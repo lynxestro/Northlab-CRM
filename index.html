@@ -10,8 +10,8 @@
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <title>NorthLab CRM</title>
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Clash+Display:wght@500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
@@ -30,9 +30,9 @@
   --text: #f0f0f0;
   --text2: #999;
   --text3: #555;
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-  --font-mono: 'Geist Mono', monospace;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
   --r: 12px;
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -61,10 +61,9 @@ body { min-height:100%; background:var(--bg); color:var(--text); font-family:var
 }
 .auth-logo-wrap { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
 .auth-n {
-  width:42px; height:42px; background:var(--accent); border-radius:10px;
+  width:42px; height:42px; border-radius:10px;
   display:flex; align-items:center; justify-content:center;
-  font-family:var(--font-display); font-size:28px; color:#fff; letter-spacing:-1px;
-  box-shadow: 0 0 20px #0a84ff44;
+  box-shadow: 0 0 20px #0a84ff44; overflow:hidden;
 }
 .auth-brand { font-family:var(--font-display); font-size:26px; letter-spacing:2px; color:var(--text); }
 .auth-sub { font-size:11px; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:32px; margin-left:54px; margin-top:-2px; }
@@ -106,10 +105,9 @@ body { min-height:100%; background:var(--bg); color:var(--text); font-family:var
 }
 .topbar-left { display:flex; align-items:center; gap:12px; }
 .logo-mark {
-  width:32px; height:32px; background:var(--accent); border-radius:8px;
+  width:32px; height:32px; border-radius:8px;
   display:flex; align-items:center; justify-content:center;
-  font-family:var(--font-display); font-size:22px; color:#fff;
-  box-shadow:0 0 12px #0a84ff33; flex-shrink:0;
+  box-shadow:0 0 12px #0a84ff33; flex-shrink:0; overflow:hidden;
 }
 .logo-text { font-family:var(--font-display); font-size:20px; letter-spacing:2px; color:var(--text); }
 
@@ -379,7 +377,7 @@ tbody td { padding:10px 14px; font-size:12px; font-family:var(--font-mono); whit
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <div class="logo-mark">N</div>
+      <div class="logo-mark"><img src="icon-192.png" style="width:24px;height:24px;border-radius:4px;" alt="N"/></div>
       <div class="logo-text">NORTHLAB</div>
       <div class="company-switcher" onclick="toggleCompanyMenu(event)" id="company-switcher">
         <span class="company-name" id="company-name-display">Loading...</span>
@@ -437,11 +435,11 @@ tbody td { padding:10px 14px; font-size:12px; font-family:var(--font-mono); whit
       <div style="margin-top:14px">
         <div class="section-title" style="margin-bottom:10px">Outcome</div>
         <div class="outcome-grid">
-          <div class="outcome-btn" onclick="selectOutcome('showed')" data-o="showed"><span class="ob-icon">✅</span>Showed</div>
-          <div class="outcome-btn" onclick="selectOutcome('no_show')" data-o="no_show"><span class="ob-icon">👻</span>No Show</div>
-          <div class="outcome-btn" onclick="selectOutcome('rescheduled')" data-o="rescheduled"><span class="ob-icon">📅</span>Rescheduled</div>
-          <div class="outcome-btn" onclick="selectOutcome('cancelled')" data-o="cancelled"><span class="ob-icon">❌</span>Cancelled</div>
-          <div class="outcome-btn" onclick="selectOutcome('offered')" data-o="offered"><span class="ob-icon">🤝</span>Offered</div>
+          <div class="outcome-btn" onclick="selectOutcome('showed')" data-o="showed">Showed</div>
+          <div class="outcome-btn" onclick="selectOutcome('no_show')" data-o="no_show">No Show</div>
+          <div class="outcome-btn" onclick="selectOutcome('rescheduled')" data-o="rescheduled">Rescheduled</div>
+          <div class="outcome-btn" onclick="selectOutcome('cancelled')" data-o="cancelled">Cancelled</div>
+          <div class="outcome-btn" onclick="selectOutcome('offered')" data-o="offered">Offered</div>
         </div>
       </div>
     </div>
@@ -788,6 +786,7 @@ function renderDashboard(k, calls) {
     <td style="color:var(--green)">${c.amount?'$'+Number(c.amount).toLocaleString():'—'}</td>
     <td>${c.payment_type==='pif'?'<span class="pif-badge">PIF</span>':c.payment_type==='installment'?'<span class="inst-badge">Installment</span>':'—'}</td>
     <td style="color:var(--text2)">${c.plan||'—'}</td>
+    <td><button onclick="deleteCall('${c.id}')" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px;transition:color .2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">✕</button></td>
   </tr>`).join('');
 
   return `
@@ -797,11 +796,11 @@ function renderDashboard(k, calls) {
 
     <div class="log-section">
       <button class="log-btn" onclick="openModal('outcome-modal')">
-        <span class="log-icon">📋</span>
+        <span class="log-icon">◈</span>
         <div><span class="log-btn-label">Manual</span>Log Call Outcome</div>
       </button>
       <button class="log-btn" onclick="openCloseModal()">
-        <span class="log-icon">💰</span>
+        <span class="log-icon">◉</span>
         <div><span class="log-btn-label">Proof-based</span>Log Closed Deal</div>
       </button>
     </div>
@@ -959,6 +958,15 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
 });
+
+// ─── DELETE CALL ────────────────────────────
+async function deleteCall(id) {
+  if (!confirm('Remove this call log?')) return;
+  const { error } = await sb.from('calls').delete().eq('id', id);
+  if (error) { toast('Error: '+error.message, 'error'); return; }
+  toast('Call removed', 'success');
+  await loadDashboard();
+}
 
 // ─── TOAST ──────────────────────────────────
 function toast(msg, type='') {
