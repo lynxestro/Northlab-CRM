@@ -355,9 +355,21 @@ tbody td { padding:10px 14px; font-size:12px; font-family:var(--font-mono); whit
       <div class="auth-brand">NORTHLAB</div>
     </div>
     <div class="auth-sub">CRM Dashboard</div>
-    <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"/></div>
-    <div class="field"><label>Password</label><input type="password" id="auth-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()"/></div>
-    <button class="btn" onclick="signIn()">Sign In</button>
+    <div style="display:flex;gap:0;margin-bottom:24px;background:var(--bg);border-radius:8px;padding:3px;border:1px solid var(--border2)">
+      <button id="tab-signin" onclick="switchTab('signin')" style="flex:1;padding:8px;border:none;border-radius:6px;background:var(--surface2);color:var(--text);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s">Sign In</button>
+      <button id="tab-signup" onclick="switchTab('signup')" style="flex:1;padding:8px;border:none;border-radius:6px;background:transparent;color:var(--text3);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s">Sign Up</button>
+    </div>
+    <div id="form-signin">
+      <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"/></div>
+      <div class="field"><label>Password</label><input type="password" id="auth-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()"/></div>
+      <button class="btn" onclick="signIn()">Sign In</button>
+    </div>
+    <div id="form-signup" style="display:none">
+      <div class="field"><label>Email</label><input type="email" id="signup-email" placeholder="you@email.com" autocomplete="email"/></div>
+      <div class="field"><label>Password</label><input type="password" id="signup-pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')signUp()"/></div>
+      <div class="field"><label>Confirm Password</label><input type="password" id="signup-pass2" placeholder="Repeat password" onkeydown="if(event.key==='Enter')signUp()"/></div>
+      <button class="btn" onclick="signUp()">Create Account</button>
+    </div>
     <div class="auth-err" id="auth-err"></div>
   </div>
 </div>
@@ -494,8 +506,8 @@ tbody td { padding:10px 14px; font-size:12px; font-family:var(--font-mono); whit
 // ─────────────────────────────────────────────
 // CONFIG — replace with your new Supabase project
 // ─────────────────────────────────────────────
-const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL  = 'https://fhtcwrecthxbimfoogaa.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZodGN3cmVjdGh4YmltZm9vZ2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDAzODQsImV4cCI6MjA4OTkxNjM4NH0.bu2OMPvzugiMkUwZNcdVQ3C0Zeg0De7jt08yaU3dfF4';
 const CLAUDE_MODEL  = 'claude-sonnet-4-20250514';
 
 const { createClient } = supabase;
@@ -509,6 +521,17 @@ let selectedOutcome = null;
 let extractedDeal   = null;
 
 // ─── AUTH ───────────────────────────────────
+function switchTab(tab) {
+  const isSignin = tab === 'signin';
+  document.getElementById('form-signin').style.display = isSignin ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = isSignin ? 'none'  : 'block';
+  document.getElementById('tab-signin').style.background = isSignin ? 'var(--surface2)' : 'transparent';
+  document.getElementById('tab-signin').style.color      = isSignin ? 'var(--text)'     : 'var(--text3)';
+  document.getElementById('tab-signup').style.background = isSignin ? 'transparent'     : 'var(--surface2)';
+  document.getElementById('tab-signup').style.color      = isSignin ? 'var(--text3)'    : 'var(--text)';
+  document.getElementById('auth-err').textContent = '';
+}
+
 async function signIn() {
   const email = document.getElementById('auth-email').value.trim();
   const pass  = document.getElementById('auth-pass').value;
@@ -518,6 +541,22 @@ async function signIn() {
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
   if (error) { err.textContent = error.message; return; }
   await bootApp();
+}
+
+async function signUp() {
+  const email = document.getElementById('signup-email').value.trim();
+  const pass  = document.getElementById('signup-pass').value;
+  const pass2 = document.getElementById('signup-pass2').value;
+  const err   = document.getElementById('auth-err');
+  err.textContent = '';
+  if (!email || !pass || !pass2) { err.textContent = 'Fill in all fields.'; return; }
+  if (pass !== pass2) { err.textContent = 'Passwords do not match.'; return; }
+  if (pass.length < 6) { err.textContent = 'Password must be at least 6 characters.'; return; }
+  const { error } = await sb.auth.signUp({ email, password: pass });
+  if (error) { err.textContent = error.message; return; }
+  err.style.color = 'var(--green)';
+  err.textContent = 'Account created! You can now sign in.';
+  setTimeout(() => { err.style.color = ''; switchTab('signin'); }, 2000);
 }
 
 async function signOut() {
