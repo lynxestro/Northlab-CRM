@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="NorthLab"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>NorthLab CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Clash+Display:wght@500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #080808;
+  --surface: #0f0f0f;
+  --surface2: #141414;
+  --surface3: #1a1a1a;
+  --border: #1e1e1e;
+  --border2: #2a2a2a;
+  --accent: #0a84ff;
+  --accent-dim: #0a84ff18;
+  --accent-border: #0a84ff33;
+  --green: #30d158;
+  --red: #ff453a;
+  --yellow: #ffd60a;
+  --text: #f0f0f0;
+  --text2: #999;
+  --text3: #555;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --r: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { height:100%; }
+body { min-height:100%; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:14px; overflow-x:hidden; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+
+/* ── AUTH ── */
+#auth-screen {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, #0a84ff14, transparent 70%);
+  padding:20px;
+}
+.auth-card {
+  width:100%; max-width:380px;
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:20px; padding:40px 32px; position:relative; overflow:hidden;
+}
+.auth-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.auth-logo-wrap { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+.auth-n {
+  width:42px; height:42px; background:var(--accent); border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-size:28px; color:#fff; letter-spacing:-1px;
+  box-shadow: 0 0 20px #0a84ff44;
+}
+.auth-brand { font-family:var(--font-display); font-size:26px; letter-spacing:2px; color:var(--text); }
+.auth-sub { font-size:11px; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:32px; margin-left:54px; margin-top:-2px; }
+.field { margin-bottom:16px; }
+.field label { display:block; font-size:10px; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:7px; font-family:var(--font-mono); }
+.field input {
+  width:100%; background:var(--bg); border:1px solid var(--border2);
+  border-radius:8px; padding:11px 14px; color:var(--text);
+  font-family:var(--font-mono); font-size:13px; outline:none; transition:border-color .2s;
+}
+.field input:focus { border-color:var(--accent); }
+.btn {
+  width:100%; padding:13px; margin-top:8px;
+  background:var(--accent); border:none; border-radius:10px;
+  color:#fff; font-family:var(--font-body); font-weight:600; font-size:14px;
+  cursor:pointer; transition:all .2s; letter-spacing:.3px;
+}
+.btn:hover { background:#2196ff; box-shadow:0 0 20px #0a84ff44; }
+.btn:active { transform:scale(.98); }
+.btn-ghost {
+  background:transparent; border:1px solid var(--border2); color:var(--text2);
+  font-size:12px; padding:9px;
+}
+.btn-ghost:hover { border-color:var(--border2); background:var(--surface2); box-shadow:none; }
+.btn-danger { background:#ff453a22; border:1px solid #ff453a33; color:var(--red); }
+.btn-danger:hover { background:#ff453a33; box-shadow:none; }
+.auth-err { color:var(--red); font-size:11px; margin-top:10px; text-align:center; min-height:16px; font-family:var(--font-mono); }
+
+/* ── APP ── */
+#app { display:none; min-height:100vh; flex-direction:column; }
+#app.visible { display:flex; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; height:56px; border-bottom:1px solid var(--border);
+  background:var(--surface); position:sticky; top:0; z-index:200;
+  backdrop-filter:blur(20px);
+}
+.topbar-left { display:flex; align-items:center; gap:12px; }
+.logo-mark {
+  width:32px; height:32px; background:var(--accent); border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-size:22px; color:#fff;
+  box-shadow:0 0 12px #0a84ff33; flex-shrink:0;
+}
+.logo-text { font-family:var(--font-display); font-size:20px; letter-spacing:2px; color:var(--text); }
+
+/* Company switcher */
+.company-switcher {
+  display:flex; align-items:center; gap:6px; background:var(--surface2);
+  border:1px solid var(--border2); border-radius:8px; padding:5px 10px;
+  cursor:pointer; transition:border-color .2s; position:relative;
+}
+.company-switcher:hover { border-color:var(--accent-border); }
+.company-name { font-size:12px; font-weight:500; color:var(--text); max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.company-arrow { color:var(--text3); font-size:10px; }
+.company-dropdown {
+  position:absolute; top:calc(100% + 8px); left:0; min-width:200px;
+  background:var(--surface2); border:1px solid var(--border2); border-radius:10px;
+  padding:6px; z-index:300; display:none; box-shadow:0 8px 32px #00000088;
+}
+.company-dropdown.open { display:block; }
+.company-option {
+  padding:9px 12px; border-radius:7px; cursor:pointer; font-size:13px;
+  display:flex; align-items:center; justify-content:space-between;
+  transition:background .15s;
+}
+.company-option:hover { background:var(--surface3); }
+.company-option.active { color:var(--accent); }
+.company-option-del { color:var(--text3); font-size:11px; padding:2px 6px; border-radius:4px; }
+.company-option-del:hover { background:#ff453a22; color:var(--red); }
+.company-add { padding:9px 12px; border-radius:7px; cursor:pointer; font-size:12px; color:var(--accent); display:flex; align-items:center; gap:6px; border-top:1px solid var(--border); margin-top:4px; padding-top:12px; }
+.company-add:hover { background:var(--accent-dim); }
+
+.topbar-right { display:flex; align-items:center; gap:10px; }
+.topbar-user { font-size:12px; color:var(--text3); font-family:var(--font-mono); display:none; }
+@media(min-width:600px){ .topbar-user { display:block; } }
+.btn-sm {
+  padding:6px 12px; border-radius:7px; font-size:11px; font-family:var(--font-mono);
+  background:transparent; border:1px solid var(--border2); color:var(--text3);
+  cursor:pointer; transition:all .2s; white-space:nowrap;
+}
+.btn-sm:hover { border-color:var(--red); color:var(--red); }
+
+/* ── SUMMARY BAR ── */
+.summary-bar {
+  padding:14px 24px; border-bottom:1px solid var(--border);
+  background:var(--surface2); display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+}
+.date-group { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.date-label { font-size:10px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; font-family:var(--font-mono); }
+.date-input {
+  background:var(--surface); border:1px solid var(--border2); border-radius:8px;
+  padding:7px 12px; color:var(--text); font-family:var(--font-mono); font-size:12px;
+  outline:none; cursor:pointer; transition:border-color .2s;
+}
+.date-input:focus { border-color:var(--accent); }
+.date-sep { color:var(--text3); font-size:12px; }
+.btn-clear {
+  background:transparent; border:1px solid var(--border2); color:var(--text3);
+  border-radius:7px; padding:7px 14px; font-family:var(--font-mono); font-size:11px;
+  cursor:pointer; transition:all .2s;
+}
+.btn-clear:hover { border-color:var(--border2); color:var(--text); background:var(--surface3); }
+.summary-stats { display:flex; gap:24px; margin-left:auto; flex-wrap:wrap; }
+.summary-stat { text-align:right; }
+.summary-stat-label { font-size:9px; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; font-family:var(--font-mono); margin-bottom:2px; }
+.summary-stat-value { font-size:18px; font-weight:700; font-family:var(--font-mono); }
+.summary-stat-value.green { color:var(--green); }
+.summary-stat-value.blue  { color:var(--accent); }
+.summary-stat-value.white { color:var(--text); }
+
+/* ── MAIN ── */
+.main { padding:20px 24px; flex:1; }
+@media(max-width:600px){ .main { padding:16px; } }
+
+/* ── SECTION TITLE ── */
+.section-title {
+  font-size:10px; color:var(--text3); letter-spacing:2px; text-transform:uppercase;
+  font-family:var(--font-mono); margin-bottom:12px; margin-top:4px;
+  display:flex; align-items:center; gap:8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── KPI GRID ── */
+.kpi-grid {
+  display:grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap:10px; margin-bottom:10px;
+}
+@media(max-width:1100px){ .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+@media(max-width:700px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.kpi-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); padding:14px; transition:border-color .2s;
+  position:relative; overflow:hidden;
+}
+.kpi-card:hover { border-color:var(--border2); }
+.kpi-label { font-size:9px; color:var(--text3); letter-spacing:1.2px; text-transform:uppercase; font-family:var(--font-mono); margin-bottom:8px; }
+.kpi-value { font-family:var(--font-mono); font-size:26px; font-weight:600; letter-spacing:-1px; line-height:1; margin-bottom:5px; color:var(--text); }
+@media(max-width:700px){ .kpi-value { font-size:22px; } }
+.kpi-delta { font-size:10px; font-family:var(--font-mono); display:flex; align-items:center; gap:3px; }
+.kpi-delta.up   { color:var(--green); }
+.kpi-delta.down { color:var(--red); }
+.kpi-delta.flat { color:var(--text3); }
+.kpi-chart { margin-top:10px; height:32px; }
+.kpi-chart svg { width:100%; height:32px; display:block; }
+
+/* ── LOG BUTTON ── */
+.log-section { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+.log-btn {
+  flex:1; min-width:140px; padding:14px 18px;
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:var(--r); cursor:pointer; transition:all .2s;
+  display:flex; align-items:center; gap:10px; color:var(--text);
+  font-family:var(--font-body); font-size:13px; font-weight:500;
+}
+.log-btn:hover { border-color:var(--accent); background:var(--accent-dim); }
+.log-btn .log-icon { font-size:18px; }
+.log-btn-label { font-size:10px; color:var(--text3); font-family:var(--font-mono); letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:2px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0; background:#000000cc; z-index:500;
+  display:none; align-items:center; justify-content:center; padding:20px;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:16px; width:100%; max-width:440px; overflow:hidden;
+  animation:modalIn .2s ease;
+}
+@keyframes modalIn { from { opacity:0; transform:translateY(12px) scale(.97); } to { opacity:1; transform:none; } }
+.modal-header {
+  padding:18px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.modal-title { font-weight:600; font-size:15px; }
+.modal-close { background:none; border:none; color:var(--text3); font-size:18px; cursor:pointer; padding:4px; line-height:1; }
+.modal-close:hover { color:var(--text); }
+.modal-body { padding:20px; }
+.modal-footer { padding:16px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+
+/* Outcome grid */
+.outcome-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.outcome-btn {
+  padding:14px 8px; border-radius:10px; border:1px solid var(--border2);
+  background:var(--surface2); cursor:pointer; text-align:center;
+  transition:all .2s; color:var(--text2); font-size:12px; font-weight:500;
+}
+.outcome-btn:hover, .outcome-btn.selected { border-color:var(--accent); background:var(--accent-dim); color:var(--text); }
+.outcome-btn .ob-icon { font-size:22px; display:block; margin-bottom:5px; }
+
+/* Upload zone */
+.upload-zone {
+  border:2px dashed var(--border2); border-radius:10px; padding:32px;
+  text-align:center; cursor:pointer; transition:all .2s; position:relative;
+}
+.upload-zone:hover, .upload-zone.drag { border-color:var(--accent); background:var(--accent-dim); }
+.upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.upload-icon { font-size:32px; margin-bottom:8px; }
+.upload-text { font-size:13px; color:var(--text2); }
+.upload-sub { font-size:11px; color:var(--text3); margin-top:4px; font-family:var(--font-mono); }
+.upload-preview { margin-top:12px; }
+.upload-preview img { max-width:100%; border-radius:8px; max-height:200px; object-fit:contain; }
+.extracted-info {
+  margin-top:14px; background:var(--surface2); border-radius:8px;
+  padding:12px 14px; border:1px solid var(--border2);
+}
+.extracted-row { display:flex; justify-content:space-between; padding:4px 0; font-size:12px; font-family:var(--font-mono); }
+.extracted-row:not(:last-child) { border-bottom:1px solid var(--border); }
+.extracted-key { color:var(--text3); }
+.extracted-val { color:var(--text); font-weight:500; }
+.pif-badge { background:#30d15822; color:var(--green); border:1px solid #30d15833; padding:2px 8px; border-radius:20px; font-size:10px; }
+.inst-badge { background:#ffd60a22; color:var(--yellow); border:1px solid #ffd60a33; padding:2px 8px; border-radius:20px; font-size:10px; }
+
+/* Prospect name input */
+.prospect-input {
+  width:100%; background:var(--bg); border:1px solid var(--border2);
+  border-radius:8px; padding:10px 14px; color:var(--text);
+  font-family:var(--font-mono); font-size:13px; outline:none;
+  transition:border-color .2s; margin-top:12px;
+}
+.prospect-input:focus { border-color:var(--accent); }
+
+/* ── CALLS TABLE ── */
+.table-wrap {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); overflow:hidden; overflow-x:auto;
+}
+table { width:100%; border-collapse:collapse; min-width:500px; }
+thead th {
+  padding:10px 14px; text-align:left; font-size:9px; color:var(--text3);
+  letter-spacing:1.5px; text-transform:uppercase; border-bottom:1px solid var(--border);
+  background:var(--surface2); font-family:var(--font-mono); white-space:nowrap;
+}
+tbody tr { border-bottom:1px solid var(--border); transition:background .15s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:var(--surface2); }
+tbody td { padding:10px 14px; font-size:12px; font-family:var(--font-mono); white-space:nowrap; }
+.status-pill {
+  font-size:9px; padding:3px 9px; border-radius:20px; font-weight:500;
+  letter-spacing:.5px; text-transform:uppercase; display:inline-block;
+}
+.empty-state { padding:48px; text-align:center; color:var(--text3); font-size:12px; font-family:var(--font-mono); }
+
+/* ── ADD COMPANY MODAL ── */
+.add-company-input {
+  width:100%; background:var(--bg); border:1px solid var(--border2);
+  border-radius:8px; padding:11px 14px; color:var(--text);
+  font-family:var(--font-mono); font-size:13px; outline:none; transition:border-color .2s;
+}
+.add-company-input:focus { border-color:var(--accent); }
+
+/* ── TOAST ── */
+#toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(8px);
+  background:var(--surface2); border:1px solid var(--border2);
+  border-radius:10px; padding:11px 20px; font-size:12px; font-family:var(--font-mono);
+  color:var(--text); opacity:0; transition:all .3s; pointer-events:none;
+  z-index:9999; white-space:nowrap; box-shadow:0 4px 24px #00000088;
+}
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+#toast.success { border-color:#30d15844; color:var(--green); }
+#toast.error   { border-color:#ff453a44; color:var(--red); }
+
+/* ── LOADING ── */
+.loading { display:flex; align-items:center; justify-content:center; height:160px; }
+.spinner { width:24px; height:24px; border:2px solid var(--border2); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── AI THINKING ── */
+.ai-thinking { display:flex; align-items:center; gap:10px; padding:14px; background:var(--accent-dim); border:1px solid var(--accent-border); border-radius:8px; margin-top:12px; font-size:12px; color:var(--accent); font-family:var(--font-mono); }
+.ai-dot { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:pulse 1s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+</style>
+</head>
+<body>
+
+<!-- ── AUTH ── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo-wrap">
+      <div class="auth-n">N</div>
+      <div class="auth-brand">NORTHLAB</div>
+    </div>
+    <div class="auth-sub">CRM Dashboard</div>
+    <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com" autocomplete="email"/></div>
+    <div class="field"><label>Password</label><input type="password" id="auth-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()"/></div>
+    <button class="btn" onclick="signIn()">Sign In</button>
+    <div class="auth-err" id="auth-err"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark">N</div>
+      <div class="logo-text">NORTHLAB</div>
+      <div class="company-switcher" onclick="toggleCompanyMenu(event)" id="company-switcher">
+        <span class="company-name" id="company-name-display">Loading...</span>
+        <span class="company-arrow">▾</span>
+        <div class="company-dropdown" id="company-dropdown"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbar-user"></span>
+      <button class="btn-sm" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY BAR -->
+  <div class="summary-bar">
+    <div class="date-group">
+      <span class="date-label">From</span>
+      <input type="date" class="date-input" id="date-from" onchange="loadDashboard()"/>
+      <span class="date-sep">→</span>
+      <span class="date-label">To</span>
+      <input type="date" class="date-input" id="date-to" onchange="loadDashboard()"/>
+      <button class="btn-clear" onclick="clearDates()">Clear</button>
+    </div>
+    <div class="summary-stats">
+      <div class="summary-stat">
+        <div class="summary-stat-label">Cash Collected</div>
+        <div class="summary-stat-value green" id="sum-cash">$0</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-stat-label">PIF Rate</div>
+        <div class="summary-stat-value blue" id="sum-pif">0%</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-stat-label">Customers</div>
+        <div class="summary-stat-value white" id="sum-customers">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main-content">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- ── OUTCOME MODAL ── -->
+<div class="modal-overlay" id="outcome-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Log Call Outcome</div>
+      <button class="modal-close" onclick="closeModal('outcome-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Prospect Name</label><input type="text" class="prospect-input" id="outcome-prospect" placeholder="Full name"/></div>
+      <div style="margin-top:14px">
+        <div class="section-title" style="margin-bottom:10px">Outcome</div>
+        <div class="outcome-grid">
+          <div class="outcome-btn" onclick="selectOutcome('showed')" data-o="showed"><span class="ob-icon">✅</span>Showed</div>
+          <div class="outcome-btn" onclick="selectOutcome('no_show')" data-o="no_show"><span class="ob-icon">👻</span>No Show</div>
+          <div class="outcome-btn" onclick="selectOutcome('rescheduled')" data-o="rescheduled"><span class="ob-icon">📅</span>Rescheduled</div>
+          <div class="outcome-btn" onclick="selectOutcome('cancelled')" data-o="cancelled"><span class="ob-icon">❌</span>Cancelled</div>
+          <div class="outcome-btn" onclick="selectOutcome('offered')" data-o="offered"><span class="ob-icon">🤝</span>Offered</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="width:auto;padding:9px 18px" onclick="closeModal('outcome-modal')">Cancel</button>
+      <button class="btn" style="width:auto;padding:9px 20px" onclick="submitOutcome()">Log Outcome</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CLOSE MODAL (proof upload) ── -->
+<div class="modal-overlay" id="close-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Log Closed Deal</div>
+      <button class="modal-close" onclick="closeModal('close-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="section-title">Upload Payment Proof</div>
+      <div class="upload-zone" id="upload-zone" ondragover="handleDrag(event)" ondragleave="handleDragLeave()" ondrop="handleDrop(event)">
+        <input type="file" accept="image/*" id="proof-file" onchange="handleFileSelect(event)"/>
+        <div class="upload-icon">📸</div>
+        <div class="upload-text">Drop screenshot here or tap to upload</div>
+        <div class="upload-sub">Stripe or Fanbasis Discord notification</div>
+      </div>
+      <div id="upload-preview" class="upload-preview" style="display:none"></div>
+      <div id="ai-thinking" style="display:none">
+        <div class="ai-thinking"><div class="ai-dot"></div>Claude is reading the screenshot...</div>
+      </div>
+      <div id="extracted-data" style="display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="width:auto;padding:9px 18px" onclick="closeModal('close-modal')">Cancel</button>
+      <button class="btn" style="width:auto;padding:9px 20px" id="confirm-close-btn" onclick="submitClose()" disabled>Log Deal</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADD COMPANY MODAL ── -->
+<div class="modal-overlay" id="add-company-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Company</div>
+      <button class="modal-close" onclick="closeModal('add-company-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Company / Offer Name</label>
+        <input type="text" class="add-company-input" id="new-company-name" placeholder="e.g. The Info Accelerator" onkeydown="if(event.key==='Enter')addCompany()"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="width:auto;padding:9px 18px" onclick="closeModal('add-company-modal')">Cancel</button>
+      <button class="btn" style="width:auto;padding:9px 20px" onclick="addCompany()">Add</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG — replace with your new Supabase project
+// ─────────────────────────────────────────────
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const CLAUDE_MODEL  = 'claude-sonnet-4-20250514';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let currentUser  = null;
+let currentCalls = [];
+let companies    = [];
+let activeCompany = null;
+let selectedOutcome = null;
+let extractedDeal   = null;
+
+// ─── AUTH ───────────────────────────────────
+async function signIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-pass').value;
+  const err   = document.getElementById('auth-err');
+  err.textContent = '';
+  if (!email || !pass) { err.textContent = 'Fill in all fields.'; return; }
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { err.textContent = error.message; return; }
+  await bootApp();
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('auth-screen').style.display = 'flex';
+  currentUser = null;
+}
+
+// ─── BOOT ───────────────────────────────────
+async function bootApp() {
+  const { data:{ user } } = await sb.auth.getUser();
+  if (!user) return;
+  currentUser = user;
+
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('topbar-user').textContent = user.email.split('@')[0];
+
+  // Set default dates (MTD)
+  const now = new Date();
+  const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
+  document.getElementById('date-to').value   = `${y}-${m}-${d}`;
+  document.getElementById('date-from').value = `${y}-${m}-01`;
+
+  await loadCompanies();
+}
+
+// ─── COMPANIES ──────────────────────────────
+async function loadCompanies() {
+  const { data } = await sb.from('companies').select('*').eq('user_id', currentUser.id).order('created_at');
+  companies = data || [];
+  if (companies.length === 0) {
+    // Create default company
+    const { data: created } = await sb.from('companies').insert({ user_id: currentUser.id, name: 'My Company' }).select().single();
+    companies = [created];
+  }
+  activeCompany = companies[0];
+  renderCompanyMenu();
+  await loadDashboard();
+}
+
+function renderCompanyMenu() {
+  document.getElementById('company-name-display').textContent = activeCompany?.name || '—';
+  const dd = document.getElementById('company-dropdown');
+  dd.innerHTML = companies.map(c => `
+    <div class="company-option ${c.id===activeCompany?.id?'active':''}" onclick="switchCompany('${c.id}', event)">
+      <span>${c.name}</span>
+      ${companies.length > 1 ? `<span class="company-option-del" onclick="deleteCompany('${c.id}',event)">✕</span>` : ''}
+    </div>`).join('') +
+    `<div class="company-add" onclick="openAddCompany(event)">＋ Add company</div>`;
+}
+
+function toggleCompanyMenu(e) {
+  e.stopPropagation();
+  document.getElementById('company-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', () => document.getElementById('company-dropdown')?.classList.remove('open'));
+
+async function switchCompany(id, e) {
+  e?.stopPropagation();
+  activeCompany = companies.find(c => c.id === id);
+  document.getElementById('company-dropdown').classList.remove('open');
+  renderCompanyMenu();
+  await loadDashboard();
+}
+
+async function addCompany() {
+  const name = document.getElementById('new-company-name').value.trim();
+  if (!name) return;
+  const { data, error } = await sb.from('companies').insert({ user_id: currentUser.id, name }).select().single();
+  if (error) { toast('Error adding company', 'error'); return; }
+  companies.push(data);
+  activeCompany = data;
+  closeModal('add-company-modal');
+  document.getElementById('new-company-name').value = '';
+  renderCompanyMenu();
+  await loadDashboard();
+  toast('Company added ✓', 'success');
+}
+
+async function deleteCompany(id, e) {
+  e?.stopPropagation();
+  if (!confirm('Delete this company and all its data?')) return;
+  await sb.from('calls').delete().eq('company_id', id);
+  await sb.from('companies').delete().eq('id', id);
+  companies = companies.filter(c => c.id !== id);
+  if (activeCompany?.id === id) activeCompany = companies[0];
+  renderCompanyMenu();
+  await loadDashboard();
+  toast('Company removed', 'success');
+}
+
+function openAddCompany(e) {
+  e?.stopPropagation();
+  document.getElementById('company-dropdown').classList.remove('open');
+  openModal('add-company-modal');
+}
+
+// ─── DATE HELPERS ───────────────────────────
+function clearDates() {
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value   = '';
+  loadDashboard();
+}
+
+// ─── DASHBOARD ──────────────────────────────
+async function loadDashboard() {
+  if (!activeCompany) return;
+  document.getElementById('main-content').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  const from = document.getElementById('date-from').value;
+  const to   = document.getElementById('date-to').value;
+
+  let q = sb.from('calls').select('*').eq('company_id', activeCompany.id).eq('user_id', currentUser.id).order('created_at', { ascending: false });
+  if (from) q = q.gte('created_at', from + 'T00:00:00');
+  if (to)   q = q.lte('created_at', to   + 'T23:59:59');
+
+  const { data: calls, error } = await q;
+  if (error) { document.getElementById('main-content').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`; return; }
+
+  currentCalls = calls || [];
+  const kpis = computeKPIs(currentCalls);
+  updateSummaryBar(kpis);
+  document.getElementById('main-content').innerHTML = renderDashboard(kpis, currentCalls);
+}
+
+function computeKPIs(calls) {
+  const booked     = calls.length;
+  const cancelled  = calls.filter(c=>c.status==='cancelled').length;
+  const noShow     = calls.filter(c=>c.status==='no_show').length;
+  const showed     = calls.filter(c=>['showed','offered','closed'].includes(c.status)).length;
+  const offered    = calls.filter(c=>['offered','closed'].includes(c.status)).length;
+  const closed     = calls.filter(c=>c.status==='closed').length;
+  const rescheduled= calls.filter(c=>c.status==='rescheduled').length;
+  const pif        = calls.filter(c=>c.payment_type==='pif').length;
+  const cash       = calls.reduce((s,c)=>s+(c.amount||0),0);
+  const showPct    = booked>0 ? (showed/booked*100).toFixed(1) : '0.0';
+  const noShowPct  = booked>0 ? (noShow/booked*100).toFixed(1)  : '0.0';
+  const reschedPct = booked>0 ? (rescheduled/booked*100).toFixed(1) : '0.0';
+  const ccpc       = closed>0 ? (cash/closed).toFixed(0) : '0';
+  const pifRate    = closed>0 ? Math.round(pif/closed*100) : 0;
+  return { booked, cancelled, noShow, showed, offered, closed, rescheduled,
+           pif, cash, showPct, noShowPct, reschedPct, ccpc, pifRate, customers: closed };
+}
+
+function updateSummaryBar(k) {
+  document.getElementById('sum-cash').textContent      = '$' + Number(k.cash).toLocaleString();
+  document.getElementById('sum-pif').textContent       = k.pifRate + '%';
+  document.getElementById('sum-customers').textContent = k.customers;
+}
+
+// ─── SPARKLINE ──────────────────────────────
+function sparkline(data, color='#0a84ff') {
+  if (!data || data.length < 2) return `<svg viewBox="0 0 100 32"><line x1="0" y1="16" x2="100" y2="16" stroke="#1e1e1e" stroke-width="1"/></svg>`;
+  const max=Math.max(...data,1), min=Math.min(...data,0), range=max-min||1;
+  const pts = data.map((v,i)=>`${(i/(data.length-1))*100},${32-((v-min)/range)*28-2}`).join(' ');
+  const area = data.map((v,i)=>`${(i/(data.length-1))*100},${32-((v-min)/range)*28-2}`).join(' ') + ` 100,32 0,32`;
+  return `<svg viewBox="0 0 100 32" preserveAspectRatio="none">
+    <defs><linearGradient id="sg${color.replace('#','')}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <polygon points="${area}" fill="url(#sg${color.replace('#','')})"/>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function dailyTrend(calls, fn, days=12) {
+  const buckets={};
+  calls.forEach(c=>{ const d=c.created_at?.slice(0,10); if(d){ if(!buckets[d])buckets[d]=[]; buckets[d].push(c); } });
+  return Object.keys(buckets).sort().slice(-days).map(d=>fn(buckets[d]));
+}
+
+function kpiCard(label, value, delta, isUp, chartData, color) {
+  const dir = delta===null ? 'flat' : isUp ? 'up' : 'down';
+  const arrow = isUp ? '▲' : '▼';
+  const deltaHtml = delta===null
+    ? `<div class="kpi-delta flat">—</div>`
+    : `<div class="kpi-delta ${dir}">${arrow} ${delta}</div>`;
+  const chart = chartData
+    ? `<div class="kpi-chart">${sparkline(chartData, color||'#0a84ff')}</div>` : '';
+  return `<div class="kpi-card">
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-value">${value}</div>
+    ${deltaHtml}${chart}
+  </div>`;
+}
+
+function statusBadge(s) {
+  const map = {
+    closed:     ['#30d158','Closed'],
+    showed:     ['#0a84ff','Showed'],
+    offered:    ['#ffd60a','Offered'],
+    no_show:    ['#ff453a','No Show'],
+    cancelled:  ['#ff453a','Cancelled'],
+    rescheduled:['#636366','Rescheduled'],
+  };
+  const [color, label] = map[s] || ['#444','—'];
+  return `<span class="status-pill" style="background:${color}22;color:${color};border:1px solid ${color}44">${label}</span>`;
+}
+
+function renderDashboard(k, calls) {
+  const bookedT = dailyTrend(calls, b=>b.length);
+  const cashT   = dailyTrend(calls, b=>b.reduce((s,c)=>s+(c.amount||0),0));
+  const closedT = dailyTrend(calls, b=>b.filter(c=>c.status==='closed').length);
+
+  const row1 = [
+    kpiCard('Booked', k.booked, null, true, bookedT, '#0a84ff'),
+    kpiCard('Cancelled', k.cancelled, null, false, null),
+    kpiCard('Showed', k.showed, null, true, null),
+    kpiCard('Cash Collected', '$'+Number(k.cash).toLocaleString(), null, true, cashT, '#30d158'),
+    kpiCard('Closed', k.closed, null, true, closedT, '#0a84ff'),
+    kpiCard('Offered', k.offered, null, true, null),
+    kpiCard('PIF Rate', k.pifRate+'%', null, true, null, '#30d158'),
+  ];
+  const row2 = [
+    kpiCard('CCPC', '$'+Number(k.ccpc).toLocaleString(), null, true, null),
+    kpiCard('Show %', k.showPct+'%', null, true, null),
+    kpiCard('No Show %', k.noShowPct+'%', null, false, null),
+    kpiCard('Rescheduled %', k.reschedPct+'%', null, false, null),
+    kpiCard('Customers', k.customers, null, true, null),
+  ];
+
+  const rows = calls.slice(0,30).map(c=>`<tr>
+    <td style="color:var(--text)">${c.prospect_name||'—'}</td>
+    <td>${c.created_at?.slice(0,10)||'—'}</td>
+    <td>${statusBadge(c.status)}</td>
+    <td style="color:var(--green)">${c.amount?'$'+Number(c.amount).toLocaleString():'—'}</td>
+    <td>${c.payment_type==='pif'?'<span class="pif-badge">PIF</span>':c.payment_type==='installment'?'<span class="inst-badge">Installment</span>':'—'}</td>
+    <td style="color:var(--text2)">${c.plan||'—'}</td>
+  </tr>`).join('');
+
+  return `
+    <div class="section-title">KPI Overview</div>
+    <div class="kpi-grid" style="margin-bottom:10px">${row1.join('')}</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px">${row2.join('')}</div>
+
+    <div class="log-section">
+      <button class="log-btn" onclick="openModal('outcome-modal')">
+        <span class="log-icon">📋</span>
+        <div><span class="log-btn-label">Manual</span>Log Call Outcome</div>
+      </button>
+      <button class="log-btn" onclick="openCloseModal()">
+        <span class="log-icon">💰</span>
+        <div><span class="log-btn-label">Proof-based</span>Log Closed Deal</div>
+      </button>
+    </div>
+
+    <div class="section-title">Recent Calls</div>
+    <div class="table-wrap">
+      ${calls.length===0
+        ? '<div class="empty-state">No calls logged yet for this period.</div>'
+        : `<table><thead><tr>
+            <th>Prospect</th><th>Date</th><th>Status</th><th>Amount</th><th>Payment</th><th>Plan</th>
+           </tr></thead><tbody>${rows}</tbody></table>`}
+    </div>`;
+}
+
+// ─── OUTCOME MODAL ──────────────────────────
+function selectOutcome(o) {
+  selectedOutcome = o;
+  document.querySelectorAll('.outcome-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelector(`.outcome-btn[data-o="${o}"]`)?.classList.add('selected');
+}
+
+async function submitOutcome() {
+  const prospect = document.getElementById('outcome-prospect').value.trim();
+  if (!prospect) { toast('Enter prospect name', 'error'); return; }
+  if (!selectedOutcome) { toast('Select an outcome', 'error'); return; }
+  if (!activeCompany) return;
+
+  const { error } = await sb.from('calls').insert({
+    user_id: currentUser.id,
+    company_id: activeCompany.id,
+    prospect_name: prospect,
+    status: selectedOutcome,
+    created_at: new Date().toISOString(),
+  });
+  if (error) { toast('Error: '+error.message, 'error'); return; }
+  closeModal('outcome-modal');
+  document.getElementById('outcome-prospect').value = '';
+  selectedOutcome = null;
+  document.querySelectorAll('.outcome-btn').forEach(b=>b.classList.remove('selected'));
+  toast('Outcome logged ✓', 'success');
+  await loadDashboard();
+}
+
+// ─── CLOSE MODAL ────────────────────────────
+function openCloseModal() {
+  extractedDeal = null;
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-preview').innerHTML = '';
+  document.getElementById('extracted-data').style.display = 'none';
+  document.getElementById('ai-thinking').style.display = 'none';
+  document.getElementById('confirm-close-btn').disabled = true;
+  document.getElementById('proof-file').value = '';
+  openModal('close-modal');
+}
+
+function handleDrag(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag'); }
+function handleDragLeave() { document.getElementById('upload-zone').classList.remove('drag'); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) processProofFile(file);
+}
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processProofFile(file);
+}
+
+async function processProofFile(file) {
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result;
+    const preview = document.getElementById('upload-preview');
+    preview.style.display = 'block';
+    preview.innerHTML = `<img src="${base64}" alt="proof"/>`;
+
+    // Show AI thinking
+    document.getElementById('ai-thinking').style.display = 'block';
+    document.getElementById('extracted-data').style.display = 'none';
+    document.getElementById('confirm-close-btn').disabled = true;
+
+    // Call Claude API
+    try {
+      const imgData = base64.split(',')[1];
+      const mediaType = file.type || 'image/jpeg';
+
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: CLAUDE_MODEL,
+          max_tokens: 1000,
+          system: `You are a payment data extractor. Extract info from payment notification screenshots (Stripe or Fanbasis Discord notifications). Return ONLY valid JSON, no markdown, no extra text. Format: {"prospect_name":"","plan":"","amount":0,"payment_type":"pif|installment","installment_info":"","timestamp":""}. payment_type is "pif" if no installment mentioned, "installment" if "1/3", "2/3", "installment", "payment plan" etc is mentioned. amount should be a number only (no $ or commas). If you can't extract a field, use null.`,
+          messages: [{
+            role: 'user',
+            content: [{
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: imgData }
+            }, {
+              type: 'text',
+              text: 'Extract the payment information from this screenshot.'
+            }]
+          }]
+        })
+      });
+
+      const data = await resp.json();
+      const text = data.content?.find(b=>b.type==='text')?.text || '';
+      const clean = text.replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(clean);
+      extractedDeal = parsed;
+
+      document.getElementById('ai-thinking').style.display = 'none';
+      document.getElementById('extracted-data').style.display = 'block';
+      document.getElementById('extracted-data').innerHTML = `
+        <div class="extracted-info">
+          <div class="extracted-row"><span class="extracted-key">Prospect</span><span class="extracted-val">${parsed.prospect_name||'—'}</span></div>
+          <div class="extracted-row"><span class="extracted-key">Plan</span><span class="extracted-val">${parsed.plan||'—'}</span></div>
+          <div class="extracted-row"><span class="extracted-key">Amount</span><span class="extracted-val" style="color:var(--green)">$${Number(parsed.amount||0).toLocaleString()}</span></div>
+          <div class="extracted-row"><span class="extracted-key">Type</span><span class="extracted-val">${parsed.payment_type==='pif'?'<span class="pif-badge">PIF</span>':'<span class="inst-badge">Installment '+( parsed.installment_info||'')+'</span>'}</span></div>
+        </div>`;
+      document.getElementById('confirm-close-btn').disabled = false;
+      toast('Screenshot read ✓', 'success');
+    } catch(err) {
+      document.getElementById('ai-thinking').style.display = 'none';
+      toast('Could not read screenshot — try again', 'error');
+      console.error(err);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitClose() {
+  if (!extractedDeal || !activeCompany) return;
+  const { error } = await sb.from('calls').insert({
+    user_id: currentUser.id,
+    company_id: activeCompany.id,
+    prospect_name: extractedDeal.prospect_name,
+    plan: extractedDeal.plan,
+    amount: extractedDeal.amount || 0,
+    payment_type: extractedDeal.payment_type,
+    status: 'closed',
+    created_at: new Date().toISOString(),
+  });
+  if (error) { toast('Error: '+error.message, 'error'); return; }
+  closeModal('close-modal');
+  toast('Deal logged ✓', 'success');
+  await loadDashboard();
+}
+
+// ─── MODAL HELPERS ──────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+});
+
+// ─── TOAST ──────────────────────────────────
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type ? `show ${type}` : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = '', 2500);
+}
+
+// ─── BOOT ───────────────────────────────────
+(async () => {
+  const { data:{ session } } = await sb.auth.getSession();
+  if (session) await bootApp();
+})();
+</script>
+</body>
+</html>
