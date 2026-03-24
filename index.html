@@ -810,7 +810,7 @@ function renderDashboard(k, calls) {
       ${calls.length===0
         ? '<div class="empty-state">No calls logged yet for this period.</div>'
         : `<table><thead><tr>
-            <th>Prospect</th><th>Date</th><th>Status</th><th>Amount</th><th>Payment</th><th>Plan</th>
+            <th>Prospect</th><th>Date</th><th>Status</th><th>Amount</th><th>Payment</th><th>Plan</th><th></th>
            </tr></thead><tbody>${rows}</tbody></table>`}
     </div>`;
 }
@@ -949,6 +949,15 @@ async function submitClose() {
   if (error) { toast('Error: '+error.message, 'error'); return; }
   closeModal('close-modal');
   toast('Deal logged ✓', 'success');
+  await loadDashboard();
+}
+
+// ─── DELETE CALL ────────────────────────────
+async function deleteCall(id) {
+  if (!confirm('Delete this entry?')) return;
+  const { error } = await sb.from('calls').delete().eq('id', id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  toast('Entry deleted', 'success');
   await loadDashboard();
 }
 
