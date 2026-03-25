@@ -410,7 +410,6 @@ tbody td { padding:10px 14px; font-size:12px; font-family:var(--font); white-spa
     </div>
     <div class="topbar-right">
       <span class="topbar-user" id="topbar-user"></span>
-      <button class="btn-sm" onclick="toggleTheme()" id="theme-btn" style="font-size:14px;padding:5px 10px">☀️</button>
       <button class="btn-sm" onclick="toggleTheme()" id="theme-btn">☀️</button>
       <button class="btn-sm" onclick="signOut()">Sign out</button>
     </div>
@@ -723,10 +722,25 @@ async function loadDashboard() {
   const { data: calls, error } = await q;
   if (error) { document.getElementById('main-content').innerHTML = `<div class="empty-state">Error: ${error.message}</div>`; return; }
 
+  // Fetch previous period for deltas
+  let prevCalls = [];
+  if (from && to) {
+    const fromD = new Date(from), toD = new Date(to);
+    const diffMs = toD - fromD + 86400000;
+    const prevTo   = new Date(fromD - 86400000).toISOString().slice(0,10);
+    const prevFrom = new Date(fromD - diffMs).toISOString().slice(0,10);
+    const { data: prev } = await sb.from('calls').select('*')
+      .eq('company_id', activeCompany.id).eq('user_id', currentUser.id)
+      .gte('created_at', prevFrom + 'T00:00:00')
+      .lte('created_at', prevTo + 'T23:59:59');
+    prevCalls = prev || [];
+  }
+
   currentCalls = calls || [];
-  const kpis = computeKPIs(currentCalls);
+  const kpis     = computeKPIs(currentCalls);
+  const prevKpis = computeKPIs(prevCalls);
   updateSummaryBar(kpis);
-  document.getElementById('main-content').innerHTML = renderDashboard(kpis, currentCalls);
+  document.getElementById('main-content').innerHTML = renderDashboard(kpis, prevKpis, currentCalls);
 }
 
 function computeKPIs(calls) {
@@ -808,26 +822,43 @@ function statusBadge(s) {
   return `<span class="status-pill" style="background:${color}22;color:${color};border:1px solid ${color}44">${label}</span>`;
 }
 
-function renderDashboard(k, calls) {
+function pctDelta(curr, prev) {
+  if (!prev || prev === 0) return null;
+  const d = ((curr - prev) / prev * 100).toFixed(1);
+  return { val: Math.abs(d) + '%', up: d >= 0 };
+}
+
+function renderDashboard(k, prev, calls) {
   const bookedT = dailyTrend(calls, b=>b.length);
   const cashT   = dailyTrend(calls, b=>b.reduce((s,c)=>s+(c.amount||0),0));
   const closedT = dailyTrend(calls, b=>b.filter(c=>c.status==='closed').length);
 
+  const d1 = pctDelta(k.booked,    prev.booked);
+  const d2 = pctDelta(k.cash,      prev.cash);
+  const d3 = pctDelta(k.closed,    prev.closed);
+  const d4 = pctDelta(k.showed,    prev.showed);
+  const d5 = pctDelta(k.offered,   prev.offered);
+  const d6 = pctDelta(k.pifRate,   prev.pifRate);
+  const d7 = pctDelta(k.ccpc,      prev.ccpc);
+  const d8 = pctDelta(Number(k.showPct),   Number(prev.showPct));
+  const d9 = pctDelta(Number(k.noShowPct), Number(prev.noShowPct));
+  const d10= pctDelta(Number(k.reschedPct),Number(prev.reschedPct));
+
   const row1 = [
-    kpiCard('Booked', k.booked, null, true, bookedT, '#0a84ff'),
-    kpiCard('Cancelled', k.cancelled, null, false, null),
-    kpiCard('Showed', k.showed, null, true, null),
-    kpiCard('Cash Collected', '$'+Number(k.cash).toLocaleString(), null, true, cashT, '#30d158'),
-    kpiCard('Closed', k.closed, null, true, closedT, '#0a84ff'),
-    kpiCard('Offered', k.offered, null, true, null),
-    kpiCard('PIF Rate', k.pifRate+'%', null, true, null, '#30d158'),
+    kpiCard('Booked',         k.booked,                           d1  ? d1.val  : null, d1  ? d1.up  : true,  bookedT, '#0a84ff'),
+    kpiCard('Cancelled',      k.cancelled,                        null,                  false, null),
+    kpiCard('Showed',         k.showed,                           d4  ? d4.val  : null, d4  ? d4.up  : true,  null),
+    kpiCard('Cash Collected', '$'+Number(k.cash).toLocaleString(),d2  ? d2.val  : null, d2  ? d2.up  : true,  cashT,   '#ff9f0a'),
+    kpiCard('Closed',         k.closed,                           d3  ? d3.val  : null, d3  ? d3.up  : true,  closedT, '#0a84ff'),
+    kpiCard('Offered',        k.offered,                          d5  ? d5.val  : null, d5  ? d5.up  : true,  null),
+    kpiCard('PIF Rate',       k.pifRate+'%',                      d6  ? d6.val  : null, d6  ? d6.up  : true,  null,    '#ff9f0a'),
   ];
   const row2 = [
-    kpiCard('CCPC', '$'+Number(k.ccpc).toLocaleString(), null, true, null),
-    kpiCard('Show %', k.showPct+'%', null, true, null),
-    kpiCard('No Show %', k.noShowPct+'%', null, false, null),
-    kpiCard('Rescheduled %', k.reschedPct+'%', null, false, null),
-    kpiCard('Customers', k.customers, null, true, null),
+    kpiCard('CCPC',           '$'+Number(k.ccpc).toLocaleString(),d7  ? d7.val  : null, d7  ? d7.up  : true,  null),
+    kpiCard('Show %',         k.showPct+'%',                      d8  ? d8.val  : null, d8  ? d8.up  : true,  null),
+    kpiCard('No Show %',      k.noShowPct+'%',                    d9  ? d9.val  : null, d9  ? !d9.up : false, null),
+    kpiCard('Rescheduled %',  k.reschedPct+'%',                   d10 ? d10.val : null, d10 ? !d10.up: false, null),
+    kpiCard('Customers',      k.customers,                        d3  ? d3.val  : null, d3  ? d3.up  : true,  null),
   ];
 
   const rows = calls.slice(0,30).map(c=>`<tr>
