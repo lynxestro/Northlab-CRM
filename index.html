@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!-- NorthLab CRM v3.2 - build 20260328 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -513,7 +513,7 @@ tbody td { padding:10px 14px; font-size:12px; font-family:var(--font); white-spa
         <div style="margin-top:14px">
           <div style="font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:var(--font);margin-bottom:8px">Payment Type</div>
           <div style="display:flex;gap:8px">
-            <div id="pt-pif" onclick="selectPayType('pif')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-dim);text-align:center;cursor:pointer;font-size:12px;color:var(--accent);font-weight:500">PIF</div>
+            <div id="pt-pif" onclick="selectPayType('pif')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;text-align:center;cursor:pointer;font-size:12px;color:var(--text3);font-weight:500;transition:all .2s">PIF</div>
             <div id="pt-inst" onclick="selectPayType('installment')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border2);background:transparent;text-align:center;cursor:pointer;font-size:12px;color:var(--text3);font-weight:500;transition:all .2s">Installment</div>
           </div>
         </div>
@@ -1083,6 +1083,7 @@ function openCloseModal() {
   extractedDeal = null;
   activeCloseTab = 'ss';
   selectedPayType = 'pif';
+  selectPayType('pif');
   document.getElementById('upload-preview').style.display = 'none';
   document.getElementById('upload-preview').innerHTML = '';
   document.getElementById('extracted-data').style.display = 'none';
