@@ -538,10 +538,69 @@ tbody td { padding:10px 14px; font-size:12px; font-family:var(--font); white-spa
         <label>Company / Offer Name</label>
         <input type="text" class="add-company-input" id="new-company-name" placeholder="e.g. The Info Accelerator" onkeydown="if(event.key==='Enter')addCompany()"/>
       </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border2)">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text)">Installment Tracking</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Track payment plans & pending balance</div>
+        </div>
+        <div id="inst-toggle" onclick="toggleInstallment()" style="width:44px;height:26px;background:var(--border2);border-radius:13px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0">
+          <div id="inst-thumb" style="width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 4px #0004"></div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" style="width:auto;padding:9px 18px" onclick="closeModal('add-company-modal')">Cancel</button>
       <button class="btn" style="width:auto;padding:9px 20px" onclick="addCompany()">Add</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── INSTALLMENT DEAL MODAL ── -->
+<div class="modal-overlay" id="inst-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Log Installment Deal</div>
+      <button class="modal-close" onclick="closeModal('inst-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Prospect Name</label><input type="text" class="prospect-input" id="inst-prospect" placeholder="Full name" style="margin-top:0"/></div>
+      <div class="field" style="margin-top:12px"><label>Plan</label><input type="text" class="prospect-input" id="inst-plan" placeholder="e.g. DFY Program" style="margin-top:0"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+        <div class="field"><label>Total Contract Value ($)</label><input type="number" class="prospect-input" id="inst-total" placeholder="9600" style="margin-top:0"/></div>
+        <div class="field"><label>No. of Installments</label><input type="number" class="prospect-input" id="inst-count" placeholder="3" min="2" style="margin-top:0"/></div>
+      </div>
+      <div class="field" style="margin-top:12px"><label>First Payment Amount ($)</label><input type="number" class="prospect-input" id="inst-first" placeholder="3200" style="margin-top:0" oninput="calcInstPreview()"/></div>
+      <div id="inst-preview" style="display:none;margin-top:12px;background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2)">
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--text3)">Collected now</span><span style="color:var(--green);font-weight:500" id="prev-collected">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0">
+          <span style="color:var(--text3)">Pending</span><span style="color:var(--orange);font-weight:500" id="prev-pending">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="width:auto;padding:9px 18px" onclick="closeModal('inst-modal')">Cancel</button>
+      <button class="btn" style="width:auto;padding:9px 20px" onclick="submitInstallment()">Log Deal</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADD PAYMENT MODAL ── -->
+<div class="modal-overlay" id="addpay-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Payment</div>
+      <button class="modal-close" onclick="closeModal('addpay-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="addpay-deal-info" style="background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2);margin-bottom:14px;font-size:12px;color:var(--text2)"></div>
+      <div class="field"><label>Payment Amount ($)</label><input type="number" class="prospect-input" id="addpay-amount" placeholder="3200" style="margin-top:0"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="width:auto;padding:9px 18px" onclick="closeModal('addpay-modal')">Cancel</button>
+      <button class="btn" style="width:auto;padding:9px 20px" onclick="submitAddPayment()">Add Payment</button>
     </div>
   </div>
 </div>
@@ -554,7 +613,7 @@ tbody td { padding:10px 14px; font-size:12px; font-family:var(--font); white-spa
 // ─────────────────────────────────────────────
 const SUPABASE_URL  = 'https://xbrijaiyadvvqyrntdin.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhicmlqYWl5YWR2dnF5cm50ZGluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDUzNzAsImV4cCI6MjA4OTkyMTM3MH0.tBMLfBrHHjFDl9NFQFH9Ki35qPqol7cOUZ2hMRo_Al4';
-const CLAUDE_MODEL  = 'claude-sonnet-4-20250514';
+const WORKER_URL = 'https://northlab-proxy.YOUR_SUBDOMAIN.workers.dev';
 
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -670,15 +729,26 @@ async function switchCompany(id, e) {
   await loadDashboard();
 }
 
+let instToggleOn = false;
+
+function toggleInstallment() {
+  instToggleOn = !instToggleOn;
+  document.getElementById('inst-toggle').style.background = instToggleOn ? 'var(--accent)' : 'var(--border2)';
+  document.getElementById('inst-thumb').style.left = instToggleOn ? '21px' : '3px';
+}
+
 async function addCompany() {
   const name = document.getElementById('new-company-name').value.trim();
   if (!name) return;
-  const { data, error } = await sb.from('companies').insert({ user_id: currentUser.id, name }).select().single();
+  const { data, error } = await sb.from('companies').insert({ user_id: currentUser.id, name, installment_tracking: instToggleOn }).select().single();
   if (error) { toast('Error adding company', 'error'); return; }
   companies.push(data);
   activeCompany = data;
   closeModal('add-company-modal');
   document.getElementById('new-company-name').value = '';
+  instToggleOn = false;
+  document.getElementById('inst-toggle').style.background = 'var(--border2)';
+  document.getElementById('inst-thumb').style.left = '3px';
   renderCompanyMenu();
   await loadDashboard();
   toast('Company added ✓', 'success');
@@ -739,10 +809,20 @@ async function loadDashboard() {
   }
 
   currentCalls = calls || [];
+
+  // Fetch installment deals if company has tracking on
+  let instDeals = [];
+  if (activeCompany?.installment_tracking) {
+    const { data: id } = await sb.from('installment_deals')
+      .select('*').eq('company_id', activeCompany.id).eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    instDeals = id || [];
+  }
+
   const kpis     = computeKPIs(currentCalls);
   const prevKpis = computeKPIs(prevCalls);
   updateSummaryBar(kpis);
-  document.getElementById('main-content').innerHTML = renderDashboard(kpis, prevKpis, currentCalls);
+  document.getElementById('main-content').innerHTML = renderDashboard(kpis, prevKpis, currentCalls, instDeals);
 }
 
 function computeKPIs(calls) {
@@ -830,10 +910,38 @@ function pctDelta(curr, prev) {
   return { val: Math.abs(d) + '%', up: d >= 0 };
 }
 
-function renderDashboard(k, prev, calls) {
+function renderDashboard(k, prev, calls, instDeals=[]) {
   const bookedT = dailyTrend(calls, b=>b.length);
   const cashT   = dailyTrend(calls, b=>b.reduce((s,c)=>s+(c.amount||0),0));
   const closedT = dailyTrend(calls, b=>b.filter(c=>c.status==='closed').length);
+
+  // Installment deals table rows
+  const instRows = instDeals.map(d => {
+    const collected = d.amount_collected || 0;
+    const total     = d.total_value || 0;
+    const pending   = Math.max(total - collected, 0);
+    const paid      = d.payments_made || 1;
+    const total_inst= d.installment_count || 1;
+    const pct       = total > 0 ? Math.round(collected/total*100) : 0;
+    return `<tr>
+      <td style="color:var(--text);font-weight:500">${d.prospect_name||'—'}</td>
+      <td style="color:var(--text2)">${d.plan||'—'}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:4px;background:var(--border2);border-radius:2px;min-width:60px">
+            <div style="width:${pct}%;height:4px;background:var(--accent);border-radius:2px;transition:width .3s"></div>
+          </div>
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap">${paid}/${total_inst}</span>
+        </div>
+      </td>
+      <td style="color:var(--green)">$${Number(collected).toLocaleString()}</td>
+      <td style="color:var(--orange)">$${Number(pending).toLocaleString()}</td>
+      <td style="display:flex;gap:6px;align-items:center">
+        ${pending > 0 ? `<button onclick="openAddPayment('${d.id}', ${pending}, '${(d.prospect_name||'').replace(/'/g,'\\'')}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">+ Pay</button>` : '<span style="font-size:11px;color:var(--green)">✓ Done</span>'}
+        <button onclick="deleteInstDeal('${d.id}')" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 4px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
 
   const d1 = pctDelta(k.booked,    prev.booked);
   const d2 = pctDelta(k.cash,      prev.cash);
@@ -855,11 +963,14 @@ function renderDashboard(k, prev, calls) {
     kpiCard('Offered',        k.offered,                          d5  ? d5.val  : null, d5  ? d5.up  : true,  null),
     kpiCard('PIF Rate',       k.pifRate+'%',                      d6  ? d6.val  : null, d6  ? d6.up  : true,  null,    '#ff9f0a'),
   ];
+  const totalPending = instDeals.reduce((s,d)=>s+Math.max((d.total_value||0)-(d.amount_collected||0),0),0);
+
   const row2 = [
     kpiCard('CCPC',           '$'+Number(k.ccpc).toLocaleString(),d7  ? d7.val  : null, d7  ? d7.up  : true,  null),
     kpiCard('Show %',         k.showPct+'%',                      d8  ? d8.val  : null, d8  ? d8.up  : true,  null),
     kpiCard('No Show %',      k.noShowPct+'%',                    d9  ? d9.val  : null, d9  ? !d9.up : false, null),
     kpiCard('Rescheduled %',  k.reschedPct+'%',                   d10 ? d10.val : null, d10 ? !d10.up: false, null),
+    ...(activeCompany?.installment_tracking ? [kpiCard('Pending', '$'+Number(totalPending).toLocaleString(), null, false, null, '#ff9f0a')] : []),
     kpiCard('Customers',      k.customers,                        d3  ? d3.val  : null, d3  ? d3.up  : true,  null),
   ];
 
@@ -885,9 +996,23 @@ function renderDashboard(k, prev, calls) {
       </button>
       <button class="log-btn" onclick="openCloseModal()">
         <span class="log-icon">◉</span>
-        <div><span class="log-btn-label">Proof-based</span>Log Closed Deal</div>
+        <div><span class="log-btn-label">Screenshot / Manual</span>Log Closed Deal</div>
       </button>
+      ${activeCompany?.installment_tracking ? `<button class="log-btn" onclick="openModal('inst-modal')" style="border-color:var(--orange)22">
+        <span class="log-icon">📋</span>
+        <div><span class="log-btn-label" style="color:var(--orange)">Installment</span>Log Payment Plan</div>
+      </button>` : ''}
     </div>
+
+    ${activeCompany?.installment_tracking ? `
+    <div class="section-title">Installment Deals</div>
+    <div class="table-wrap" style="margin-bottom:20px">
+      ${instDeals.length===0
+        ? '<div class="empty-state">No installment deals yet.</div>'
+        : `<table><thead><tr>
+            <th>Prospect</th><th>Plan</th><th>Progress</th><th>Collected</th><th>Pending</th><th></th>
+           </tr></thead><tbody>${instRows}</tbody></table>`}
+    </div>` : ''}
 
     <div class="section-title">Recent Calls</div>
     <div class="table-wrap">
@@ -1012,31 +1137,14 @@ async function processProofFile(file) {
     try {
       const imgData = base64.split(',')[1];
       const mediaType = file.type || 'image/jpeg';
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      const resp = await fetch(WORKER_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: CLAUDE_MODEL,
-          max_tokens: 500,
-          system: 'You are a payment data extractor. Extract info from Stripe or Fanbasis Discord notification screenshots. Return ONLY valid JSON with no markdown or extra text. Format: {"prospect_name":"","plan":"","amount":0,"payment_type":"pif","installment_info":""}. payment_type is pif if no installment mentioned, installment if 1/3 or 2/3 or installment plan is mentioned. amount is a plain number with no $ or commas. Use null for missing fields.',
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: imgData } },
-              { type: 'text', text: 'Extract payment info from this screenshot.' }
-            ]
-          }]
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData: imgData, mediaType })
       });
-      const data = await resp.json();
-      if (data.error) throw new Error(data.error.message);
-      const text = data.content?.find(b => b.type === 'text')?.text || '';
-      const clean = text.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
+      const result = await resp.json();
+      if (!result.success) throw new Error(result.error || 'Worker error');
+      const parsed = result.data;
       extractedDeal = parsed;
       document.getElementById('ai-thinking').style.display = 'none';
       document.getElementById('extracted-data').style.display = 'block';
@@ -1106,6 +1214,107 @@ async function submitClose() {
   await loadDashboard();
 }
 
+// ─── INSTALLMENT DEAL FUNCTIONS ─────────────
+function calcInstPreview() {
+  const total = parseFloat(document.getElementById('inst-total').value) || 0;
+  const first = parseFloat(document.getElementById('inst-first').value) || 0;
+  if (first > 0 && total > 0) {
+    document.getElementById('inst-preview').style.display = 'block';
+    document.getElementById('prev-collected').textContent = '$' + first.toLocaleString();
+    document.getElementById('prev-pending').textContent = '$' + Math.max(total - first, 0).toLocaleString();
+  } else {
+    document.getElementById('inst-preview').style.display = 'none';
+  }
+}
+
+async function submitInstallment() {
+  const prospect = document.getElementById('inst-prospect').value.trim();
+  const plan     = document.getElementById('inst-plan').value.trim();
+  const total    = parseFloat(document.getElementById('inst-total').value) || 0;
+  const count    = parseInt(document.getElementById('inst-count').value) || 2;
+  const first    = parseFloat(document.getElementById('inst-first').value) || 0;
+  if (!prospect) { toast('Enter prospect name', 'error'); return; }
+  if (!total || !first) { toast('Enter amounts', 'error'); return; }
+  if (!activeCompany) return;
+
+  const { error } = await sb.from('installment_deals').insert({
+    user_id: currentUser.id,
+    company_id: activeCompany.id,
+    prospect_name: prospect,
+    plan, total_value: total,
+    installment_count: count,
+    payments_made: 1,
+    amount_collected: first,
+    created_at: new Date().toISOString(),
+  });
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+
+  // Also log as a closed call
+  await sb.from('calls').insert({
+    user_id: currentUser.id, company_id: activeCompany.id,
+    prospect_name: prospect, plan, amount: first,
+    payment_type: 'installment', status: 'closed',
+    created_at: new Date().toISOString(),
+  });
+
+  closeModal('inst-modal');
+  document.getElementById('inst-prospect').value = '';
+  document.getElementById('inst-plan').value = '';
+  document.getElementById('inst-total').value = '';
+  document.getElementById('inst-count').value = '';
+  document.getElementById('inst-first').value = '';
+  document.getElementById('inst-preview').style.display = 'none';
+  toast('Installment deal logged ✓', 'success');
+  await loadDashboard();
+}
+
+let addPayDealId = null;
+
+function openAddPayment(dealId, pending, name) {
+  addPayDealId = dealId;
+  document.getElementById('addpay-deal-info').innerHTML =
+    `<span style="color:var(--text)">${name}</span> &nbsp;·&nbsp; <span style="color:var(--orange)">$${Number(pending).toLocaleString()} pending</span>`;
+  document.getElementById('addpay-amount').value = '';
+  openModal('addpay-modal');
+}
+
+async function submitAddPayment() {
+  const amount = parseFloat(document.getElementById('addpay-amount').value) || 0;
+  if (!amount || !addPayDealId) { toast('Enter payment amount', 'error'); return; }
+
+  // Get current deal
+  const { data: deal } = await sb.from('installment_deals').select('*').eq('id', addPayDealId).single();
+  if (!deal) { toast('Deal not found', 'error'); return; }
+
+  const newCollected = (deal.amount_collected || 0) + amount;
+  const newPayments  = (deal.payments_made || 1) + 1;
+
+  const { error } = await sb.from('installment_deals').update({
+    amount_collected: newCollected,
+    payments_made: newPayments,
+  }).eq('id', addPayDealId);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+
+  // Also log as a call payment
+  await sb.from('calls').insert({
+    user_id: currentUser.id, company_id: activeCompany.id,
+    prospect_name: deal.prospect_name, plan: deal.plan,
+    amount, payment_type: 'installment', status: 'closed',
+    created_at: new Date().toISOString(),
+  });
+
+  closeModal('addpay-modal');
+  toast('Payment added ✓', 'success');
+  await loadDashboard();
+}
+
+async function deleteInstDeal(id) {
+  if (!confirm('Delete this installment deal?')) return;
+  await sb.from('installment_deals').delete().eq('id', id);
+  toast('Deal removed', 'success');
+  await loadDashboard();
+}
+
 // ─── DELETE CALL ────────────────────────────
 async function deleteCall(id) {
   if (!confirm('Delete this entry?')) return;
@@ -1121,6 +1330,107 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
 });
+
+// ─── INSTALLMENT DEAL FUNCTIONS ─────────────
+function calcInstPreview() {
+  const total = parseFloat(document.getElementById('inst-total').value) || 0;
+  const first = parseFloat(document.getElementById('inst-first').value) || 0;
+  if (first > 0 && total > 0) {
+    document.getElementById('inst-preview').style.display = 'block';
+    document.getElementById('prev-collected').textContent = '$' + first.toLocaleString();
+    document.getElementById('prev-pending').textContent = '$' + Math.max(total - first, 0).toLocaleString();
+  } else {
+    document.getElementById('inst-preview').style.display = 'none';
+  }
+}
+
+async function submitInstallment() {
+  const prospect = document.getElementById('inst-prospect').value.trim();
+  const plan     = document.getElementById('inst-plan').value.trim();
+  const total    = parseFloat(document.getElementById('inst-total').value) || 0;
+  const count    = parseInt(document.getElementById('inst-count').value) || 2;
+  const first    = parseFloat(document.getElementById('inst-first').value) || 0;
+  if (!prospect) { toast('Enter prospect name', 'error'); return; }
+  if (!total || !first) { toast('Enter amounts', 'error'); return; }
+  if (!activeCompany) return;
+
+  const { error } = await sb.from('installment_deals').insert({
+    user_id: currentUser.id,
+    company_id: activeCompany.id,
+    prospect_name: prospect,
+    plan, total_value: total,
+    installment_count: count,
+    payments_made: 1,
+    amount_collected: first,
+    created_at: new Date().toISOString(),
+  });
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+
+  // Also log as a closed call
+  await sb.from('calls').insert({
+    user_id: currentUser.id, company_id: activeCompany.id,
+    prospect_name: prospect, plan, amount: first,
+    payment_type: 'installment', status: 'closed',
+    created_at: new Date().toISOString(),
+  });
+
+  closeModal('inst-modal');
+  document.getElementById('inst-prospect').value = '';
+  document.getElementById('inst-plan').value = '';
+  document.getElementById('inst-total').value = '';
+  document.getElementById('inst-count').value = '';
+  document.getElementById('inst-first').value = '';
+  document.getElementById('inst-preview').style.display = 'none';
+  toast('Installment deal logged ✓', 'success');
+  await loadDashboard();
+}
+
+let addPayDealId = null;
+
+function openAddPayment(dealId, pending, name) {
+  addPayDealId = dealId;
+  document.getElementById('addpay-deal-info').innerHTML =
+    `<span style="color:var(--text)">${name}</span> &nbsp;·&nbsp; <span style="color:var(--orange)">$${Number(pending).toLocaleString()} pending</span>`;
+  document.getElementById('addpay-amount').value = '';
+  openModal('addpay-modal');
+}
+
+async function submitAddPayment() {
+  const amount = parseFloat(document.getElementById('addpay-amount').value) || 0;
+  if (!amount || !addPayDealId) { toast('Enter payment amount', 'error'); return; }
+
+  // Get current deal
+  const { data: deal } = await sb.from('installment_deals').select('*').eq('id', addPayDealId).single();
+  if (!deal) { toast('Deal not found', 'error'); return; }
+
+  const newCollected = (deal.amount_collected || 0) + amount;
+  const newPayments  = (deal.payments_made || 1) + 1;
+
+  const { error } = await sb.from('installment_deals').update({
+    amount_collected: newCollected,
+    payments_made: newPayments,
+  }).eq('id', addPayDealId);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+
+  // Also log as a call payment
+  await sb.from('calls').insert({
+    user_id: currentUser.id, company_id: activeCompany.id,
+    prospect_name: deal.prospect_name, plan: deal.plan,
+    amount, payment_type: 'installment', status: 'closed',
+    created_at: new Date().toISOString(),
+  });
+
+  closeModal('addpay-modal');
+  toast('Payment added ✓', 'success');
+  await loadDashboard();
+}
+
+async function deleteInstDeal(id) {
+  if (!confirm('Delete this installment deal?')) return;
+  await sb.from('installment_deals').delete().eq('id', id);
+  toast('Deal removed', 'success');
+  await loadDashboard();
+}
 
 // ─── DELETE CALL ────────────────────────────
 async function deleteCall(id) {
