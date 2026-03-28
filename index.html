@@ -998,21 +998,10 @@ function renderDashboard(k, prev, calls, instDeals=[]) {
         <span class="log-icon">◉</span>
         <div><span class="log-btn-label">Screenshot / Manual</span>Log Closed Deal</div>
       </button>
-      ${activeCompany?.installment_tracking ? `<button class="log-btn" onclick="openModal('inst-modal')" style="border-color:var(--orange)22">
-        <span class="log-icon">📋</span>
-        <div><span class="log-btn-label" style="color:var(--orange)">Installment</span>Log Payment Plan</div>
-      </button>` : ''}
+      ${activeCompany && activeCompany.installment_tracking ? '<button class="log-btn" onclick="openModal(\'inst-modal\')" style="border-color:#ff9f0a22"><span class="log-icon">📋</span><div><span class="log-btn-label" style="color:var(--orange)">Installment</span>Log Payment Plan</div></button>' : ''}
     </div>
 
-    ${activeCompany?.installment_tracking ? `
-    <div class="section-title">Installment Deals</div>
-    <div class="table-wrap" style="margin-bottom:20px">
-      ${instDeals.length===0
-        ? '<div class="empty-state">No installment deals yet.</div>'
-        : `<table><thead><tr>
-            <th>Prospect</th><th>Plan</th><th>Progress</th><th>Collected</th><th>Pending</th><th></th>
-           </tr></thead><tbody>${instRows}</tbody></table>`}
-    </div>` : ''}
+    ${activeCompany && activeCompany.installment_tracking ? '<div class="section-title">Installment Deals</div><div class="table-wrap" style="margin-bottom:20px">' + (instDeals.length===0 ? '<div class="empty-state">No installment deals yet.</div>' : '<table><thead><tr><th>Prospect</th><th>Plan</th><th>Progress</th><th>Collected</th><th>Pending</th><th></th></tr></thead><tbody>' + instRows + '</tbody></table>') + '</div>' : ''}
 
     <div class="section-title">Recent Calls</div>
     <div class="table-wrap">
