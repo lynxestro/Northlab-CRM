@@ -923,24 +923,19 @@ function renderDashboard(k, prev, calls, instDeals=[]) {
     const paid      = d.payments_made || 1;
     const total_inst= d.installment_count || 1;
     const pct       = total > 0 ? Math.round(collected/total*100) : 0;
-    return `<tr>
-      <td style="color:var(--text);font-weight:500">${d.prospect_name||'—'}</td>
-      <td style="color:var(--text2)">${d.plan||'—'}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="flex:1;height:4px;background:var(--border2);border-radius:2px;min-width:60px">
-            <div style="width:${pct}%;height:4px;background:var(--accent);border-radius:2px;transition:width .3s"></div>
-          </div>
-          <span style="font-size:11px;color:var(--text3);white-space:nowrap">${paid}/${total_inst}</span>
-        </div>
-      </td>
-      <td style="color:var(--green)">$${Number(collected).toLocaleString()}</td>
-      <td style="color:var(--orange)">$${Number(pending).toLocaleString()}</td>
-      <td style="display:flex;gap:6px;align-items:center">
-        ${pending > 0 ? `<button onclick="openAddPayment('${d.id}', ${pending}, '${(d.prospect_name||'').replace(/'/g,'\\'')}')" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">+ Pay</button>` : '<span style="font-size:11px;color:var(--green)">✓ Done</span>'}
-        <button onclick="deleteInstDeal('${d.id}')" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 4px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'">✕</button>
-      </td>
-    </tr>`;
+    const nm        = (d.prospect_name||'').replace(/'/g,'');
+    const payBtn    = pending > 0
+      ? '<button onclick="openAddPayment(\"'+d.id+'\",'+pending+',\"'+nm+'\")" style="background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">+ Pay</button>'
+      : '<span style="font-size:11px;color:var(--green)">Done</span>';
+    const delBtn = '<button onclick="deleteInstDeal(\"'+d.id+'\")" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 4px">x</button>';
+    return '<tr>'
+      + '<td style="color:var(--text);font-weight:500">'+(d.prospect_name||'-')+'</td>'
+      + '<td style="color:var(--text2)">'+(d.plan||'-')+'</td>'
+      + '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:4px;background:var(--border2);border-radius:2px;min-width:60px"><div style="width:'+pct+'%;height:4px;background:var(--accent);border-radius:2px"></div></div><span style="font-size:11px;color:var(--text3)">'+paid+'/'+total_inst+'</span></div></td>'
+      + '<td style="color:var(--green)">$'+Number(collected).toLocaleString()+'</td>'
+      + '<td style="color:var(--orange)">$'+Number(pending).toLocaleString()+'</td>'
+      + '<td style="display:flex;gap:6px;align-items:center">'+payBtn+delBtn+'</td>'
+      + '</tr>';
   }).join('');
 
   const d1 = pctDelta(k.booked,    prev.booked);
@@ -1259,7 +1254,7 @@ async function submitInstallment() {
 
 let addPayDealId = null;
 
-function openAddPayment(dealId, pending, name) {
+function openAddPayment(dealId, pending, name) { dealId = String(dealId); name = String(name||'');
   addPayDealId = dealId;
   document.getElementById('addpay-deal-info').innerHTML =
     `<span style="color:var(--text)">${name}</span> &nbsp;·&nbsp; <span style="color:var(--orange)">$${Number(pending).toLocaleString()} pending</span>`;
@@ -1376,7 +1371,7 @@ async function submitInstallment() {
 
 let addPayDealId = null;
 
-function openAddPayment(dealId, pending, name) {
+function openAddPayment(dealId, pending, name) { dealId = String(dealId); name = String(name||'');
   addPayDealId = dealId;
   document.getElementById('addpay-deal-info').innerHTML =
     `<span style="color:var(--text)">${name}</span> &nbsp;·&nbsp; <span style="color:var(--orange)">$${Number(pending).toLocaleString()} pending</span>`;
