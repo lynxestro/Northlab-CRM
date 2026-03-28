@@ -228,14 +228,15 @@ body { min-height:100%; background:var(--bg); color:var(--text); font-family:var
 /* ── LOG BUTTON ── */
 .log-section { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
 .log-btn {
-  flex:1; min-width:140px; padding:14px 18px;
+  flex:1; min-width:0; padding:14px 12px;
   background:var(--surface); border:1px solid var(--border2);
   border-radius:var(--r); cursor:pointer; transition:all .2s;
-  display:flex; align-items:center; gap:10px; color:var(--text);
+  display:flex; align-items:center; gap:8px; color:var(--text);
   font-family:var(--font); font-size:13px; font-weight:500;
+  overflow:hidden;
 }
 .log-btn:hover { border-color:var(--accent); background:var(--accent-dim); }
-.log-btn .log-icon { font-size:18px; }
+.log-btn .log-icon { font-size:16px; flex-shrink:0; display:flex; align-items:center; }
 .log-btn-label { font-size:11px; color:var(--text2); font-family:var(--font); letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:2px; }
 
 /* ── MODAL ── */
@@ -970,13 +971,14 @@ function renderDashboard(k, prev, calls, instDeals=[]) {
   ];
   const totalPending = instDeals.reduce((s,d)=>s+Math.max((d.total_value||0)-(d.amount_collected||0),0),0);
 
+  const hasInst = activeCompany && activeCompany.installment_tracking;
   const row2 = [
-    kpiCard('CCPC',           '$'+Number(k.ccpc).toLocaleString(),d7  ? d7.val  : null, d7  ? d7.up  : true,  null),
-    kpiCard('Show %',         k.showPct+'%',                      d8  ? d8.val  : null, d8  ? d8.up  : true,  null),
-    kpiCard('No Show %',      k.noShowPct+'%',                    d9  ? d9.val  : null, d9  ? !d9.up : false, null),
-    kpiCard('Rescheduled %',  k.reschedPct+'%',                   d10 ? d10.val : null, d10 ? !d10.up: false, null),
-    ...(activeCompany?.installment_tracking ? [kpiCard('Pending', '$'+Number(totalPending).toLocaleString(), null, false, null, '#ff9f0a')] : []),
-    kpiCard('Customers',      k.customers,                        d3  ? d3.val  : null, d3  ? d3.up  : true,  null),
+    kpiCard('CCPC',          '$'+Number(k.ccpc).toLocaleString(),d7  ? d7.val  : null, d7  ? d7.up  : true,  null),
+    kpiCard('Show %',        k.showPct+'%',                      d8  ? d8.val  : null, d8  ? d8.up  : true,  null),
+    kpiCard('No Show %',     k.noShowPct+'%',                    d9  ? d9.val  : null, d9  ? !d9.up : false, null),
+    kpiCard('Rescheduled %', k.reschedPct+'%',                   d10 ? d10.val : null, d10 ? !d10.up: false, null),
+    ...(hasInst ? [kpiCard('Pending', '$'+Number(totalPending).toLocaleString(), null, false, null, '#ff9f0a')] : []),
+    kpiCard('Customers',     k.customers,                        d3  ? d3.val  : null, d3  ? d3.up  : true,  null),
   ];
 
   const rows = calls.slice(0,30).map(c=>`<tr>
@@ -992,18 +994,18 @@ function renderDashboard(k, prev, calls, instDeals=[]) {
   return `
     <div class="section-title">KPI Overview</div>
     <div class="kpi-grid" id="kpi-row1" style="margin-bottom:8px">${row1.join('')}</div>
-    <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px" id="kpi-row2">${row2.join('')}</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(${hasInst ? 6 : 5},1fr);margin-bottom:20px" id="kpi-row2">${row2.join('')}</div>
 
     <div class="log-section">
       <button class="log-btn" onclick="openModal('outcome-modal')">
         <span class="log-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
-        <div><span class="log-btn-label">Manual</span>Log Call Outcome</div>
+        <div><span class="log-btn-label">Manual</span>Log Outcome</div>
       </button>
       <button class="log-btn" onclick="openCloseModal()">
         <span class="log-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg></span>
-        <div><span class="log-btn-label">Screenshot / Manual</span>Log Closed Deal</div>
+        <div><span class="log-btn-label">Proof / Manual</span>Log Close</div>
       </button>
-      ${activeCompany && activeCompany.installment_tracking ? '<button class="log-btn" onclick="openModal(\'inst-modal\')" style="border-color:#ff9f0a22"><span class="log-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span><div><span class="log-btn-label" style="color:var(--orange)">Installment</span>Log Payment Plan</div></button>' : ''}
+      ${activeCompany && activeCompany.installment_tracking ? '<button class="log-btn" onclick="openModal(\'inst-modal\')" style="border-color:#ff9f0a22"><span class="log-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span><div><span class="log-btn-label" style="color:var(--orange)">Installment</span>Log Plan</div></button>' : ''}
     </div>
 
     ${activeCompany && activeCompany.installment_tracking ? '<div class="section-title">Installment Deals</div><div class="table-wrap" style="margin-bottom:20px">' + (instDeals.length===0 ? '<div class="empty-state">No installment deals yet.</div>' : '<table><thead><tr><th>Prospect</th><th>Plan</th><th>Progress</th><th>Collected</th><th>Pending</th><th></th></tr></thead><tbody>' + instRows + '</tbody></table>') + '</div>' : ''}
