@@ -228,12 +228,12 @@ body { min-height:100%; background:var(--bg); color:var(--text); font-family:var
 /* ── LOG BUTTON ── */
 .log-section { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px; }
 .log-btn {
-  min-width:0; padding:12px 10px;
+  min-width:0; padding:14px 12px;
   background:var(--surface); border:1px solid var(--border2);
   border-radius:var(--r); cursor:pointer; transition:all .2s;
   display:flex; align-items:center; gap:8px; color:var(--text);
-  font-family:var(--font); font-size:12px; font-weight:500;
-  overflow:hidden; white-space:nowrap;
+  font-family:var(--font); font-size:13px; font-weight:500;
+  overflow:hidden;
 }
 .log-btn:hover { border-color:var(--accent); background:var(--accent-dim); }
 .log-btn .log-icon { font-size:16px; flex-shrink:0; display:flex; align-items:center; }
@@ -357,16 +357,22 @@ tbody td { padding:10px 14px; font-size:12px; font-family:var(--font); white-spa
 @keyframes spin { to { transform:rotate(360deg); } }
 
 @media(max-width:700px){
-  .kpi-value { font-size:24px !important; }
-  .kpi-card { padding:14px 12px; border-radius:12px; }
-  .log-btn { min-width:0; padding:12px; }
+  .kpi-value { font-size:22px !important; }
+  .kpi-card { padding:12px 10px; border-radius:12px; }
   .summary-stat-value { font-size:15px; }
   .date-input { font-size:11px; padding:6px 8px; }
   .topbar { padding:0 14px; height:52px; }
-  #kpi-row2 { grid-template-columns: repeat(3, 1fr) !important; gap:6px !important; }
-  .main { padding:12px; }
+  .main { padding:10px; }
   .kpi-grid { gap:6px !important; margin-bottom:6px !important; }
   .summary-bar { padding:10px 14px; }
+  #kpi-row1 { grid-template-columns: repeat(2, 1fr) !important; }
+  #kpi-row1 .kpi-card:last-child { grid-column: 1 / -1; }
+  #kpi-row2 { grid-template-columns: repeat(2, 1fr) !important; }
+  #kpi-row2 .kpi-card:last-child { grid-column: 1 / -1; }
+  .log-section { grid-template-columns: 1fr 1fr; gap:6px; }
+  .log-btn { padding:10px 8px; font-size:11px; white-space:normal; }
+  .log-btn-label { font-size:9px; }
+  .log-btn .log-icon { display:none; }
 }
 
 /* ── AI THINKING ── */
@@ -825,7 +831,7 @@ async function loadDashboard() {
 
   const kpis     = computeKPIs(currentCalls);
   const prevKpis = computeKPIs(prevCalls);
-  updateSummaryBar(kpis);
+  updateSummaryBar(kpis, instDeals);
   document.getElementById('main-content').innerHTML = renderDashboard(kpis, prevKpis, currentCalls, instDeals);
 }
 
@@ -848,7 +854,9 @@ function computeKPIs(calls) {
            pif, cash, showPct, noShowPct, reschedPct, ccpc, pifRate, customers: closed };
 }
 
-function updateSummaryBar(k) {
+function updateSummaryBar(k, instDeals=[]) {
+  const instCash = instDeals.reduce((s,d)=>s+(d.amount_collected||0),0);
+  const totalCash = k.cash + (instCash > k.cash ? 0 : 0); // calls already include inst payments
   document.getElementById('sum-cash').textContent      = '$' + Number(k.cash).toLocaleString();
   document.getElementById('sum-pif').textContent       = k.pifRate + '%';
   document.getElementById('sum-customers').textContent = k.customers;
@@ -1237,13 +1245,14 @@ async function submitInstallment() {
   });
   if (error) { toast('Error: ' + error.message, 'error'); return; }
 
-  // Also log as a closed call
-  await sb.from('calls').insert({
+  // Also log as a closed call so it appears in cash collected
+  const { error: callErr } = await sb.from('calls').insert({
     user_id: currentUser.id, company_id: activeCompany.id,
     prospect_name: prospect, plan, amount: first,
     payment_type: 'installment', status: 'closed',
     created_at: new Date().toISOString(),
   });
+  if (callErr) console.error('Call insert error:', callErr);
 
   closeModal('inst-modal');
   document.getElementById('inst-prospect').value = '';
@@ -1283,13 +1292,14 @@ async function submitAddPayment() {
   }).eq('id', addPayDealId);
   if (error) { toast('Error: ' + error.message, 'error'); return; }
 
-  // Also log as a call payment
-  await sb.from('calls').insert({
+  // Also log as a call payment so it appears in cash collected
+  const { error: payCallErr } = await sb.from('calls').insert({
     user_id: currentUser.id, company_id: activeCompany.id,
     prospect_name: deal.prospect_name, plan: deal.plan,
     amount, payment_type: 'installment', status: 'closed',
     created_at: new Date().toISOString(),
   });
+  if (payCallErr) console.error('Payment call insert error:', payCallErr);
 
   closeModal('addpay-modal');
   toast('Payment added ✓', 'success');
@@ -1297,8 +1307,9 @@ async function submitAddPayment() {
 }
 
 async function deleteInstDeal(id) {
-  if (!confirm('Delete this installment deal?')) return;
-  await sb.from('installment_deals').delete().eq('id', id).eq('user_id', currentUser.id);
+  if (!window.confirm('Delete this installment deal?')) return;
+  const { error } = await sb.from('installment_deals').delete().eq('id', id).eq('user_id', currentUser.id);
+  if (error) { toast('Error: ' + error.message, 'error'); console.error(error); return; }
   toast('Deal removed', 'success');
   await loadDashboard();
 }
