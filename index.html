@@ -652,21 +652,36 @@ async function loadDashboard() {
   document.getElementById('main-content').innerHTML = renderDashboard(k, kp, currentCalls, instDeals);
 }
 
+const STATUS_RANK = { closed:6, offered:5, showed:4, rescheduled:3, no_show:2, cancelled:1 };
+
+function dedupCalls(calls) {
+  // Per prospect per day, keep only the highest-ranked status call
+  const map = {};
+  calls.forEach(c => {
+    const key = (c.prospect_name||'').toLowerCase().trim() + '|' + (c.created_at||'').slice(0,10);
+    if (!map[key] || (STATUS_RANK[c.status]||0) > (STATUS_RANK[map[key].status]||0)) {
+      map[key] = c;
+    }
+  });
+  return Object.values(map);
+}
+
 function computeKPIs(calls) {
-  const booked  = calls.length;
-  const canc    = calls.filter(c => c.status === 'cancelled').length;
-  const ns      = calls.filter(c => c.status === 'no_show').length;
-  const showed  = calls.filter(c => ['showed','offered','closed'].includes(c.status)).length;
-  const offered = calls.filter(c => ['offered','closed'].includes(c.status)).length;
-  const closed  = calls.filter(c => c.status === 'closed').length;
-  const resch   = calls.filter(c => c.status === 'rescheduled').length;
-  const pif     = calls.filter(c => c.payment_type === 'pif').length;
-  const cash    = calls.reduce((s,c) => s + (c.amount||0), 0);
-  const showPct   = booked  > 0 ? (showed/booked*100).toFixed(1) : '0.0';
-  const nsPct     = booked  > 0 ? (ns/booked*100).toFixed(1)     : '0.0';
-  const rescPct   = booked  > 0 ? (resch/booked*100).toFixed(1)  : '0.0';
-  const ccpc      = closed  > 0 ? (cash/closed).toFixed(0)       : '0';
-  const pifRate   = closed  > 0 ? Math.round(pif/closed*100)     : 0;
+  const deduped = dedupCalls(calls);
+  const booked  = deduped.length;
+  const canc    = deduped.filter(c => c.status === 'cancelled').length;
+  const ns      = deduped.filter(c => c.status === 'no_show').length;
+  const showed  = deduped.filter(c => ['showed','offered','closed'].includes(c.status)).length;
+  const offered = deduped.filter(c => ['offered','closed'].includes(c.status)).length;
+  const closed  = deduped.filter(c => c.status === 'closed').length;
+  const resch   = deduped.filter(c => c.status === 'rescheduled').length;
+  const pif     = deduped.filter(c => c.payment_type === 'pif').length;
+  const cash    = deduped.reduce((s,c) => s + (c.amount||0), 0);
+  const showPct  = booked > 0 ? (showed/booked*100).toFixed(1) : '0.0';
+  const nsPct    = booked > 0 ? (ns/booked*100).toFixed(1)     : '0.0';
+  const rescPct  = booked > 0 ? (resch/booked*100).toFixed(1)  : '0.0';
+  const ccpc     = closed > 0 ? (cash/closed).toFixed(0)       : '0';
+  const pifRate  = closed > 0 ? Math.round(pif/closed*100)     : 0;
   return { booked, canc, ns, showed, offered, closed, resch, pif, cash, showPct, nsPct, rescPct, ccpc, pifRate, customers: closed };
 }
 
@@ -787,7 +802,7 @@ function renderDashboard(k, kp, calls, instDeals) {
     </tr>`;
   }).join('');
 
-  const callRows = calls.slice(0,30).map(c => `<tr>
+  const callRows = dedupCalls(calls).slice(0,30).map(c => `<tr>
     <td style="color:var(--text)">${c.prospect_name||'—'}</td>
     <td style="color:var(--text3)">${c.created_at?.slice(0,10)||'—'}</td>
     <td>${statusBadge(c.status)}</td>
