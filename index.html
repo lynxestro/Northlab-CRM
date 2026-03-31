@@ -655,10 +655,10 @@ async function loadDashboard() {
 const STATUS_RANK = { closed:6, offered:5, showed:4, rescheduled:3, no_show:2, cancelled:1 };
 
 function dedupCalls(calls) {
-  // Per prospect per day, keep only the highest-ranked status call
+  // Per prospect (across all dates), keep only the highest-ranked status call
   const map = {};
   calls.forEach(c => {
-    const key = (c.prospect_name||'').toLowerCase().trim() + '|' + (c.created_at||'').slice(0,10);
+    const key = (c.prospect_name||'').toLowerCase().trim();
     if (!map[key] || (STATUS_RANK[c.status]||0) > (STATUS_RANK[map[key].status]||0)) {
       map[key] = c;
     }
