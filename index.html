@@ -388,7 +388,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     </div>
     <div class="summary-stats">
       <div class="summary-stat">
-        <div class="summary-stat-label">Cash Collected</div>
+        <div class="summary-stat-label">Cash Collected (All-time)</div>
         <div class="summary-stat-value orange" id="sum-cash">$0</div>
       </div>
       <div class="summary-stat">
@@ -945,7 +945,10 @@ async function loadDashboard() {
   currentCalls = calls || [];
   const k  = computeKPIs(currentCalls);
   const kp = computeKPIs(prevCalls);
-  document.getElementById('sum-cash').textContent = '$' + Number(k.cash).toLocaleString();
+  // All-time cash — no date filter
+  const { data: allCalls } = await sb.from('calls').select('amount').eq('company_id', activeCompany.id).eq('user_id', currentUser.id).eq('status','closed');
+  const allTimeCash = (allCalls||[]).reduce((s,c) => s+(c.amount||0), 0);
+  document.getElementById('sum-cash').textContent = '$' + Number(allTimeCash).toLocaleString();
   document.getElementById('sum-pif').textContent  = k.pifRate + '%';
   document.getElementById('sum-cust').textContent = k.customers;
   document.getElementById('main-content').innerHTML = renderDashboard(k, kp, currentCalls, instDeals);
