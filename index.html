@@ -211,7 +211,8 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 .home-greeting{margin-bottom:24px}
 .home-greeting-name{font-size:22px;font-weight:600;letter-spacing:-0.3px}
 .home-greeting-sub{font-size:13px;color:var(--text3);margin-top:3px}
-.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;align-items:start}
+#goal-cards-container{display:contents}
 .home-card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:20px;position:relative}
 .home-card-title{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .home-card-title::after{content:'';flex:1;height:1px;background:var(--border)}
@@ -323,33 +324,42 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       <div class="home-greeting-name" id="home-greeting-name">Good morning</div>
       <div class="home-greeting-sub" id="home-greeting-sub">Here's your overview.</div>
     </div>
-    <div class="home-grid">
+    <div class="home-grid" id="home-grid">
       <!-- INCOME CARD -->
-      <div class="home-card">
+      <div class="home-card" id="income-card">
         <div class="home-card-title">Income</div>
         <div class="income-big" id="h-cash">$0</div>
         <div class="income-label">collected this month</div>
         <div class="income-prog-wrap">
           <div class="income-prog-bg"><div class="income-prog-fill" id="h-prog-fill" style="width:0%"></div></div>
-          <div class="income-prog-pct" id="h-prog-pct">0% of target</div>
+          <div class="income-prog-pct" id="h-prog-pct">No target set</div>
+        </div>
+        <div id="h-commission-row" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">Commission this month</span>
+            <span style="font-size:15px;font-weight:500;color:var(--green)" id="h-commission">$0</span>
+          </div>
         </div>
         <div class="income-target-row">
           <span class="income-target-label">Monthly target</span>
           <span class="income-target-val" id="h-target-display">—</span>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="goal-add-btn" style="margin-top:0" onclick="openIncomeTarget()">Edit target</button>
+        <div style="display:flex;gap:8px;margin-top:14px;align-items:center">
+          <button class="btn-sm" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="openIncomeTarget()">Edit target</button>
           <button class="crm-link-btn" style="margin-top:0;flex:1" onclick="goCRM()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             Open CRM
           </button>
         </div>
       </div>
-      <!-- GOALS CARD -->
-      <div class="home-card">
-        <div class="home-card-title">Goals</div>
-        <div id="h-goals-list"><div style="color:var(--text3);font-size:12px;padding:20px 0;text-align:center">No goals yet</div></div>
-        <button class="goal-add-btn" onclick="openGoalModal(null)">+ Add goal</button>
+      <!-- DYNAMIC GOAL CARDS rendered by JS -->
+      <div id="goal-cards-container"></div>
+      <!-- ADD GOAL CARD -->
+      <div class="home-card" style="display:flex;align-items:center;justify-content:center;min-height:180px;cursor:pointer;border-style:dashed" onclick="openAddGoalModal()" id="add-goal-card">
+        <div style="text-align:center">
+          <div style="width:32px;height:32px;border:1.5px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:var(--text3)">+</div>
+          <div style="font-size:12px;color:var(--text3)">Add goal</div>
+        </div>
       </div>
     </div>
   </div>
@@ -388,7 +398,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     </div>
     <div class="summary-stats">
       <div class="summary-stat">
-        <div class="summary-stat-label">Cash Collected (All-time)</div>
+        <div class="summary-stat-label">CC</div>
         <div class="summary-stat-value orange" id="sum-cash">$0</div>
       </div>
       <div class="summary-stat">
@@ -459,6 +469,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
         <div class="fgroup"><label class="flabel">Prospect Name</label><input type="text" class="finput" id="m-prospect" placeholder="Full name"/></div>
         <div class="fgroup"><label class="flabel">Plan</label><input type="text" class="finput" id="m-plan" placeholder="e.g. Info Accelerator DFY"/></div>
         <div class="fgroup"><label class="flabel">Amount ($)</label><input type="number" class="finput" id="m-amount" placeholder="3200"/></div>
+        <div class="fgroup" id="m-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" id="m-commission" placeholder="0"/></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -486,6 +497,15 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
           <div class="toggle-thumb" id="inst-thumb"></div>
         </div>
       </div>
+      <div class="toggle-wrap" style="margin-top:8px">
+        <div>
+          <div style="font-size:13px;font-weight:500">Commission Tracking</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Log commission earned per deal or payment</div>
+        </div>
+        <div id="com-toggle" onclick="toggleCom()" class="toggle-track" style="background:var(--border2)">
+          <div class="toggle-thumb" id="com-thumb"></div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" style="width:auto;padding:9px 16px" onclick="closeModal('m-company')">Cancel</button>
@@ -509,6 +529,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
         <div class="fgroup"><label class="flabel">No. of Installments</label><input type="number" class="finput" id="i-count" placeholder="3" min="2"/></div>
       </div>
       <div class="fgroup"><label class="flabel">First Payment ($)</label><input type="number" class="finput" id="i-first" placeholder="3200" oninput="calcPreview()"/></div>
+      <div class="fgroup" id="i-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" id="i-commission" placeholder="0"/></div>
       <div id="i-preview" style="display:none;background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2)">
         <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text3)">Collected now</span><span style="color:var(--green);font-weight:500" id="prev-col">—</span></div>
         <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span style="color:var(--text3)">Pending</span><span style="color:var(--orange);font-weight:500" id="prev-pen">—</span></div>
@@ -531,6 +552,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     <div class="modal-body">
       <div id="pay-info" style="background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2);margin-bottom:14px;font-size:12px;color:var(--text2)"></div>
       <div class="fgroup"><label class="flabel">Payment Amount ($)</label><input type="number" class="finput" id="pay-amount" placeholder="3200"/></div>
+      <div class="fgroup" id="pay-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" id="pay-commission" placeholder="0"/></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" style="width:auto;padding:9px 16px" onclick="closeModal('m-pay')">Cancel</button>
@@ -539,27 +561,61 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
   </div>
 </div>
 
-<!-- GOAL MODAL -->
-<div class="modal-overlay" id="m-goal">
+<!-- ADD GOAL TYPE MODAL -->
+<div class="modal-overlay" id="m-add-goal-type">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="goal-modal-title">Add Goal</div>
-      <button class="modal-close" onclick="closeModal('m-goal')">&#x2715;</button>
+      <div class="modal-title">Add Goal</div>
+      <button class="modal-close" onclick="closeModal('m-add-goal-type')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div class="fgroup"><label class="flabel">Goal Name</label><input type="text" class="finput" id="g-name" placeholder="e.g. Surah memorised"/></div>
-      <div class="fgroup"><label class="flabel">Target</label><input type="text" class="finput" id="g-target" placeholder="e.g. Al-Mulk (30 ayat)"/></div>
-      <div class="fgroup"><label class="flabel">Icon (emoji or symbol)</label><input type="text" class="finput" id="g-icon" placeholder="e.g. ☾ or $" maxlength="4"/></div>
-      <div class="fgroup"><label class="flabel">Progress (0–100%)</label><input type="number" class="finput" id="g-progress" placeholder="0" min="0" max="100"/></div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
-        <input type="checkbox" id="g-done" style="width:15px;height:15px;accent-color:var(--green);cursor:pointer"/>
-        <label for="g-done" style="font-size:13px;color:var(--text2);cursor:pointer">Mark as achieved</label>
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">Choose type</div>
+      <div style="display:grid;gap:8px">
+        <button class="log-btn" onclick="closeModal('m-add-goal-type');openQuranModal(null)" style="justify-content:flex-start">
+          <div style="width:30px;height:30px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <div><span class="log-btn-label">Quran</span>Track surah &amp; ayat memorisation</div>
+        </button>
       </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:16px;text-align:center">More goal types coming soon</div>
+    </div>
+  </div>
+</div>
+
+<!-- QURAN GOAL MODAL -->
+<div class="modal-overlay" id="m-quran">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="quran-modal-title">Quran Goal</div>
+      <button class="modal-close" onclick="closeModal('m-quran')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="fgroup"><label class="flabel">Surah Name</label><input type="text" class="finput" id="q-name" placeholder="e.g. Al-Mulk"/></div>
+      <div class="fgroup"><label class="flabel">Total Ayat / Target</label><input type="number" class="finput" id="q-target" placeholder="30" min="1"/></div>
     </div>
     <div class="modal-footer">
-      <button id="g-delete-btn" class="btn btn-ghost" style="width:auto;padding:9px 16px;color:var(--red);border-color:#ff453a44;display:none" onclick="deleteGoal()">Delete</button>
-      <button class="btn btn-ghost" style="width:auto;padding:9px 16px;margin-left:auto" onclick="closeModal('m-goal')">Cancel</button>
-      <button class="btn" style="width:auto;padding:9px 20px" onclick="saveGoal()">Save</button>
+      <button id="q-delete-btn" class="btn btn-ghost" style="width:auto;padding:9px 16px;color:var(--red);border-color:#ff453a44;display:none" onclick="deleteQuranGoal()">Delete</button>
+      <button class="btn btn-ghost" style="width:auto;padding:9px 16px;margin-left:auto" onclick="closeModal('m-quran')">Cancel</button>
+      <button class="btn" style="width:auto;padding:9px 20px" onclick="saveQuranGoal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG AYAT MODAL -->
+<div class="modal-overlay" id="m-log-ayat">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Log Progress</div>
+      <button class="modal-close" onclick="closeModal('m-log-ayat')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div id="ayat-goal-info" style="background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2);margin-bottom:14px;font-size:12px;color:var(--text2)"></div>
+      <div class="fgroup"><label class="flabel">Ayat memorised today</label><input type="number" class="finput" id="ayat-count" placeholder="e.g. 3" min="1"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="width:auto;padding:9px 16px" onclick="closeModal('m-log-ayat')">Cancel</button>
+      <button class="btn" style="width:auto;padding:9px 20px" onclick="submitAyat()">Log</button>
     </div>
   </div>
 </div>
@@ -597,15 +653,17 @@ let currentCalls = [], selectedOutcome = null, extractedDeal = null;
 let activeCloseTab = 'ss', instToggleOn = false, payDealId = null;
 
 // ── HOME / GOALS ──
-let goals = [];
-let editGoalId = null;
+let quranGoals = [];
+let editQuranId = null;
+let logAyatGoalId = null;
 let incomeTarget = 0;
+let comToggleOn = false;
 
 function goHome() {
   document.getElementById('app').classList.remove('visible');
   document.getElementById('home-screen').classList.add('visible');
   renderHomeIncome();
-  renderGoals();
+  renderGoalCards();
 }
 
 function goCRM() {
@@ -623,62 +681,81 @@ function setGreeting(name) {
 }
 
 async function loadGoals() {
-  const { data } = await sb.from('goals').select('*').eq('user_id', currentUser.id).order('created_at');
-  goals = data || [];
+  const { data } = await sb.from('quran_goals').select('*').eq('user_id', currentUser.id).order('created_at');
+  quranGoals = data || [];
   incomeTarget = parseFloat(localStorage.getItem('nl-income-target') || '0');
-  renderGoals();
+  renderGoalCards();
   renderHomeIncome();
 }
 
-function renderGoals() {
-  const list = document.getElementById('h-goals-list');
-  if (!list) return;
-  if (!goals.length) { list.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:20px 0;text-align:center">No goals yet. Add one below.</div>'; return; }
-  list.innerHTML = goals.map(g => {
-    const pct = Math.min(100, Math.max(0, Math.round(g.progress || 0)));
-    return `<div class="goal-item">
-      <div class="goal-item-top">
-        <div style="display:flex;align-items:center;gap:8px">
-          ${g.icon ? `<span style="font-size:14px">${g.icon}</span>` : ''}
-          <div>
-            <div class="goal-item-name">${g.name}</div>
-            <div class="goal-item-target">${g.target}</div>
-          </div>
+function renderGoalCards() {
+  const container = document.getElementById('goal-cards-container');
+  if (!container) return;
+  container.innerHTML = '';
+  quranGoals.forEach(g => {
+    const pct = g.target > 0 ? Math.min(100, Math.round((g.logged||0) / g.target * 100)) : 0;
+    const done = (g.logged||0) >= g.target;
+    const card = document.createElement('div');
+    card.className = 'home-card';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:8px">
+          Quran<span style="flex:1;height:1px;background:var(--border);display:inline-block;min-width:20px"></span>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          ${g.done ? '<span class="goal-done-badge">Done</span>' : `<span class="goal-item-pct">${pct}%</span>`}
-          <button class="goal-edit-btn" onclick="openGoalModal('${g.id}')">&#9998;</button>
-        </div>
+        <button class="goal-edit-btn" onclick="openQuranModal('${g.id}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
       </div>
-      <div class="goal-prog-bg"><div class="goal-prog-fill ${g.done?'done':''}" style="width:${g.done?100:pct}%"></div></div>
-    </div>`;
-  }).join('');
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px;letter-spacing:.5px">SURAH</div>
+      <div style="font-size:20px;font-weight:500;color:var(--text);margin-bottom:2px">${g.name}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px">${g.logged||0} / ${g.target} ayat</div>
+      <div class="income-prog-bg" style="margin-bottom:6px"><div class="income-prog-fill" style="width:${done?100:pct}%;background:${done?'var(--green)':'var(--accent)'}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:14px">
+        <span>${done ? 'Complete' : pct + '% memorised'}</span>
+        ${done ? '<span style="color:var(--green);font-weight:500">Done</span>' : ''}
+      </div>
+      <button class="log-btn" style="width:100%;justify-content:center;padding:10px;font-size:12px;${done?'opacity:.5;pointer-events:none':''}" onclick="openLogAyat('${g.id}')">
+        + Log ayat
+      </button>`;
+    container.appendChild(card);
+  });
+  // reposition add-goal card to end
+  const addCard = document.getElementById('add-goal-card');
+  if (addCard) container.parentNode.insertBefore(addCard, null);
 }
 
-function renderHomeIncome() {
+async function renderHomeIncome() {
   const el = document.getElementById('h-cash');
+  if (!el) return;
+  const now = new Date();
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  const { data } = await sb.from('calls').select('amount,commission').eq('user_id', currentUser.id).eq('status','closed').gte('created_at', monthStart + 'T00:00:00');
+  const cash = (data||[]).reduce((s,c) => s + (c.amount||0), 0);
+  const commission = (data||[]).reduce((s,c) => s + (c.commission||0), 0);
+  el.textContent = '$' + Number(cash).toLocaleString();
+  const target = incomeTarget || 0;
   const progFill = document.getElementById('h-prog-fill');
   const progPct = document.getElementById('h-prog-pct');
   const targetDisplay = document.getElementById('h-target-display');
-  if (!el) return;
-  // Get this month's cash from calls (already loaded in currentCalls or refetch)
-  const now = new Date();
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
-  sb.from('calls').select('amount').eq('user_id', currentUser.id).eq('status','closed').gte('created_at', monthStart + 'T00:00:00').then(({ data }) => {
-    const cash = (data||[]).reduce((s,c) => s + (c.amount||0), 0);
-    el.textContent = '$' + Number(cash).toLocaleString();
-    const target = incomeTarget || 0;
-    if (target > 0) {
-      const pct = Math.min(100, Math.round(cash / target * 100));
-      progFill.style.width = pct + '%';
-      progPct.textContent = pct + '% of target';
-      targetDisplay.textContent = '$' + Number(target).toLocaleString() + ' / mo';
-    } else {
-      progFill.style.width = '0%';
-      progPct.textContent = 'No target set';
-      targetDisplay.textContent = '—';
-    }
-  });
+  if (target > 0) {
+    const pct = Math.min(100, Math.round(cash / target * 100));
+    progFill.style.width = pct + '%';
+    progPct.textContent = pct + '% of target';
+    targetDisplay.textContent = '$' + Number(target).toLocaleString() + ' / mo';
+  } else {
+    progFill.style.width = '0%';
+    progPct.textContent = 'No target set';
+    targetDisplay.textContent = '—';
+  }
+  // Commission row — show if any commission logged this month
+  const comRow = document.getElementById('h-commission-row');
+  const comEl = document.getElementById('h-commission');
+  if (commission > 0) {
+    comRow.style.display = 'block';
+    comEl.textContent = '$' + Number(commission).toLocaleString();
+  } else {
+    comRow.style.display = 'none';
+  }
 }
 
 function openIncomeTarget() {
@@ -695,58 +772,89 @@ function saveIncomeTarget() {
   toast('Target saved', 'success');
 }
 
-function openGoalModal(id) {
-  editGoalId = id;
-  const delBtn = document.getElementById('g-delete-btn');
+// ── QURAN GOALS ──
+function openAddGoalModal() { openModal('m-add-goal-type'); }
+
+function openQuranModal(id) {
+  editQuranId = id;
+  const delBtn = document.getElementById('q-delete-btn');
   if (id) {
-    const g = goals.find(x => x.id === id);
+    const g = quranGoals.find(x => x.id === id);
     if (!g) return;
-    document.getElementById('goal-modal-title').textContent = 'Edit Goal';
-    document.getElementById('g-name').value = g.name || '';
-    document.getElementById('g-target').value = g.target || '';
-    document.getElementById('g-icon').value = g.icon || '';
-    document.getElementById('g-progress').value = g.progress || 0;
-    document.getElementById('g-done').checked = !!g.done;
+    document.getElementById('quran-modal-title').textContent = 'Edit Quran Goal';
+    document.getElementById('q-name').value = g.name || '';
+    document.getElementById('q-target').value = g.target || '';
     delBtn.style.display = 'block';
   } else {
-    document.getElementById('goal-modal-title').textContent = 'Add Goal';
-    document.getElementById('g-name').value = '';
-    document.getElementById('g-target').value = '';
-    document.getElementById('g-icon').value = '';
-    document.getElementById('g-progress').value = '';
-    document.getElementById('g-done').checked = false;
+    document.getElementById('quran-modal-title').textContent = 'Quran Goal';
+    document.getElementById('q-name').value = '';
+    document.getElementById('q-target').value = '';
     delBtn.style.display = 'none';
   }
-  openModal('m-goal');
+  openModal('m-quran');
 }
 
-async function saveGoal() {
-  const name = document.getElementById('g-name').value.trim();
-  const target = document.getElementById('g-target').value.trim();
-  const icon = document.getElementById('g-icon').value.trim();
-  const progress = Math.min(100, Math.max(0, parseInt(document.getElementById('g-progress').value) || 0));
-  const done = document.getElementById('g-done').checked;
-  if (!name || !target) { toast('Fill in name and target', 'error'); return; }
-  if (editGoalId) {
-    const { error } = await sb.from('goals').update({ name, target, icon, progress, done }).eq('id', editGoalId).eq('user_id', currentUser.id);
+async function saveQuranGoal() {
+  const name = document.getElementById('q-name').value.trim();
+  const target = parseInt(document.getElementById('q-target').value) || 0;
+  if (!name || !target) { toast('Fill in surah name and target', 'error'); return; }
+  if (editQuranId) {
+    const { error } = await sb.from('quran_goals').update({ name, target }).eq('id', editQuranId).eq('user_id', currentUser.id);
     if (error) { toast('Error: ' + error.message, 'error'); return; }
-    toast('Goal updated', 'success');
+    toast('Updated', 'success');
   } else {
-    const { error } = await sb.from('goals').insert({ user_id: currentUser.id, name, target, icon, progress, done });
+    const { error } = await sb.from('quran_goals').insert({ user_id: currentUser.id, name, target, logged: 0 });
     if (error) { toast('Error: ' + error.message, 'error'); return; }
-    toast('Goal added', 'success');
+    toast('Quran goal added', 'success');
   }
-  closeModal('m-goal');
+  closeModal('m-quran');
   await loadGoals();
 }
 
-async function deleteGoal() {
-  if (!editGoalId || !confirm('Delete this goal?')) return;
-  const { error } = await sb.from('goals').delete().eq('id', editGoalId).eq('user_id', currentUser.id);
-  if (error) { toast('Error: ' + error.message, 'error'); return; }
-  closeModal('m-goal');
+async function deleteQuranGoal() {
+  if (!editQuranId || !confirm('Delete this goal?')) return;
+  await sb.from('quran_goals').delete().eq('id', editQuranId).eq('user_id', currentUser.id);
+  closeModal('m-quran');
   toast('Deleted', 'success');
   await loadGoals();
+}
+
+function openLogAyat(id) {
+  logAyatGoalId = id;
+  const g = quranGoals.find(x => x.id === id);
+  if (!g) return;
+  document.getElementById('ayat-goal-info').innerHTML = `<strong>${g.name}</strong> &nbsp;&middot;&nbsp; <span style="color:var(--accent)">${g.logged||0} / ${g.target} ayat logged</span>`;
+  document.getElementById('ayat-count').value = '';
+  openModal('m-log-ayat');
+}
+
+async function submitAyat() {
+  const count = parseInt(document.getElementById('ayat-count').value) || 0;
+  if (!count || !logAyatGoalId) { toast('Enter ayat count', 'error'); return; }
+  const g = quranGoals.find(x => x.id === logAyatGoalId);
+  if (!g) return;
+  const newLogged = Math.min(g.target, (g.logged||0) + count);
+  const { error } = await sb.from('quran_goals').update({ logged: newLogged }).eq('id', logAyatGoalId).eq('user_id', currentUser.id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  closeModal('m-log-ayat');
+  toast('Progress logged', 'success');
+  await loadGoals();
+}
+
+// ── COMMISSION TOGGLE ──
+function toggleCom() {
+  comToggleOn = !comToggleOn;
+  document.getElementById('com-toggle').style.background = comToggleOn ? 'var(--green)' : 'var(--border2)';
+  document.getElementById('com-thumb').style.left = comToggleOn ? '21px' : '3px';
+}
+
+// Show/hide commission fields based on active company
+function updateComFields() {
+  const hasCom = activeCompany && activeCompany.commission_tracking;
+  ['m-com-wrap','i-com-wrap','pay-com-wrap'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = hasCom ? 'block' : 'none';
+  });
 }
 
 // ── AUTH ──
@@ -793,7 +901,7 @@ async function signOut() {
   document.getElementById('home-screen').classList.remove('visible');
   document.getElementById('auth-screen').classList.add('visible');
   currentUser = null;
-  goals = [];
+  quranGoals = [];
 }
 
 // ── BOOT ──
@@ -840,6 +948,7 @@ async function loadCompanies() {
   }
   activeCompany = companies[0];
   renderCompanyMenu();
+  updateComFields();
   await loadDashboard();
 }
 
@@ -862,6 +971,7 @@ async function switchCo(id, e) {
   activeCompany = companies.find(c => c.id === id);
   document.getElementById('co-dropdown').classList.remove('open');
   renderCompanyMenu();
+  updateComFields();
   await loadDashboard();
 }
 
@@ -869,8 +979,11 @@ function openAddCo(e) {
   e?.stopPropagation();
   document.getElementById('co-dropdown').classList.remove('open');
   instToggleOn = false;
+  comToggleOn = false;
   document.getElementById('inst-toggle').style.background = 'var(--border2)';
   document.getElementById('inst-thumb').style.left = '3px';
+  document.getElementById('com-toggle').style.background = 'var(--border2)';
+  document.getElementById('com-thumb').style.left = '3px';
   document.getElementById('co-name-input').value = '';
   openModal('m-company');
 }
@@ -884,12 +997,13 @@ function toggleInst() {
 async function addCompany() {
   const name = document.getElementById('co-name-input').value.trim();
   if (!name) return;
-  const { data, error } = await sb.from('companies').insert({ user_id: currentUser.id, name, installment_tracking: instToggleOn }).select().single();
+  const { data, error } = await sb.from('companies').insert({ user_id: currentUser.id, name, installment_tracking: instToggleOn, commission_tracking: comToggleOn }).select().single();
   if (error) { toast('Error: ' + error.message, 'error'); return; }
   companies.push(data);
   activeCompany = data;
   closeModal('m-company');
   renderCompanyMenu();
+  updateComFields();
   await loadDashboard();
   toast('Company added', 'success');
 }
@@ -1231,12 +1345,13 @@ async function submitClose() {
     if (!extractedDeal) { toast('Upload a screenshot first', 'error'); return; }
     deal = { prospect_name:extractedDeal.prospect_name, plan:extractedDeal.plan, amount:extractedDeal.amount||0, payment_type:'pif' };
   }
+  const commission = parseFloat(document.getElementById('m-commission')?.value) || 0;
   const today = new Date().toISOString().slice(0,10);
   const { data: existing } = await sb.from('calls').select('id').eq('user_id',currentUser.id).eq('company_id',activeCompany.id).ilike('prospect_name', deal.prospect_name||'').gte('created_at',today+'T00:00:00').limit(1);
   if (existing && existing.length > 0) {
-    await sb.from('calls').update({ status:'closed', amount:deal.amount, payment_type:deal.payment_type, plan:deal.plan }).eq('id', existing[0].id);
+    await sb.from('calls').update({ status:'closed', amount:deal.amount, payment_type:deal.payment_type, plan:deal.plan, commission }).eq('id', existing[0].id);
   } else {
-    const { error } = await sb.from('calls').insert({ user_id:currentUser.id, company_id:activeCompany.id, ...deal, status:'closed', created_at:new Date().toISOString() });
+    const { error } = await sb.from('calls').insert({ user_id:currentUser.id, company_id:activeCompany.id, ...deal, status:'closed', commission, created_at:new Date().toISOString() });
     if (error) { toast('Error: '+error.message, 'error'); return; }
   }
   closeModal('m-close');
@@ -1265,14 +1380,15 @@ async function submitInst() {
   const first    = parseFloat(document.getElementById('i-first').value)||0;
   if (!prospect) { toast('Enter prospect name', 'error'); return; }
   if (!total || !first) { toast('Enter amounts', 'error'); return; }
+  const commission = parseFloat(document.getElementById('i-commission')?.value) || 0;
   const { error: ie } = await sb.from('installment_deals').insert({ user_id:currentUser.id, company_id:activeCompany.id, prospect_name:prospect, plan, total_value:total, installment_count:count, payments_made:1, amount_collected:first, created_at:new Date().toISOString() });
   if (ie) { toast('Error: '+ie.message, 'error'); return; }
   const iToday = new Date().toISOString().slice(0,10);
   const { data: iExisting } = await sb.from('calls').select('id').eq('user_id',currentUser.id).eq('company_id',activeCompany.id).ilike('prospect_name',prospect).gte('created_at',iToday+'T00:00:00').limit(1);
   if (iExisting && iExisting.length > 0) {
-    await sb.from('calls').update({ status:'closed', amount:first, payment_type:'installment', plan }).eq('id', iExisting[0].id);
+    await sb.from('calls').update({ status:'closed', amount:first, payment_type:'installment', plan, commission }).eq('id', iExisting[0].id);
   } else {
-    const { error: ce } = await sb.from('calls').insert({ user_id:currentUser.id, company_id:activeCompany.id, prospect_name:prospect, plan, amount:first, payment_type:'installment', status:'closed', created_at:new Date().toISOString() });
+    const { error: ce } = await sb.from('calls').insert({ user_id:currentUser.id, company_id:activeCompany.id, prospect_name:prospect, plan, amount:first, payment_type:'installment', status:'closed', commission, created_at:new Date().toISOString() });
     if (ce) console.error('Call insert error:', ce);
   }
   closeModal('m-inst');
@@ -1295,12 +1411,13 @@ function openPay(id, pending, name) {
 
 async function submitPay() {
   const amount = parseFloat(document.getElementById('pay-amount').value)||0;
+  const commission = parseFloat(document.getElementById('pay-commission')?.value) || 0;
   if (!amount || !payDealId) { toast('Enter amount', 'error'); return; }
   const { data: deal } = await sb.from('installment_deals').select('*').eq('id', payDealId).single();
   if (!deal) { toast('Deal not found', 'error'); return; }
   const { error: ue } = await sb.from('installment_deals').update({ amount_collected:(deal.amount_collected||0)+amount, payments_made:(deal.payments_made||1)+1 }).eq('id', payDealId);
   if (ue) { toast('Error: '+ue.message, 'error'); return; }
-  await sb.from('calls').insert({ user_id:currentUser.id, company_id:activeCompany.id, prospect_name:deal.prospect_name, plan:deal.plan, amount, payment_type:'installment', status:'closed', created_at:new Date().toISOString() });
+  await sb.from('calls').insert({ user_id:currentUser.id, company_id:activeCompany.id, prospect_name:deal.prospect_name, plan:deal.plan, amount, payment_type:'installment', status:'closed', commission, created_at:new Date().toISOString() });
   closeModal('m-pay');
   toast('Payment added', 'success');
   await loadDashboard();
