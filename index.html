@@ -121,6 +121,32 @@ body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--fo
 .kpi-chart{margin-top:8px;height:30px}
 .kpi-chart svg{width:100%;height:30px;display:block}
 
+/* HERO KPI */
+.hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.hero-card{border-radius:14px;padding:18px 18px 14px;position:relative;overflow:hidden;min-width:0;transition:border-color .2s}
+.hero-card::before{content:'';position:absolute;inset:0;border-radius:14px;pointer-events:none}
+.hero-card.orange{background:linear-gradient(135deg,#ff9f0a0a 0%,#ff9f0a04 100%);border:1px solid #ff9f0a33}
+.hero-card.green{background:linear-gradient(135deg,#30d1580a 0%,#30d15804 100%);border:1px solid #30d15833}
+.hero-card.yellow{background:linear-gradient(135deg,#ffd60a0a 0%,#ffd60a04 100%);border:1px solid #ffd60a33}
+.hero-card.blue{background:linear-gradient(135deg,#0a84ff0a 0%,#0a84ff04 100%);border:1px solid #0a84ff33}
+.hero-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;font-weight:500}
+.hero-card.orange .hero-label{color:#ff9f0a99}
+.hero-card.green .hero-label{color:#30d15899}
+.hero-card.yellow .hero-label{color:#ffd60a99}
+.hero-card.blue .hero-label{color:#0a84ff99}
+.hero-value{font-size:36px;font-weight:300;letter-spacing:-1.5px;line-height:1;margin-bottom:6px}
+.hero-card.orange .hero-value{color:var(--orange)}
+.hero-card.green .hero-value{color:var(--green)}
+.hero-card.yellow .hero-value{color:var(--yellow)}
+.hero-card.blue .hero-value{color:var(--accent)}
+.hero-delta{font-size:10px;display:flex;align-items:center;gap:3px;margin-bottom:10px}
+.hero-delta.up{color:var(--green)}
+.hero-delta.down{color:var(--red)}
+.hero-delta.flat{color:var(--text3)}
+.hero-chart{height:36px}
+.hero-chart svg{width:100%;height:36px;display:block}
+@media(max-width:700px){.hero-grid{grid-template-columns:1fr 1fr;gap:8px}.hero-value{font-size:28px}.hero-card{padding:14px 14px 12px}}
+
 /* LOG BUTTONS */
 .log-section{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
 .log-section-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
@@ -1145,30 +1171,38 @@ function statusBadge(s) {
   return `<span class="status-pill" style="background:${c}22;color:${c};border:1px solid ${c}44">${l}</span>`;
 }
 
+function heroCard(label, value, d, color, chartData) {
+  const delta = d === null ? `<div class="hero-delta flat">—</div>`
+    : `<div class="hero-delta ${d.up?'up':'down'}">${d.up?'▲':'▼'} ${d.val}</div>`;
+  const chart = chartData ? `<div class="hero-chart">${sparkline(chartData, color==='orange'?'#ff9f0a':color==='green'?'#30d158':color==='yellow'?'#ffd60a':'#0a84ff')}</div>` : '';
+  return `<div class="hero-card ${color}">
+    <div class="hero-label">${label}</div>
+    <div class="hero-value">${value}</div>
+    ${delta}${chart}
+  </div>`;
+}
+
 function renderDashboard(k, kp, calls, instDeals) {
-  const bookedT = trend(calls, b => b.length);
-  const cashT   = trend(calls, b => b.reduce((s,c) => s+(c.amount||0), 0));
-  const closedT = trend(calls, b => b.filter(c => c.status==='closed').length);
-  const hasInst = activeCompany && activeCompany.installment_tracking;
+  const bookedT  = trend(calls, b => b.length);
+  const cashT    = trend(calls, b => b.reduce((s,c) => s+(c.amount||0), 0));
+  const closedT  = trend(calls, b => b.filter(c => c.status==='closed').length);
+  const hasInst  = activeCompany && activeCompany.installment_tracking;
   const totalPending = instDeals.reduce((s,d) => s + Math.max((d.total_value||0)-(d.amount_collected||0),0), 0);
 
-  const row1 = [
-    kpiCardChart('Booked',        k.booked,                           pctD(k.booked, kp.booked),   '#0a84ff', bookedT),
-    kpiCard(     'Cancelled',     k.canc,                             pctD(k.canc,   kp.canc),     '#ff453a'),
-    kpiCard(     'Showed',        k.showed,                           pctD(k.showed, kp.showed),   '#0a84ff'),
-    kpiCardChart('Cash Collected','$'+Number(k.cash).toLocaleString(),pctD(k.cash,   kp.cash),     '#ff9f0a', cashT),
-    kpiCardChart('Closed',        k.closed,                           pctD(k.closed, kp.closed),   '#0a84ff', closedT),
-    kpiCard(     'Offered',       k.offered,                          pctD(k.offered,kp.offered),  '#0a84ff'),
-    kpiCard(     'PIF Rate',      k.pifRate+'%',                      pctD(k.pifRate,kp.pifRate),  '#ff9f0a'),
-  ].join('');
+  const heroes = `<div class="hero-grid">
+    ${heroCard('Cash Collected', '$'+Number(k.cash).toLocaleString(), pctD(k.cash, kp.cash), 'orange', cashT)}
+    ${heroCard('Closed',         k.closed,                            pctD(k.closed, kp.closed), 'green', closedT)}
+    ${hasInst ? heroCard('Pending', '$'+Number(totalPending).toLocaleString(), null, 'yellow', null) : heroCard('Offered', k.offered, pctD(k.offered, kp.offered), 'yellow', null)}
+    ${heroCard('Booked',         k.booked,                            pctD(k.booked, kp.booked), 'blue', bookedT)}
+  </div>`;
 
   const row2cols = hasInst ? 'kpi-grid-6' : 'kpi-grid-5';
   const row2 = [
-    kpiCard('CCPC',          '$'+Number(k.ccpc).toLocaleString(),    pctD(Number(k.ccpc), Number(kp.ccpc)),     '#0a84ff'),
+    kpiCard('CCPC',          '$'+Number(k.ccpc).toLocaleString(),    pctD(Number(k.ccpc), Number(kp.ccpc)), '#0a84ff'),
     kpiCard('Show %',        k.showPct+'%',                          pctD(Number(k.showPct), Number(kp.showPct)), '#0a84ff'),
     kpiCard('No Show %',     k.nsPct+'%',                            pctD(Number(k.nsPct), Number(kp.nsPct)) ? { val:pctD(Number(k.nsPct),Number(kp.nsPct)).val, up:!pctD(Number(k.nsPct),Number(kp.nsPct)).up } : null, '#ff453a'),
     kpiCard('Rescheduled %', k.rescPct+'%',                          null, '#ff453a'),
-    ...(hasInst ? [kpiCard('Pending', '$'+Number(totalPending).toLocaleString(), null, '#ff9f0a')] : []),
+    kpiCard('PIF Rate',      k.pifRate+'%',                          pctD(k.pifRate, kp.pifRate), '#ff9f0a'),
     kpiCard('Customers',     k.customers,                            pctD(k.customers, kp.customers), '#0a84ff'),
   ].join('');
 
@@ -1229,9 +1263,9 @@ function renderDashboard(k, kp, calls, instDeals) {
   </tr>`).join('');
 
   return `
-    <div class="section-title">KPI Overview</div>
-    <div class="kpi-grid">${row1}</div>
-    <div class="${row2cols}">${row2}</div>
+    ${heroes}
+    <div class="section-title">Stats</div>
+    <div class="kpi-grid-6" style="margin-bottom:16px">${row2}</div>
     ${logBtns}
     ${hasInst ? `<div class="section-title">Installment Deals</div>
     <div class="table-wrap">
