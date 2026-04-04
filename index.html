@@ -463,7 +463,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       <button class="modal-close" onclick="closeModal('m-outcome')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div class="fgroup"><label class="flabel">Prospect Name</label><input type="text" class="finput" id="oc-prospect" placeholder="Full name"/></div>
+      <div class="fgroup"><label class="flabel">Prospect Name</label><input type="text" class="finput" autocomplete="off" id="oc-prospect" placeholder="Full name"/></div>
       <div style="font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">Outcome</div>
       <div class="outcome-grid">
         <div class="outcome-btn" onclick="selectOutcome('showed')" data-o="showed">Showed</div>
@@ -504,10 +504,10 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
         <div id="extracted-data" style="display:none"></div>
       </div>
       <div id="close-manual" style="display:none">
-        <div class="fgroup"><label class="flabel">Prospect Name</label><input type="text" class="finput" id="m-prospect" placeholder="Full name"/></div>
-        <div class="fgroup"><label class="flabel">Plan</label><input type="text" class="finput" id="m-plan" placeholder="e.g. Info Accelerator DFY"/></div>
-        <div class="fgroup"><label class="flabel">Amount ($)</label><input type="number" class="finput" id="m-amount" placeholder="3200"/></div>
-        <div class="fgroup" id="m-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" id="m-commission" placeholder="0"/></div>
+        <div class="fgroup"><label class="flabel">Prospect Name</label><input type="text" class="finput" autocomplete="off" id="m-prospect" placeholder="Full name"/></div>
+        <div class="fgroup"><label class="flabel">Plan</label><input type="text" class="finput" autocomplete="off" id="m-plan" placeholder="e.g. Info Accelerator DFY"/></div>
+        <div class="fgroup"><label class="flabel">Amount ($)</label><input type="number" class="finput" autocomplete="off" id="m-amount" placeholder="3200"/></div>
+        <div class="fgroup" id="m-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" autocomplete="off" id="m-commission" placeholder="0"/></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -525,7 +525,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       <button class="modal-close" onclick="closeModal('m-company')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div class="fgroup"><label class="flabel">Company / Offer Name</label><input type="text" class="finput" id="co-name-input" placeholder="e.g. The Info Accelerator" onkeydown="if(event.key==='Enter')addCompany()"/></div>
+      <div class="fgroup"><label class="flabel">Company / Offer Name</label><input type="text" class="finput" autocomplete="off" id="co-name-input" placeholder="e.g. The Info Accelerator" onkeydown="if(event.key==='Enter')addCompany()"/></div>
       <div class="toggle-wrap" style="margin-top:4px">
         <div>
           <div style="font-size:13px;font-weight:500">Installment Tracking</div>
@@ -560,14 +560,14 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       <button class="modal-close" onclick="closeModal('m-inst')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div class="fgroup"><label class="flabel">Prospect Name</label><input type="text" class="finput" id="i-prospect" placeholder="Full name"/></div>
-      <div class="fgroup"><label class="flabel">Plan</label><input type="text" class="finput" id="i-plan" placeholder="e.g. DFY Program"/></div>
+      <div class="fgroup"><label class="flabel">Prospect Name</label><input type="text" class="finput" autocomplete="off" id="i-prospect" placeholder="Full name"/></div>
+      <div class="fgroup"><label class="flabel">Plan</label><input type="text" class="finput" autocomplete="off" id="i-plan" placeholder="e.g. DFY Program"/></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="fgroup"><label class="flabel">Total Value ($)</label><input type="number" class="finput" id="i-total" placeholder="9600"/></div>
-        <div class="fgroup"><label class="flabel">No. of Installments</label><input type="number" class="finput" id="i-count" placeholder="3" min="2"/></div>
+        <div class="fgroup"><label class="flabel">Total Value ($)</label><input type="number" class="finput" autocomplete="off" id="i-total" placeholder="9600"/></div>
+        <div class="fgroup"><label class="flabel">No. of Installments</label><input type="number" class="finput" autocomplete="off" id="i-count" placeholder="3" min="2"/></div>
       </div>
-      <div class="fgroup"><label class="flabel">First Payment ($)</label><input type="number" class="finput" id="i-first" placeholder="3200" oninput="calcPreview()"/></div>
-      <div class="fgroup" id="i-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" id="i-commission" placeholder="0"/></div>
+      <div class="fgroup"><label class="flabel">First Payment ($)</label><input type="number" class="finput" autocomplete="off" id="i-first" placeholder="3200" oninput="calcPreview()"/></div>
+      <div class="fgroup" id="i-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" autocomplete="off" id="i-commission" placeholder="0"/></div>
       <div id="i-preview" style="display:none;background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2)">
         <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text3)">Collected now</span><span style="color:var(--green);font-weight:500" id="prev-col">—</span></div>
         <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span style="color:var(--text3)">Pending</span><span style="color:var(--orange);font-weight:500" id="prev-pen">—</span></div>
@@ -589,8 +589,8 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     </div>
     <div class="modal-body">
       <div id="pay-info" style="background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2);margin-bottom:14px;font-size:12px;color:var(--text2)"></div>
-      <div class="fgroup"><label class="flabel">Payment Amount ($)</label><input type="number" class="finput" id="pay-amount" placeholder="3200"/></div>
-      <div class="fgroup" id="pay-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" id="pay-commission" placeholder="0"/></div>
+      <div class="fgroup"><label class="flabel">Payment Amount ($)</label><input type="number" class="finput" autocomplete="off" id="pay-amount" placeholder="3200"/></div>
+      <div class="fgroup" id="pay-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" autocomplete="off" id="pay-commission" placeholder="0"/></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" style="width:auto;padding:9px 16px" onclick="closeModal('m-pay')">Cancel</button>
@@ -629,8 +629,8 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       <button class="modal-close" onclick="closeModal('m-quran')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div class="fgroup"><label class="flabel">Surah Name</label><input type="text" class="finput" id="q-name" placeholder="e.g. Al-Mulk"/></div>
-      <div class="fgroup"><label class="flabel">Total Ayat / Target</label><input type="number" class="finput" id="q-target" placeholder="30" min="1"/></div>
+      <div class="fgroup"><label class="flabel">Surah Name</label><input type="text" class="finput" autocomplete="off" id="q-name" placeholder="e.g. Al-Mulk"/></div>
+      <div class="fgroup"><label class="flabel">Total Ayat / Target</label><input type="number" class="finput" autocomplete="off" id="q-target" placeholder="30" min="1"/></div>
     </div>
     <div class="modal-footer">
       <button id="q-delete-btn" class="btn btn-ghost" style="width:auto;padding:9px 16px;color:var(--red);border-color:#ff453a44;display:none" onclick="deleteQuranGoal()">Delete</button>
@@ -649,7 +649,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     </div>
     <div class="modal-body">
       <div id="ayat-goal-info" style="background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2);margin-bottom:14px;font-size:12px;color:var(--text2)"></div>
-      <div class="fgroup"><label class="flabel">Ayat memorised today</label><input type="number" class="finput" id="ayat-count" placeholder="e.g. 3" min="1"/></div>
+      <div class="fgroup"><label class="flabel">Ayat memorised today</label><input type="number" class="finput" autocomplete="off" id="ayat-count" placeholder="e.g. 3" min="1"/></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" style="width:auto;padding:9px 16px" onclick="closeModal('m-log-ayat')">Cancel</button>
@@ -666,7 +666,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       <button class="modal-close" onclick="closeModal('m-income-target')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div class="fgroup"><label class="flabel">Target Amount ($)</label><input type="number" class="finput" id="it-amount" placeholder="e.g. 5000" min="0"/></div>
+      <div class="fgroup"><label class="flabel">Target Amount ($)</label><input type="number" class="finput" autocomplete="off" id="it-amount" placeholder="e.g. 5000" min="0"/></div>
       <div style="font-size:11px;color:var(--text3);margin-top:4px">This is your monthly cash collected goal.</div>
     </div>
     <div class="modal-footer">
