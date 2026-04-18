@@ -196,6 +196,15 @@ body.light .hero-delta.flat{color:#555}
 .extracted-key{color:var(--text3)}
 .extracted-val{color:var(--text);font-weight:500}
 .pif-badge{background:#30d15822;color:var(--green);border:1px solid #30d15833;padding:2px 8px;border-radius:20px;font-size:10px}
+body.light .pif-badge{background:#0d6b2a22;color:#0d6b2a;border-color:#0d6b2a55}
+body.light .inst-badge{background:#997a0022;color:#7a5e00;border-color:#997a0055}
+body.light .status-pill[style*="#30d158"]{background:#0d6b2a22 !important;color:#0d6b2a !important;border-color:#0d6b2a55 !important}
+body.light .status-pill[style*="#0a84ff"]{background:#0044bb22 !important;color:#0044bb !important;border-color:#0044bb55 !important}
+body.light .status-pill[style*="#ffd60a"]{background:#7a5e0022 !important;color:#7a5e00 !important;border-color:#7a5e0055 !important}
+body.light .status-pill[style*="#ff453a"]{background:#cc000022 !important;color:#cc0000 !important;border-color:#cc000055 !important}
+body.light .status-pill[style*="#636366"]{background:#33333322 !important;color:#333 !important;border-color:#33333355 !important}
+/* Logo visibility in light mode */
+body.light .topbar img, body.light .auth-logo-wrap img{filter:invert(1) brightness(0.1)}
 
 /* FORM INPUTS */
 .finput{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:border-color .2s}
@@ -559,9 +568,8 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     <div class="modal-body">
       <div class="fgroup"><label class="flabel">Prospect Name</label><input type="text" class="finput" autocomplete="off" id="i-prospect" placeholder="Full name"/></div>
       <div class="fgroup"><label class="flabel">Plan</label><input type="text" class="finput" autocomplete="off" id="i-plan" placeholder="e.g. DFY Program"/></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="display:grid;grid-template-columns:1fr;gap:10px">
         <div class="fgroup"><label class="flabel">Total Value ($)</label><input type="number" class="finput" autocomplete="off" id="i-total" placeholder="9600"/></div>
-        <div class="fgroup"><label class="flabel">No. of Installments</label><input type="number" class="finput" autocomplete="off" id="i-count" placeholder="3" min="2"/></div>
       </div>
       <div class="fgroup"><label class="flabel">First Payment ($)</label><input type="number" class="finput" autocomplete="off" id="i-first" placeholder="3200" oninput="calcPreview()"/></div>
       <div class="fgroup" id="i-com-wrap" style="display:none"><label class="flabel">Commission Earned ($) <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" autocomplete="off" id="i-commission" placeholder="0"/></div>
@@ -1245,13 +1253,11 @@ function renderDashboard(k, kp, calls, instDeals) {
     const col = d.amount_collected || 0;
     const tot = d.total_value || 0;
     const pen = Math.max(tot - col, 0);
-    const pct = tot > 0 ? Math.round(col/tot*100) : 0;
-    const pid = d.payments_made || 1;
-    const tot_i = d.installment_count || 1;
+    const pct = tot > 0 ? Math.min(100, Math.round(col/tot*100)) : 0;
     return `<tr>
       <td style="color:var(--text);font-weight:500">${d.prospect_name||'—'}</td>
       <td style="color:var(--text2)">${d.plan||'—'}</td>
-      <td><div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div><span class="prog-label">${pid}/${tot_i}</span></div></td>
+      <td><div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div><span class="prog-label">${pct}%</span></div></td>
       <td style="color:var(--green)">$${Number(col).toLocaleString()}</td>
       <td style="color:var(--orange)">$${Number(pen).toLocaleString()}</td>
       <td style="display:flex;gap:6px;align-items:center">
@@ -1419,12 +1425,12 @@ async function submitInst() {
   const prospect = document.getElementById('i-prospect').value.trim();
   const plan     = document.getElementById('i-plan').value.trim();
   const total    = parseFloat(document.getElementById('i-total').value)||0;
-  const count    = parseInt(document.getElementById('i-count').value)||2;
+  const count    = 0;
   const first    = parseFloat(document.getElementById('i-first').value)||0;
   if (!prospect) { toast('Enter prospect name', 'error'); return; }
   if (!total || !first) { toast('Enter amounts', 'error'); return; }
   const commission = parseFloat(document.getElementById('i-commission')?.value) || 0;
-  const { error: ie } = await sb.from('installment_deals').insert({ user_id:currentUser.id, company_id:activeCompany.id, prospect_name:prospect, plan, total_value:total, installment_count:count, payments_made:1, amount_collected:first, created_at:new Date().toISOString() });
+  const { error: ie } = await sb.from('installment_deals').insert({ user_id:currentUser.id, company_id:activeCompany.id, prospect_name:prospect, plan, total_value:total, installment_count:0, payments_made:1, amount_collected:first, created_at:new Date().toISOString() });
   if (ie) { toast('Error: '+ie.message, 'error'); return; }
   const iToday = new Date().toISOString().slice(0,10);
   const { data: iExisting } = await sb.from('calls').select('id').eq('user_id',currentUser.id).eq('company_id',activeCompany.id).ilike('prospect_name',prospect).gte('created_at',iToday+'T00:00:00').limit(1);
@@ -1438,7 +1444,7 @@ async function submitInst() {
   document.getElementById('i-prospect').value = '';
   document.getElementById('i-plan').value = '';
   document.getElementById('i-total').value = '';
-  document.getElementById('i-count').value = '';
+  
   document.getElementById('i-first').value = '';
   document.getElementById('i-preview').style.display = 'none';
   toast('Installment deal logged', 'success');
