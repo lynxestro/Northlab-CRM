@@ -36,7 +36,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 #auth-screen{min-height:100vh;display:none;align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse 60% 50% at 50% 0%,#0a84ff12,transparent 70%)}
 #auth-screen.visible{display:flex}
 .auth-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px 32px;position:relative;overflow:hidden}
-.auth-card::before{content:\'\';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
 .auth-logo-wrap{display:flex;align-items:center;gap:12px;margin-bottom:4px}
 .auth-brand{font-size:20px;font-weight:700;letter-spacing:2px}
 .auth-sub{font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px}
@@ -63,7 +63,7 @@ body.light .auth-logo-wrap img{filter:invert(1) brightness(0.1)}
 /* SIDEBAR */
 .sidebar{width:var(--sb-width);min-width:var(--sb-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .2s,min-width .2s;overflow:hidden;position:relative;z-index:300;flex-shrink:0}
 .sidebar.collapsed{width:var(--sb-collapsed);min-width:var(--sb-collapsed)}
-.sb-header{display:flex;align-items:center;gap:10px;padding:16px 14px 14px;border-bottom:1px solid var(--border);min-height:58px;overflow:hidden}
+.sb-header{display:flex;align-items:center;gap:10px;padding:16px 14px 14px;border-bottom:1px solid var(--border);min-height:58px;overflow:visible}
 .sb-logo{width:30px;height:30px;flex-shrink:0;object-fit:contain}
 body.light .sb-logo{filter:invert(1) brightness(0.1)}
 .sb-brand{font-size:14px;font-weight:700;letter-spacing:1.5px;white-space:nowrap;overflow:hidden;transition:opacity .15s}
@@ -149,7 +149,7 @@ body.light .sb-logo{filter:invert(1) brightness(0.1)}
 
 /* SECTION TITLE */
 .section-title{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;margin-top:4px;display:flex;align-items:center;gap:8px}
-.section-title::after{content:\'\';flex:1;height:1px;background:var(--border)}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
 
 /* KPI GRID */
 .kpi-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:8px}
@@ -295,7 +295,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 #goal-cards-container{display:contents}
 .home-card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:20px;position:relative}
 .home-card-title{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.home-card-title::after{content:\'\';flex:1;height:1px;background:var(--border)}
+.home-card-title::after{content:'';flex:1;height:1px;background:var(--border)}
 .income-big{font-size:36px;font-weight:300;letter-spacing:-1px;color:var(--orange);line-height:1}
 .income-label{font-size:11px;color:var(--text3);margin-top:4px}
 .income-target-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
@@ -395,18 +395,18 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     </div>
     <div class="auth-sub">CRM Dashboard</div>
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-si" onclick="switchTab(\'si\')">Sign In</button>
-      <button class="auth-tab inactive" id="tab-su" onclick="switchTab(\'su\')">Sign Up</button>
+      <button class="auth-tab active" id="tab-si" onclick="switchTab('si')">Sign In</button>
+      <button class="auth-tab inactive" id="tab-su" onclick="switchTab('su')">Sign Up</button>
     </div>
     <div id="form-si">
       <div class="field"><label>Email</label><input type="email" id="si-email" placeholder="you@email.com" autocomplete="email"/></div>
-      <div class="field"><label>Password</label><input type="password" id="si-pass" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" onkeydown="if(event.key===\'Enter\')signIn()"/></div>
+      <div class="field"><label>Password</label><input type="password" id="si-pass" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" onkeydown="if(event.key==='Enter')signIn()"/></div>
       <button class="btn" onclick="signIn()">Sign In</button>
     </div>
     <div id="form-su" style="display:none">
       <div class="field"><label>Email</label><input type="email" id="su-email" placeholder="you@email.com" autocomplete="email"/></div>
-      <div class="field"><label>Password</label><input type="password" id="su-pass" placeholder="Min 6 characters" onkeydown="if(event.key===\'Enter\')signUp()"/></div>
-      <div class="field"><label>Confirm Password</label><input type="password" id="su-pass2" placeholder="Repeat password" onkeydown="if(event.key===\'Enter\')signUp()"/></div>
+      <div class="field"><label>Password</label><input type="password" id="su-pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')signUp()"/></div>
+      <div class="field"><label>Confirm Password</label><input type="password" id="su-pass2" placeholder="Repeat password" onkeydown="if(event.key==='Enter')signUp()"/></div>
       <button class="btn" onclick="signUp()">Create Account</button>
     </div>
     <div class="auth-err" id="auth-err"></div>
@@ -424,27 +424,27 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     <div class="sb-header">
       <img class="sb-logo" src="data:image/png;base64,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" />
       <span class="sb-brand">NORTHLAB</span>
-      <button class="sb-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      <button class="sb-toggle" id="sb-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
+        <svg id="sb-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
     </div>
 
     <div class="sb-nav">
       <div class="sb-section-label">Main</div>
-      <div class="sb-item active" id="nav-dashboard" onclick="showView(\'dashboard\')">
+      <div class="sb-item active" id="nav-dashboard" onclick="showView('dashboard')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         <span class="sb-item-label">Dashboard</span>
       </div>
-      <div class="sb-item" id="nav-revenue" onclick="showView(\'revenue\')">
+      <div class="sb-item" id="nav-revenue" onclick="showView('revenue')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         <span class="sb-item-label">Revenue</span>
       </div>
-      <div class="sb-item" id="nav-goals" onclick="showView(\'goals\')">
+      <div class="sb-item" id="nav-goals" onclick="showView('goals')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
         <span class="sb-item-label">Goals</span>
       </div>
       <div class="sb-section-label" style="margin-top:8px">Account</div>
-      <div class="sb-item" id="nav-settings" onclick="showView(\'settings\')">
+      <div class="sb-item" id="nav-settings" onclick="showView('settings')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         <span class="sb-item-label">Settings</span>
       </div>
@@ -518,13 +518,13 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     <div class="view" id="view-revenue">
       <div class="rev-main">
         <div class="rev-filters" id="rev-filters">
-          <button class="rev-filter-btn active" onclick="setRevFilter(\'today\',this)">Today</button>
-          <button class="rev-filter-btn" onclick="setRevFilter(\'3d\',this)">3 Days</button>
-          <button class="rev-filter-btn" onclick="setRevFilter(\'7d\',this)">7 Days</button>
-          <button class="rev-filter-btn" onclick="setRevFilter(\'month\',this)">Month</button>
-          <button class="rev-filter-btn" onclick="setRevFilter(\'year\',this)">Year</button>
-          <input type="date" class="date-input" id="rev-from" onchange="setRevFilter(\'custom\',null)" style="font-size:11px;padding:5px 8px"/>
-          <input type="date" class="date-input" id="rev-to" onchange="setRevFilter(\'custom\',null)" style="font-size:11px;padding:5px 8px"/>
+          <button class="rev-filter-btn active" onclick="setRevFilter('today',this)">Today</button>
+          <button class="rev-filter-btn" onclick="setRevFilter('3d',this)">3 Days</button>
+          <button class="rev-filter-btn" onclick="setRevFilter('7d',this)">7 Days</button>
+          <button class="rev-filter-btn" onclick="setRevFilter('month',this)">Month</button>
+          <button class="rev-filter-btn" onclick="setRevFilter('year',this)">Year</button>
+          <input type="date" class="date-input" id="rev-from" onchange="setRevFilter('custom',null)" style="font-size:11px;padding:5px 8px"/>
+          <input type="date" class="date-input" id="rev-to" onchange="setRevFilter('custom',null)" style="font-size:11px;padding:5px 8px"/>
         </div>
         <div class="rev-hero">
           <div class="rev-label">Cash Collected</div>
@@ -549,6 +549,21 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
             <div class="rev-stat-label">Commission</div>
             <div class="rev-stat-val" id="rev-commission" style="color:var(--green)">$0</div>
           </div>
+        </div>
+        <!-- CC TARGET -->
+        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-top:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">Monthly target</div>
+            <button class="btn-sm" style="font-size:11px;padding:4px 10px" onclick="openIncomeTarget()">Edit</button>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px">
+            <span style="font-size:28px;font-weight:300;letter-spacing:-1px;color:var(--orange)" id="rev-month-cash">$0</span>
+            <span style="font-size:13px;color:var(--text3)">/ <span id="rev-target-val">—</span></span>
+          </div>
+          <div style="height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-bottom:6px">
+            <div id="rev-target-fill" style="height:4px;background:var(--orange);border-radius:2px;width:0%;transition:width .4s"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);text-align:right" id="rev-target-pct">No target set</div>
         </div>
       </div>
     </div>
@@ -584,7 +599,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
             </div>
             <div style="display:flex;gap:8px;margin-top:14px;align-items:center">
               <button class="btn-sm" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="openIncomeTarget()">Edit target</button>
-              <button class="crm-link-btn" style="margin-top:0;flex:1" onclick="showView(\'dashboard\')">
+              <button class="crm-link-btn" style="margin-top:0;flex:1" onclick="showView('dashboard')">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 Open CRM
               </button>
@@ -624,9 +639,9 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
           <div class="settings-section-title">Role</div>
           <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Choose your role. This is just a label shown in your sidebar.</div>
           <div class="role-picker">
-            <button class="role-btn setter" onclick="setRole(\'setter\')">Setter</button>
-            <button class="role-btn closer" onclick="setRole(\'closer\')">Closer</button>
-            <button class="role-btn admin" onclick="setRole(\'admin\')">Admin</button>
+            <button class="role-btn setter" onclick="setRole('setter')">Setter</button>
+            <button class="role-btn closer" onclick="setRole('closer')">Closer</button>
+            <button class="role-btn admin" onclick="setRole('admin')">Admin</button>
           </div>
         </div>
         <div class="settings-section">
@@ -886,8 +901,10 @@ let revFilter = 'today';
 // ── SIDEBAR ──
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
-  sb.classList.toggle('collapsed');
-  localStorage.setItem('nl-sb-collapsed', sb.classList.contains('collapsed') ? '1' : '0');
+  const collapsed = sb.classList.toggle('collapsed');
+  localStorage.setItem('nl-sb-collapsed', collapsed ? '1' : '0');
+  const icon = document.getElementById('sb-toggle-icon');
+  if (icon) icon.style.transform = collapsed ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 function openSidebar() {
   document.getElementById('sidebar').classList.add('mobile-open');
@@ -963,6 +980,24 @@ async function loadRevenue() {
   document.getElementById('rev-closed').textContent = closed;
   document.getElementById('rev-ccpc').textContent = '$'+Number(ccpc).toLocaleString();
   document.getElementById('rev-commission').textContent = '$'+Number(commission).toLocaleString();
+
+  // Monthly target section — always shows this month's cash vs target
+  const now2 = new Date();
+  const mStart = `${now2.getFullYear()}-${String(now2.getMonth()+1).padStart(2,'0')}-01`;
+  const { data: monthData } = await sb.from('calls').select('amount').eq('user_id', currentUser.id).eq('status','closed').gte('created_at', mStart+'T00:00:00');
+  const monthCash = (monthData||[]).reduce((s,c) => s+(c.amount||0), 0);
+  document.getElementById('rev-month-cash').textContent = '$'+Number(monthCash).toLocaleString();
+  const target = incomeTarget || 0;
+  if (target > 0) {
+    const pct = Math.min(100, Math.round(monthCash/target*100));
+    document.getElementById('rev-target-fill').style.width = pct+'%';
+    document.getElementById('rev-target-val').textContent = '$'+Number(target).toLocaleString()+' / mo';
+    document.getElementById('rev-target-pct').textContent = pct+'% of target';
+  } else {
+    document.getElementById('rev-target-fill').style.width = '0%';
+    document.getElementById('rev-target-val').textContent = '—';
+    document.getElementById('rev-target-pct').textContent = 'No target set';
+  }
 
   // Build chart
   drawRevChart(arr, from, to);
@@ -1232,7 +1267,11 @@ async function bootApp() {
   document.getElementById('d-to').value = `${y}-${m}-${d}`;
   document.getElementById('d-from').value = `${y}-${m}-01`;
   if (localStorage.getItem('nl-theme') === 'light') applyTheme(true);
-  if (localStorage.getItem('nl-sb-collapsed') === '1') document.getElementById('sidebar').classList.add('collapsed');
+  if (localStorage.getItem('nl-sb-collapsed') === '1') {
+    document.getElementById('sidebar').classList.add('collapsed');
+    const icon = document.getElementById('sb-toggle-icon');
+    if (icon) icon.style.transform = 'rotate(180deg)';
+  }
   currentRole = localStorage.getItem('nl-role') || 'setter';
   renderRoleBadge();
   await loadCompanies();
