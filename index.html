@@ -63,11 +63,11 @@ body.light .auth-logo-wrap img{filter:invert(1) brightness(0.1)}
 /* SIDEBAR */
 .sidebar{width:var(--sb-width);min-width:var(--sb-width);height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .2s,min-width .2s;overflow:hidden;position:relative;z-index:300;flex-shrink:0}
 .sidebar.collapsed{width:var(--sb-collapsed);min-width:var(--sb-collapsed)}
-.sb-header{display:flex;align-items:center;gap:10px;padding:16px 14px 14px;border-bottom:1px solid var(--border);min-height:58px;overflow:visible}
+.sb-header{display:flex;align-items:center;gap:10px;padding:16px 14px 14px;border-bottom:1px solid var(--border);min-height:58px;overflow:hidden}
 .sb-logo{width:30px;height:30px;flex-shrink:0;object-fit:contain}
 body.light .sb-logo{filter:invert(1) brightness(0.1)}
-.sb-brand{font-size:14px;font-weight:700;letter-spacing:1.5px;white-space:nowrap;overflow:hidden;transition:opacity .15s}
-.sidebar.collapsed .sb-brand{opacity:0;width:0}
+.sb-brand{font-size:14px;font-weight:700;letter-spacing:1.5px;white-space:nowrap;overflow:hidden;transition:opacity .2s,max-width .2s;max-width:200px}
+.sidebar.collapsed .sb-brand{opacity:0;max-width:0}
 .sb-toggle{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;transition:color .15s}
 .sb-toggle:hover{color:var(--text);background:var(--surface2)}
 .sb-section-label{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;padding:14px 14px 6px;white-space:nowrap;overflow:hidden;transition:opacity .15s}
@@ -77,8 +77,8 @@ body.light .sb-logo{filter:invert(1) brightness(0.1)}
 .sb-item:hover{background:var(--surface2);color:var(--text)}
 .sb-item.active{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border)}
 .sb-item svg{flex-shrink:0;width:18px;height:18px}
-.sb-item-label{overflow:hidden;transition:opacity .15s,width .15s}
-.sidebar.collapsed .sb-item-label{opacity:0;width:0}
+.sb-item-label{overflow:hidden;transition:opacity .2s,width .2s,max-width .2s;max-width:200px}
+.sidebar.collapsed .sb-item-label{opacity:0;max-width:0;width:0}
 .sb-bottom{padding:10px 8px 16px;border-top:1px solid var(--border)}
 .sb-role-badge{margin:0 6px 8px;padding:5px 8px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);font-size:11px;font-weight:600;letter-spacing:.5px;text-align:center;text-transform:uppercase;overflow:hidden;transition:opacity .15s}
 .sidebar.collapsed .sb-role-badge{opacity:0}
@@ -154,7 +154,7 @@ body.light .sb-logo{filter:invert(1) brightness(0.1)}
 /* KPI GRID */
 .kpi-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:8px}
 .kpi-grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
-.kpi-grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px}
+.kpi-grid-6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:16px}
 .kpi-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:14px;transition:border-color .2s;min-width:0}
 .kpi-label{font-size:10px;color:var(--text2);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-value{font-size:26px;font-weight:300;letter-spacing:-0.5px;line-height:1;margin-bottom:5px}
@@ -166,7 +166,7 @@ body.light .sb-logo{filter:invert(1) brightness(0.1)}
 .kpi-chart svg{width:100%;height:30px;display:block}
 
 /* HERO KPI */
-.hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.hero-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
 .hero-card{border-radius:14px;padding:18px 18px 14px;min-width:0;transition:border-color .2s}
 .hero-card.orange{background:#ff9f0a18;border:1px solid #ff9f0a66}
 .hero-card.green{background:#30d15818;border:1px solid #30d15866}
@@ -334,16 +334,20 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 .rev-chart-wrap{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-bottom:20px}
 .rev-chart-area{height:200px;position:relative}
 .rev-chart-area svg{width:100%;height:100%}
-.rev-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rev-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.rev-dd-item{padding:8px 12px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--text2);transition:background .15s}
+.rev-dd-item:hover{background:var(--surface3);color:var(--text)}
+.rev-dd-item.active{color:var(--accent)}
 .rev-stat-card{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px}
 .rev-stat-label{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
 .rev-stat-val{font-size:24px;font-weight:300;letter-spacing:-.5px}
 
 /* SETTINGS VIEW */
-.settings-main{padding:24px 20px;max-width:600px}
-.settings-section{margin-bottom:28px}
-.settings-section-title{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.settings-main{padding:24px 20px;width:100%}
+.settings-inner{max-width:700px}
+.settings-section{margin-bottom:28px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px}
+.settings-section-title{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .settings-row:last-child{border-bottom:none}
 .settings-row-label{font-size:13px;font-weight:500}
 .settings-row-sub{font-size:11px;color:var(--text3);margin-top:2px}
@@ -353,6 +357,9 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 .role-btn.closer.active{background:#30d15818;border-color:#30d15866;color:var(--green)}
 .role-btn.admin.active{background:#ff9f0a18;border-color:#ff9f0a66;color:var(--orange)}
 .role-btn:hover{background:var(--surface2);color:var(--text)}
+.name-edit-wrap{display:flex;align-items:center;gap:8px}
+.name-edit-input{background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;width:160px;transition:border-color .2s}
+.name-edit-input:focus{border-color:var(--accent)}
 
 /* MOBILE */
 @media(max-width:700px){
@@ -421,16 +428,20 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 
   <!-- SIDEBAR -->
   <div class="sidebar" id="sidebar">
-    <div class="sb-header">
+    <div class="sb-header" onclick="showView('home')" style="cursor:pointer">
       <img class="sb-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAQm0lEQVR4nO1ae3BdxXn/7e4599z3lWTpypZkS8KWsJF52i5gXjKkrUViEh7WQB4d0hkHQqehZRpC2mllZSaTkKTDpE2BtAXSwgwghQKxkQy20XWwIxsc/EZYUpCs9/t13/ec3a9/3HMdWUhGlmHCH/rNnNHV2W93v9/3fbv77e4BFrGIRSxiEYv43ID9qRW4EBARq6+v58BWAPU4deoU1dbWqj+1Xp866urqBBHx2cqIiM9VNhu0T0Ohmpoavn37dlZfX39R7WzduhUAFGOMMu/q6upEdXW1BIA9e5rzhWClAPcqZcZSKauDMdY/U+58+FyHdIZEY2PoJsNwPialrMrOzmGcCyglMT4+Royx35hm6vGqqsrm+ZC+KMJExBhj9NZboTKXy79qamrKYowtqE3GJPP5skQ4HD5SVXVLf1NTk7Zp0yZrx463H83NXfI4EWFqKnxAKXWQcxpWii8Rgt2Sk7PkzyKRCBKJ6KNVVZt+SkSCMTYn6YsNaQaALIs94/F4bnK5nOBcLKihWCwGh8MBoqnf1tTUbNq0aZP12mtvbVuxovjxkZHhD5Uyt23efNP+mfV27Qp9VdeNZ7Ozc3/S0BByMMZ+mDHWXAovCDU1Nby2tlbt3v3OCs61NsuyBpVSP8iUcw6Stp2FAOQcNueccaVIAfi6YRg3GYZDRCKRLfG43B8MZo8kk4njt9563XoAc87GDQ1NP/T5Ao8ppXg4HKn+0pcq6+cK7wUTzlixsXHfg0VFK57q6Tnzs6qqyu8utL1du/Z9zev1v5BMJsg0U0c5561ut/cv4vHIHVdddU1FMpncohQVMMacQoguxqhpcHCg7qqrVnfs3fvOlVKyo4xxBdAUY2ztO++82Q8AM5etBYd0KBRSAKAU3Ts1NYlEwnyjpuaXbrdbiKysoNyz5/lkfX29beGtAqg/72QSiYSbAWYC0DgXV+u6frWm8c7LLlv769xcd34q5UYymcTERHhC1401ubnuvxRC++fOzsHvNzTseaG0dHkCkIbP58uanJz899ra2rvq6uo+Nr4W5GEi4owxdeJE2/LCwrx2TROay+XsAQDGGDHGMD4epWg0GdN1nXw+g42PRxhjHJklhwhgDCACAZQgImptbb1cSmmkUiatXFksy8sv0fr7x4bGx8ebiNQ9o6Mje/3+4jv9fmuZYXjucDj0H/n9fqO3t7exra3tZl3XPVIqy+PxaJFI+Iu3317ZMDO0F+phDhC53QN/np0dcCilYJpyhRACShEAQipl9VuW5JrGvICRo5Q6wxiBiNgfbU1gjDu8Xu9SIQQuuaQYx49/gMLCfFqz5hJtYGDqyJkzQ7cMDHS+vHTpMjE5GXXeemthDMAfADzR0dHXArDXVq4srNJ1wsmTrdB1nUtpEefsibq6uqatW7cmznaWVnxBUAAjzvl9U1Mm3nvvxFgodAh79hyw9u17V+3de2Bo//53165cubTk2LGTPzlw4N3Y66+/dGlxcbD0ueeeLC0pyS957rn/KC0pyS/p7j5dHotF+6LRmMrNzVEFBUG1Zs0qFg7HO+rqDlQGg8b1a9eursrO9lhlZcU3nj790QOHDx/WAaC0tGAXIN/jHKqkpEguW5YPy5I8mUwqny9Q7vcH72OMUVNT09nQvmAP19Skw/nIka5Cp9NZOT4+8eGxY6fuLCoq+B0RBQzD4NFodG919eYxADBN6wter9cdicAPYLi2tpYAIPP3xhtvDHd2DoV8Pu9XU6m4dfXVl3HGOI2Nhfd/5ztVLwPYnDYwhO2pp5Uq/tvu7r6Dhw4dL02l4tcAWYyIeEVFGcbHJ2FZkpRSBLCvAHh2eHj4bOZ2wWOYiDQAcnQ0/Nc5Ob7/npyMHs/K8jzT0dHzLYBVACBAvRIM5rxFxP1dXX01mqb5vF7nz3JyAqeVUpxzbk94SgOAcDj5BSGcd0uZkvn5ASGlkkKkF/RUyiRd11hPzwCmpiJYsiRbLV2aywFgeHgCsVgMxcUFUEqBc46urj4cP35aBgJ+EY1GDlVVVV6XSZAWSlgwxiQRvQrgDix8WJyD7u5RCMERDPqVpgkO4P3Ozp5Xli7N+4HTabCDB4/ygYER6LqGJUuy1Lp1FUrXdaYUCc5ZRjcAQHPzEZlKSZFMJho3b7759ukT17yVJSLW1NSkhUIhFg6H8wHcBoBPTiYwNDRpjY1FJBEhGo2fCIfD90xMhO9WCu1DQ2M4frwVH3zQviMcDt8VDofvicVi94TD4bssy3oBgAXACgTcUIoU54wppc6MjmJTTk6Oz+k0BABVWJgPITiE4OjvH+KnTrVpaeOfqydjDOXlpSSEBoCOAEBeXt5ZqXmN4bq6ukx+atnkNwHwWZb18sjIxPJAIGujUmaKMSaklM8GAv5XGhoO+quqrs1PJBI0ODjKkslEuKKi7NUZRhwG8HUAyuMxSNcFOOdkmua9ubk8LKXzr2xRvnz5MhARensH4fN54fF4MDNtZ4yBiJCbmy10vYumpiIvAUBlZeXZ5OMTCdtrrqypqdEqK7esVyq13LKsb2uaRpqm1eu6Zuk6f9XlcgkAJqA3EpGIRhPVAHxerzulacIBOFYTUWbiYQBUOBw+7fF4pjjnfiG46XI5dMuyXnY4HAcnJiKbOfcUID1hcQBYsaIAK1YUnFdf2zEiGMz65fXXX3Vi5mbivIQznt25c+9Wt9tT63Y71zgcAWhaupqU6n+LinJNpSylaZpIJs2jfr/RCkA4nfrDAGAYBiciSCmXNjc3OzZu3BjPrMV+v3/YsmQLgGttUpZS6nEiYpFIfCvSa+dZwkR01qvTf8+EZREMw/8GEbFQKHSO0JxjODPQd+58+6G8vPw6xtiaiYnx17u6uv7l5Mm2XwCAENzNOQKaphEAmKbcyRhDMpksE0KsSRPWhRAMRJQbj1MQALZv386QXmbAGN63uxRSqgOGYRzp7Ow0DEO/DelIOKvjdIJzkR0ZCfPh4TCSycQAY4ymhzMwh4czYdzYuLfC7fb9WzweH00k4luqqiqbMzKmaXo1TbsfgAlAU0opy5KvI+2VzTYhS9M0Tdc10nXdkUpRAYAzFRUVbFpfRzK/k8nUPiJi8bi5Qde1Ykzz7jyhfD437+8fOyPlsuN2JNF0gVkbC4VCHACEML7t9wfE8PDg31VVVTa3tLT4mpqaNADQNO3vAfTaxBgRju7e3XD85z9vMOLx1EMAoJTiAOByOZUQOnSdFQJnZ01Ky4gTtuxUJJJ8njFGhiHuzhC4ALIAQIYhQIQnystZMhQKienHRXMSrqyslETEE4nkzZaVonXr1t3d3T16yucLtq9efc3vh4Yiv2hp6RU9PQM77DaISL1ZXV0tr7gia1tWlm8VAAkwDgBut5M451BKFWf62L59OwFAIoF2+1Vzfn5We1dXlwvAl8+n3xxQAIRSqre0NO/JDI+ZQrM1yOwdj7r00lLv+vUVrLh46VeklGuUIqFp2hV5eZ6/8fvd73Z29jQrpQYBME3T6h9+uCYrJ2fJdrvzs8PM5XJm2l5hR4i2ZcsW0dTUpL344u8npZQTUsr9hw8f1pctW3Yd57wEFx7OGU8OMsbM6dnV+Wullw60t/fdRURJpYg6Ogb+qaXlTEFHx3hWW1vvNd3do4eiUaLe3rETRJQgolYA2LFj785IJEFEZCmlSClFRERDQ6NmKHSYdu3a9+Icfb5BRFcDgJTyx5SGSRcGk4iUlPIZu81Z5ydtRscMgDp58qSDc/54Mikdra0f4dixU0Xf+MadfbbY+93dA9smJycPeTyutfa7l+rrG/61pKTkiy6XLgGITBIApGdq00yBCBsbG0M/yuyEORdMKUktLe3B4eHxbY2NoUnTtO4zDAeUUoLz+SeC9sOklP8z7d35CdfX1/Pq6mrZ1tazLhAIrOrrGxlNJhP6DTdseHBsbJy53a7dkUhkd25u7vHOzuHJ3FyfAUA1Nx/5ptfrK8rO9ijOuciskZmYNgyDESlomrbC7fY8NlOJvr5h6LpjfX7+UhiGAwDAMwny7FA4d0LjAHSl1K8cDsdvM6vMJxLOy9vKiIi1tfUUer1OCgQcvtLSfIdd/ACAB3Rdbz95srVZ0yhP1zmbmJgSExPhokDApwoKgny2hMDh0OFw6BSLxREOT0maYXshOA+Hp1Qg4AEAYY+/2ZkqRTzt+unul0qpp1taWh62byHmHLvnEK6sBDHGKBZLrHE4wABuWpb6dXt7xyZdd+Tl5WWT3+9dVVFRtqq3dxAA0NnZC9M06fLLy/n0MJ6OSCQFXdeZlFEwxrSZMlISpFQ8O9s/l54AIAGIjo6e/youLvg/zvkNSikXY6xLStFkGOLk+Sp/jHAmDIhoFYDvS6lobCwSDQYDX3v++VdvW768aE9HR5fasOEKFQj4VGFhvhYOR9HbO4D16y9nPp9n1nQvHk9hYiKqdN0x4vW6g3N5zjAcyM4OnE9XIgI++uhMaNWq4jcBvDmjkANph82LMNIhoizL+pamaa5IJGEK4Qx2d48+t3z5km/u3Pn2A5rmeLq3d1AFAj7NsiQ6Orpx5ZWXoaAgOGdum0pZUErxoqKCrLw8/5wpIWNAZpKaKWO3LUZHJ2R//9iHRCTa2tq0srKyzDhVjLF5JSnTx4FKd8avA0CmaT4ZiYTJ6/Xe39s7fmDDhvWjui4acnKyBQCllEJ5eSmKivLPm8gLIcAYg5TkiEZTZ/e0M5/zzciUHgNsZGRMHjx4sJMxJsvKylKMMct+5p2RTfdw+giEQQfAcnMD/9nZOVwghNiq6/pGp9O5sby8POXxuAGAOxx6Rpk5yQJAeo+bLo9EEhCCzeJBwOEQcDhm37xxzkEExOPxZ5966sfj804qPoEwByCVQifnuBbAmtHRsYfcbtftRGRMTEwQ59wxPh6FaUr4fE5oGj8vWZuOaVmSCSE0pRRGRiIfk1CKkJfnm4swAWCxWHKyvd3/CHB2t3XRhBkAMEZvArhXKXxv/frVr7S0dN29bNmyXVJKklIS54xNTcURiyURDPrn9EpGUV0XZl6ejwmhaUrJWQ1EBBjG7O3YyxBLpcy2U6eeSdrevfhb/8ymnIiypJSDRESWJXcS0YrW1r4HR0Ziie7uUau7e5SGh6comfzEzE/Zz8XCJCLq7x9/3tbvU7nEz5C2j0atR6Z1aBHRvlgsOZlKSTJNaz4kzpFRF0fbJCLq7Bx89LMgzIhIHD58WJeS3rMVlxeooCQiSqWsR6SUfXRxnraIiCxL7jh6tN9DtkM+VZD9gUgikVhNRGGbgKnm5ybTVvB3AGBZ1veIiKRMK74A2O1Z/2Dr9ul5dwZpAQCmaX55mqU/ydNWmpyM2MYSROSWUrYSkSUlJW0CF/IkiMgyTXMz2dH3mRC2SWv23/ttQspWYrqrMyGfsv9PmaZZZddz2Ea74wI8OisSiUSZ3eZF33LMGSKMMYuINMbYryzLkkKIZwDodrHCH8+XGQCuFP6glLVN1/UmSp8Fpyi9hPwmkUh8l4iWAjxTbx5I3xUppWJOp7MbADJ3Up8pMp5Opeg6y5J7pZSJacZPEtFRy7L+kYgCtryYUf9z9WnUvJShaaf38Xi8VAhRqOu6TCQw6HKxj6bJ8dmSArrIyYYxNusXOZ8pKP2J36wGIiLt8+bJubCQ61I+rR5hHnvQRSxiEYtYxCIWMSv+H2HrrR0sDcEqAAAAAElFTkSuQmCC" />
       <span class="sb-brand">NORTHLAB</span>
-      <button class="sb-toggle" id="sb-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
-        <svg id="sb-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      <button class="sb-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
     </div>
 
     <div class="sb-nav">
       <div class="sb-section-label">Main</div>
+      <div class="sb-item" id="nav-home" onclick="showView('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="sb-item-label">Home</span>
+      </div>
       <div class="sb-item active" id="nav-dashboard" onclick="showView('dashboard')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         <span class="sb-item-label">Dashboard</span>
@@ -483,6 +494,29 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       </div>
     </div>
 
+    <!-- VIEW: HOME -->
+    <div class="view" id="view-home">
+      <div class="rev-main" style="max-width:700px">
+        <div style="margin-bottom:24px">
+          <div style="font-size:22px;font-weight:600;margin-bottom:4px" id="home-greeting-name">Welcome back</div>
+          <div style="font-size:13px;color:var(--text3)" id="home-greeting-sub"></div>
+        </div>
+        <!-- Goals summary -->
+        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-bottom:14px">
+          <div style="font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Goals</div>
+          <div id="home-goals-summary" style="display:flex;flex-direction:column;gap:10px">
+            <div style="font-size:12px;color:var(--text3)">No goals yet</div>
+          </div>
+          <button class="crm-link-btn" style="margin-top:14px" onclick="showView('goals')">View Goals</button>
+        </div>
+        <!-- Open CRM -->
+        <button class="crm-link-btn" onclick="showView('dashboard')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Open CRM
+        </button>
+      </div>
+    </div>
+
     <!-- VIEW: DASHBOARD -->
     <div class="view active" id="view-dashboard">
       <div class="summary-bar">
@@ -517,14 +551,27 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     <!-- VIEW: REVENUE -->
     <div class="view" id="view-revenue">
       <div class="rev-main">
-        <div class="rev-filters" id="rev-filters">
-          <button class="rev-filter-btn active" onclick="setRevFilter('today',this)">Today</button>
-          <button class="rev-filter-btn" onclick="setRevFilter('3d',this)">3 Days</button>
-          <button class="rev-filter-btn" onclick="setRevFilter('7d',this)">7 Days</button>
-          <button class="rev-filter-btn" onclick="setRevFilter('month',this)">Month</button>
-          <button class="rev-filter-btn" onclick="setRevFilter('year',this)">Year</button>
-          <input type="date" class="date-input" id="rev-from" onchange="setRevFilter('custom',null)" style="font-size:11px;padding:5px 8px"/>
-          <input type="date" class="date-input" id="rev-to" onchange="setRevFilter('custom',null)" style="font-size:11px;padding:5px 8px"/>
+        <div style="position:relative;margin-bottom:24px">
+          <button class="rev-filter-btn active" id="rev-period-btn" onclick="toggleRevDropdown()" style="display:flex;align-items:center;gap:6px;min-width:120px;justify-content:space-between">
+            <span id="rev-period-label">Total</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div id="rev-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:6px;z-index:100;min-width:180px;box-shadow:0 8px 24px #00000066">
+            <div class="rev-dd-item" onclick="setRevFilter('total',this)" data-f="total">Total</div>
+            <div class="rev-dd-item" onclick="setRevFilter('today',this)" data-f="today">Today</div>
+            <div class="rev-dd-item" onclick="setRevFilter('3d',this)" data-f="3d">Last 3 Days</div>
+            <div class="rev-dd-item" onclick="setRevFilter('7d',this)" data-f="7d">Last 7 Days</div>
+            <div class="rev-dd-item" onclick="setRevFilter('month',this)" data-f="month">This Month</div>
+            <div class="rev-dd-item" onclick="setRevFilter('year',this)" data-f="year">This Year</div>
+            <div style="border-top:1px solid var(--border);margin:4px 0;padding-top:6px">
+              <div style="font-size:10px;color:var(--text3);letter-spacing:1px;padding:0 8px 4px">Custom Range</div>
+              <div style="display:flex;gap:6px;padding:4px 8px">
+                <input type="date" class="date-input" id="rev-from" style="font-size:11px;padding:4px 6px;flex:1"/>
+                <input type="date" class="date-input" id="rev-to" style="font-size:11px;padding:4px 6px;flex:1"/>
+              </div>
+              <div style="padding:4px 8px"><button class="rev-filter-btn" onclick="setRevFilter('custom',this)" style="width:100%;justify-content:center" data-f="custom">Apply</button></div>
+            </div>
+          </div>
         </div>
         <div class="rev-hero">
           <div class="rev-label">Cash Collected</div>
@@ -550,21 +597,6 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
             <div class="rev-stat-val" id="rev-commission" style="color:var(--green)">$0</div>
           </div>
         </div>
-        <!-- CC TARGET -->
-        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-top:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-            <div style="font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase">Monthly target</div>
-            <button class="btn-sm" style="font-size:11px;padding:4px 10px" onclick="openIncomeTarget()">Edit</button>
-          </div>
-          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px">
-            <span style="font-size:28px;font-weight:300;letter-spacing:-1px;color:var(--orange)" id="rev-month-cash">$0</span>
-            <span style="font-size:13px;color:var(--text3)">/ <span id="rev-target-val">—</span></span>
-          </div>
-          <div style="height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-bottom:6px">
-            <div id="rev-target-fill" style="height:4px;background:var(--orange);border-radius:2px;width:0%;transition:width .4s"></div>
-          </div>
-          <div style="font-size:11px;color:var(--text3);text-align:right" id="rev-target-pct">No target set</div>
-        </div>
       </div>
     </div>
 
@@ -574,51 +606,22 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
           <div>
             <div style="font-size:18px;font-weight:600">Goals</div>
-            <div style="font-size:12px;color:var(--text3);margin-top:2px">Track what matters beyond the numbers</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px">Track what matters</div>
           </div>
+          <button class="btn-sm" onclick="openGoalModal(null)" style="display:flex;align-items:center;gap:5px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add goal
+          </button>
         </div>
-        <!-- INCOME CARD -->
-        <div class="home-grid" id="home-grid">
-          <div class="home-card" id="income-card">
-            <div class="home-card-title">Income</div>
-            <div class="income-big" id="h-cash">$0</div>
-            <div class="income-label">collected this month</div>
-            <div class="income-prog-wrap">
-              <div class="income-prog-bg"><div class="income-prog-fill" id="h-prog-fill" style="width:0%"></div></div>
-              <div class="income-prog-pct" id="h-prog-pct">No target set</div>
-            </div>
-            <div id="h-commission-row" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">Commission this month</span>
-                <span style="font-size:15px;font-weight:500;color:var(--green)" id="h-commission">$0</span>
-              </div>
-            </div>
-            <div class="income-target-row">
-              <span class="income-target-label">Monthly target</span>
-              <span class="income-target-val" id="h-target-display">&#8212;</span>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:14px;align-items:center">
-              <button class="btn-sm" style="font-size:11px;padding:5px 10px;white-space:nowrap" onclick="openIncomeTarget()">Edit target</button>
-              <button class="crm-link-btn" style="margin-top:0;flex:1" onclick="showView('dashboard')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Open CRM
-              </button>
-            </div>
-          </div>
-          <div id="goal-cards-container"></div>
-          <div class="home-card" style="display:flex;align-items:center;justify-content:center;min-height:180px;cursor:pointer;border-style:dashed" onclick="openAddGoalModal()" id="add-goal-card">
-            <div style="text-align:center">
-              <div style="width:32px;height:32px;border:1.5px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:var(--text3)">+</div>
-              <div style="font-size:12px;color:var(--text3)">Add goal</div>
-            </div>
-          </div>
-        </div>
+        <div id="goals-list" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div id="goals-empty" style="text-align:center;padding:40px;color:var(--text3);font-size:13px;display:none">No goals yet. Add your first one above.</div>
       </div>
     </div>
 
     <!-- VIEW: SETTINGS -->
     <div class="view" id="view-settings">
       <div class="rev-main settings-main">
+        <div class="settings-inner">
         <div style="font-size:18px;font-weight:600;margin-bottom:20px">Settings</div>
         <div class="settings-section">
           <div class="settings-section-title">Profile</div>
@@ -631,7 +634,10 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
           <div class="settings-row">
             <div>
               <div class="settings-row-label">Display name</div>
-              <div class="settings-row-sub" id="settings-name">&#8212;</div>
+            </div>
+            <div class="name-edit-wrap">
+              <input class="name-edit-input" id="settings-name-input" placeholder="Your name" />
+              <button class="btn-sm" onclick="saveDisplayName()">Save</button>
             </div>
           </div>
         </div>
@@ -658,7 +664,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
             </button>
           </div>
         </div>
-      </div>
+      </div><!-- end settings-inner -->
     </div>
 
   </div><!-- end app-content -->
@@ -805,61 +811,47 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
   </div>
 </div>
 
-<!-- ADD GOAL TYPE MODAL -->
-<div class="modal-overlay" id="m-add-goal-type">
+<!-- GOAL MODAL -->
+<div class="modal-overlay" id="m-goal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Add Goal</div>
-      <button class="modal-close" onclick="closeModal('m-add-goal-type')">&#x2715;</button>
+      <div class="modal-title" id="g-modal-title">Add Goal</div>
+      <button class="modal-close" onclick="closeModal('m-goal')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">Choose type</div>
-      <div style="display:grid;gap:8px">
-        <button class="log-btn" onclick="closeModal('m-add-goal-type');openQuranModal(null)" style="justify-content:flex-start">
-          <div style="width:30px;height:30px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          </div>
-          <div><span class="log-btn-label">Quran</span>Track surah &amp; ayat memorisation</div>
-        </button>
+      <div class="fgroup"><label class="flabel">Goal name</label><input type="text" class="finput" autocomplete="off" id="g-name" placeholder="e.g. Memorise Al-Mulk"/></div>
+      <div class="fgroup"><label class="flabel">Notes <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="text" class="finput" autocomplete="off" id="g-notes" placeholder="Add a note..."/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fgroup"><label class="flabel">Target <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" autocomplete="off" id="g-target" placeholder="e.g. 30"/></div>
+        <div class="fgroup"><label class="flabel">Current progress</label><input type="number" class="finput" autocomplete="off" id="g-progress" placeholder="0"/></div>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:16px;text-align:center">More goal types coming soon</div>
-    </div>
-  </div>
-</div>
-
-<!-- QURAN GOAL MODAL -->
-<div class="modal-overlay" id="m-quran">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="quran-modal-title">Quran Goal</div>
-      <button class="modal-close" onclick="closeModal('m-quran')">&#x2715;</button>
-    </div>
-    <div class="modal-body">
-      <div class="fgroup"><label class="flabel">Surah Name</label><input type="text" class="finput" autocomplete="off" id="q-name" placeholder="e.g. Al-Mulk"/></div>
-      <div class="fgroup"><label class="flabel">Total Ayat / Target</label><input type="number" class="finput" autocomplete="off" id="q-target" placeholder="30" min="1"/></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+        <input type="checkbox" id="g-done" style="width:15px;height:15px;accent-color:var(--green);cursor:pointer"/>
+        <label for="g-done" style="font-size:13px;color:var(--text2);cursor:pointer">Mark as done</label>
+      </div>
     </div>
     <div class="modal-footer">
-      <button id="q-delete-btn" class="btn btn-ghost" style="width:auto;padding:9px 16px;color:var(--red);border-color:#ff453a44;display:none" onclick="deleteQuranGoal()">Delete</button>
-      <button class="btn btn-ghost" style="width:auto;padding:9px 16px;margin-left:auto" onclick="closeModal('m-quran')">Cancel</button>
-      <button class="btn" style="width:auto;padding:9px 20px" onclick="saveQuranGoal()">Save</button>
+      <button id="g-delete-btn" class="btn btn-ghost" style="width:auto;padding:9px 16px;color:var(--red);border-color:#ff453a44;display:none" onclick="deleteGoal()">Delete</button>
+      <button class="btn btn-ghost" style="width:auto;padding:9px 16px;margin-left:auto" onclick="closeModal('m-goal')">Cancel</button>
+      <button class="btn" style="width:auto;padding:9px 20px" onclick="saveGoal()">Save</button>
     </div>
   </div>
 </div>
 
-<!-- LOG AYAT MODAL -->
-<div class="modal-overlay" id="m-log-ayat">
+<!-- LOG PROGRESS MODAL -->
+<div class="modal-overlay" id="m-log-progress">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title">Log Progress</div>
-      <button class="modal-close" onclick="closeModal('m-log-ayat')">&#x2715;</button>
+      <button class="modal-close" onclick="closeModal('m-log-progress')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div id="ayat-goal-info" style="background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2);margin-bottom:14px;font-size:12px;color:var(--text2)"></div>
-      <div class="fgroup"><label class="flabel">Ayat memorised today</label><input type="number" class="finput" autocomplete="off" id="ayat-count" placeholder="e.g. 3" min="1"/></div>
+      <div id="log-prog-info" style="background:var(--surface2);border-radius:8px;padding:12px 14px;border:1px solid var(--border2);margin-bottom:14px;font-size:12px;color:var(--text2)"></div>
+      <div class="fgroup"><label class="flabel">Add progress</label><input type="number" class="finput" autocomplete="off" id="log-prog-amount" placeholder="e.g. 5" min="1"/></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" style="width:auto;padding:9px 16px" onclick="closeModal('m-log-ayat')">Cancel</button>
-      <button class="btn" style="width:auto;padding:9px 20px" onclick="submitAyat()">Log</button>
+      <button class="btn btn-ghost" style="width:auto;padding:9px 16px" onclick="closeModal('m-log-progress')">Cancel</button>
+      <button class="btn" style="width:auto;padding:9px 20px" onclick="submitLogProgress()">Log</button>
     </div>
   </div>
 </div>
@@ -892,19 +884,17 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 let currentUser = null, companies = [], activeCompany = null;
 let currentCalls = [], selectedOutcome = null, extractedDeal = null;
 let activeCloseTab = 'ss', instToggleOn = false, payDealId = null;
-let quranGoals = [], editQuranId = null, logAyatGoalId = null;
+
 let incomeTarget = 0, comToggleOn = false;
 let currentView = 'dashboard';
 let currentRole = 'setter';
-let revFilter = 'today';
+let revFilter = 'total';
 
 // ── SIDEBAR ──
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
-  const collapsed = sb.classList.toggle('collapsed');
-  localStorage.setItem('nl-sb-collapsed', collapsed ? '1' : '0');
-  const icon = document.getElementById('sb-toggle-icon');
-  if (icon) icon.style.transform = collapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('nl-sb-collapsed', sb.classList.contains('collapsed') ? '1' : '0');
 }
 function openSidebar() {
   document.getElementById('sidebar').classList.add('mobile-open');
@@ -918,12 +908,13 @@ function closeSidebar() {
 // ── VIEWS ──
 function showView(view) {
   currentView = view;
-  ['dashboard','revenue','goals','settings'].forEach(v => {
+  ['home','dashboard','revenue','goals','settings'].forEach(v => {
     document.getElementById('view-'+v).classList.toggle('active', v === view);
     document.getElementById('nav-'+v)?.classList.toggle('active', v === view);
   });
   if (view === 'revenue') loadRevenue();
-  if (view === 'goals') { renderGoalCards(); renderHomeIncome(); }
+  if (view === 'goals') { renderGoalCards(); }
+  if (view === 'home') { renderHomeView(); }
   if (window.innerWidth <= 768) closeSidebar();
 }
 
@@ -943,11 +934,36 @@ function renderRoleBadge() {
   });
 }
 
+// ── DISPLAY NAME ──
+function saveDisplayName() {
+  const val = document.getElementById('settings-name-input').value.trim();
+  if (!val) { toast('Enter a name', 'error'); return; }
+  localStorage.setItem('nl-display-name', val);
+  document.getElementById('topbar-user').textContent = val;
+  toast('Name saved', 'success');
+}
+
+// ── REV DROPDOWN ──
+function toggleRevDropdown() {
+  const dd = document.getElementById('rev-dropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', e => {
+  const btn = document.getElementById('rev-period-btn');
+  const dd = document.getElementById('rev-dropdown');
+  if (dd && btn && !btn.contains(e.target) && !dd.contains(e.target)) {
+    dd.style.display = 'none';
+  }
+});
+
 // ── REVENUE VIEW ──
 async function loadRevenue() {
   const now = new Date();
-  let from, to;
-  if (revFilter === 'today') {
+  let from, to, noDateFilter = false;
+  if (revFilter === 'total') {
+    noDateFilter = true;
+    from = '2020-01-01'; to = now.toISOString().slice(0,10);
+  } else if (revFilter === 'today') {
     from = to = now.toISOString().slice(0,10);
   } else if (revFilter === '3d') {
     const d = new Date(now); d.setDate(d.getDate()-2);
@@ -980,24 +996,6 @@ async function loadRevenue() {
   document.getElementById('rev-closed').textContent = closed;
   document.getElementById('rev-ccpc').textContent = '$'+Number(ccpc).toLocaleString();
   document.getElementById('rev-commission').textContent = '$'+Number(commission).toLocaleString();
-
-  // Monthly target section — always shows this month's cash vs target
-  const now2 = new Date();
-  const mStart = `${now2.getFullYear()}-${String(now2.getMonth()+1).padStart(2,'0')}-01`;
-  const { data: monthData } = await sb.from('calls').select('amount').eq('user_id', currentUser.id).eq('status','closed').gte('created_at', mStart+'T00:00:00');
-  const monthCash = (monthData||[]).reduce((s,c) => s+(c.amount||0), 0);
-  document.getElementById('rev-month-cash').textContent = '$'+Number(monthCash).toLocaleString();
-  const target = incomeTarget || 0;
-  if (target > 0) {
-    const pct = Math.min(100, Math.round(monthCash/target*100));
-    document.getElementById('rev-target-fill').style.width = pct+'%';
-    document.getElementById('rev-target-val').textContent = '$'+Number(target).toLocaleString()+' / mo';
-    document.getElementById('rev-target-pct').textContent = pct+'% of target';
-  } else {
-    document.getElementById('rev-target-fill').style.width = '0%';
-    document.getElementById('rev-target-val').textContent = '—';
-    document.getElementById('rev-target-pct').textContent = 'No target set';
-  }
 
   // Build chart
   drawRevChart(arr, from, to);
@@ -1044,7 +1042,7 @@ function drawRevChart(calls, from, to) {
   const cMax = Math.max(...cumVals, 1);
   const pts = cumVals.map((v,i) => {
     const x = padX + (i/(cumVals.length-1||1))*(W-padX*2);
-    const y = H - padY - ((v/cMax)*(H-padY*2));
+    const y = padY + ((1 - v/cMax)*(H-padY*2));
     return `${x},${y}`;
   }).join(' ');
   const areaClose = ` ${W-padX},${H-padY} ${padX},${H-padY}`;
@@ -1066,7 +1064,7 @@ function drawRevChart(calls, from, to) {
   cumVals.forEach((v,i) => {
     if (vals[i] > 0) {
       const x = padX + (i/(cumVals.length-1||1))*(W-padX*2);
-      const y = H - padY - ((v/cMax)*(H-padY*2));
+      const y = padY + ((1 - v/cMax)*(H-padY*2));
       svg.innerHTML += `<circle cx="${x}" cy="${y}" r="4" fill="${lineColor}" opacity="0.8"/>`;
     }
   });
@@ -1074,140 +1072,164 @@ function drawRevChart(calls, from, to) {
 
 function setRevFilter(filter, btn) {
   revFilter = filter;
-  document.querySelectorAll('.rev-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.rev-dd-item').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  const labels = { total:'Total', today:'Today', '3d':'Last 3 Days', '7d':'Last 7 Days', month:'This Month', year:'This Year', custom:'Custom' };
+  const labelEl = document.getElementById('rev-period-label');
+  if (labelEl) labelEl.textContent = labels[filter] || filter;
+  document.getElementById('rev-dropdown').style.display = 'none';
   loadRevenue();
 }
 
-// ── GOALS ──
+// ── GOALS (general) ──
+let goals = [];
+let editGoalId = null;
+
 async function loadGoals() {
-  const { data } = await sb.from('quran_goals').select('*').eq('user_id', currentUser.id).order('created_at');
-  quranGoals = data || [];
+  const { data } = await sb.from('goals').select('*').eq('user_id', currentUser.id).order('created_at');
+  goals = data || [];
   incomeTarget = parseFloat(localStorage.getItem('nl-income-target') || '0');
-  if (currentView === 'goals') { renderGoalCards(); renderHomeIncome(); }
+  if (currentView === 'goals') renderGoalsList();
+  if (currentView === 'home') renderHomeView();
 }
 
-function renderGoalCards() {
-  const container = document.getElementById('goal-cards-container');
-  if (!container) return;
-  container.innerHTML = '';
-  quranGoals.forEach(g => {
-    const pct = g.target > 0 ? Math.min(100, Math.round((g.logged||0) / g.target * 100)) : 0;
-    const done = (g.logged||0) >= g.target;
-    const card = document.createElement('div');
-    card.className = 'home-card';
-    card.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:8px">Quran</div>
-        <button class="goal-edit-btn" onclick="openQuranModal('${g.id}')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
+function renderGoalsList() {
+  const list = document.getElementById('goals-list');
+  const empty = document.getElementById('goals-empty');
+  if (!list) return;
+  if (!goals.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = goals.map(g => {
+    const pct = g.target > 0 ? Math.min(100, Math.round((g.progress||0) / g.target * 100)) : (g.progress||0);
+    const done = g.done;
+    return `<div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px">${g.name}</div>
+          ${g.notes ? `<div style="font-size:12px;color:var(--text3)">${g.notes}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px">
+          ${done ? '<span style="font-size:9px;padding:2px 8px;border-radius:20px;background:#30d15822;color:var(--green);border:1px solid #30d15833">Done</span>' : ''}
+          <button class="goal-edit-btn" onclick="openGoalModal('${g.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </div>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:4px;letter-spacing:.5px">SURAH</div>
-      <div style="font-size:20px;font-weight:500;color:var(--text);margin-bottom:2px">${g.name}</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:14px">${g.logged||0} / ${g.target} ayat</div>
-      <div class="income-prog-bg" style="margin-bottom:6px"><div class="income-prog-fill" style="width:${done?100:pct}%;background:${done?'var(--green)':'var(--accent)'}"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:14px">
-        <span>${done ? 'Complete' : pct + '% memorised'}</span>
-        ${done ? '<span style="color:var(--green);font-weight:500">Done</span>' : ''}
+      ${g.target > 0 ? `
+      <div style="height:3px;background:var(--border2);border-radius:2px;overflow:hidden;margin-bottom:5px">
+        <div style="height:3px;border-radius:2px;width:${done?100:pct}%;background:${done?'var(--green)':'var(--accent)'};transition:width .3s"></div>
       </div>
-      <button class="log-btn" style="width:100%;justify-content:center;padding:10px;font-size:12px;${done?'opacity:.5;pointer-events:none':''}" onclick="openLogAyat('${g.id}')">+ Log ayat</button>`;
-    container.appendChild(card);
-  });
-  const addCard = document.getElementById('add-goal-card');
-  if (addCard) container.parentNode.insertBefore(addCard, null);
+      <div style="font-size:11px;color:var(--text3);display:flex;justify-content:space-between">
+        <span>${done ? 'Complete' : pct + '% — ' + (g.progress||0) + ' / ' + g.target}</span>
+        <button onclick="openLogProgress('${g.id}')" style="background:none;border:none;color:var(--accent);font-size:11px;cursor:pointer;font-family:var(--font)">+ Log</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
 }
 
-async function renderHomeIncome() {
-  const el = document.getElementById('h-cash');
-  if (!el) return;
-  const now = new Date();
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
-  const { data } = await sb.from('calls').select('amount,commission').eq('user_id', currentUser.id).eq('status','closed').gte('created_at', monthStart + 'T00:00:00');
-  const cash = (data||[]).reduce((s,c) => s + (c.amount||0), 0);
-  const commission = (data||[]).reduce((s,c) => s + (c.commission||0), 0);
-  el.textContent = '$' + Number(cash).toLocaleString();
-  const target = incomeTarget || 0;
-  const progFill = document.getElementById('h-prog-fill');
-  const progPct = document.getElementById('h-prog-pct');
-  const targetDisplay = document.getElementById('h-target-display');
-  if (target > 0) {
-    const pct = Math.min(100, Math.round(cash / target * 100));
-    progFill.style.width = pct + '%';
-    progPct.textContent = pct + '% of target';
-    targetDisplay.textContent = '$' + Number(target).toLocaleString() + ' / mo';
+function renderHomeView() {
+  const h = new Date().getHours();
+  const gr = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const name = currentUser?.email?.split('@')[0] || '';
+  const el = document.getElementById('home-greeting-name');
+  if (el) el.textContent = gr + (name ? ', ' + name : '');
+  const subEl = document.getElementById('home-greeting-sub');
+  if (subEl) subEl.textContent = new Date().toLocaleDateString('en-MY', { weekday:'long', day:'numeric', month:'long' });
+  const summary = document.getElementById('home-goals-summary');
+  if (!summary) return;
+  if (!goals.length) { summary.innerHTML = '<div style="font-size:12px;color:var(--text3)">No goals yet</div>'; return; }
+  summary.innerHTML = goals.slice(0,5).map(g => {
+    const pct = g.target > 0 ? Math.min(100, Math.round((g.progress||0)/g.target*100)) : 0;
+    const done = g.done;
+    return `<div style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;color:var(--text);margin-bottom:3px;display:flex;justify-content:space-between">
+          <span>${g.name}</span>
+          <span style="font-size:11px;color:${done?'var(--green)':'var(--text3)'}">${done?'Done':g.target>0?pct+'%':''}</span>
+        </div>
+        ${g.target > 0 ? `<div style="height:2px;background:var(--border2);border-radius:1px;overflow:hidden"><div style="height:2px;border-radius:1px;width:${done?100:pct}%;background:${done?'var(--green)':'var(--accent)'}"></div></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openGoalModal(id) {
+  editGoalId = id;
+  const delBtn = document.getElementById('g-delete-btn');
+  if (id) {
+    const g = goals.find(x => x.id === id);
+    if (!g) return;
+    document.getElementById('g-modal-title').textContent = 'Edit Goal';
+    document.getElementById('g-name').value = g.name || '';
+    document.getElementById('g-notes').value = g.notes || '';
+    document.getElementById('g-target').value = g.target || '';
+    document.getElementById('g-progress').value = g.progress || '';
+    document.getElementById('g-done').checked = !!g.done;
+    delBtn.style.display = 'block';
   } else {
-    progFill.style.width = '0%';
-    progPct.textContent = 'No target set';
-    targetDisplay.textContent = '—';
+    document.getElementById('g-modal-title').textContent = 'Add Goal';
+    document.getElementById('g-name').value = '';
+    document.getElementById('g-notes').value = '';
+    document.getElementById('g-target').value = '';
+    document.getElementById('g-progress').value = '';
+    document.getElementById('g-done').checked = false;
+    delBtn.style.display = 'none';
   }
-  const comRow = document.getElementById('h-commission-row');
-  const comEl = document.getElementById('h-commission');
-  if (commission > 0) { comRow.style.display = 'block'; comEl.textContent = '$' + Number(commission).toLocaleString(); }
-  else comRow.style.display = 'none';
+  openModal('m-goal');
+}
+
+async function saveGoal() {
+  const name = document.getElementById('g-name').value.trim();
+  if (!name) { toast('Enter goal name', 'error'); return; }
+  const notes = document.getElementById('g-notes').value.trim();
+  const target = parseFloat(document.getElementById('g-target').value) || 0;
+  const progress = parseFloat(document.getElementById('g-progress').value) || 0;
+  const done = document.getElementById('g-done').checked;
+  if (editGoalId) {
+    const { error } = await sb.from('goals').update({ name, notes, target, progress, done }).eq('id', editGoalId).eq('user_id', currentUser.id);
+    if (error) { toast('Error: ' + error.message, 'error'); return; }
+    toast('Updated', 'success');
+  } else {
+    const { error } = await sb.from('goals').insert({ user_id: currentUser.id, name, notes, target, progress: 0, done: false });
+    if (error) { toast('Error: ' + error.message, 'error'); return; }
+    toast('Goal added', 'success');
+  }
+  closeModal('m-goal'); await loadGoals();
+}
+
+async function deleteGoal() {
+  if (!editGoalId || !confirm('Delete this goal?')) return;
+  await sb.from('goals').delete().eq('id', editGoalId).eq('user_id', currentUser.id);
+  closeModal('m-goal'); toast('Deleted', 'success'); await loadGoals();
+}
+
+function openLogProgress(id) {
+  editGoalId = id;
+  const g = goals.find(x => x.id === id);
+  if (!g) return;
+  document.getElementById('log-prog-info').innerHTML = `<strong>${g.name}</strong> &nbsp;&middot;&nbsp; <span style="color:var(--accent)">${g.progress||0} / ${g.target}</span>`;
+  document.getElementById('log-prog-amount').value = '';
+  openModal('m-log-progress');
+}
+
+async function submitLogProgress() {
+  const amount = parseFloat(document.getElementById('log-prog-amount').value) || 0;
+  if (!amount || !editGoalId) { toast('Enter amount', 'error'); return; }
+  const g = goals.find(x => x.id === editGoalId);
+  if (!g) return;
+  const newProg = Math.min(g.target, (g.progress||0) + amount);
+  const done = newProg >= g.target;
+  const { error } = await sb.from('goals').update({ progress: newProg, done }).eq('id', editGoalId).eq('user_id', currentUser.id);
+  if (error) { toast('Error: ' + error.message, 'error'); return; }
+  closeModal('m-log-progress'); toast('Progress logged', 'success'); await loadGoals();
 }
 
 function openIncomeTarget() { document.getElementById('it-amount').value = incomeTarget || ''; openModal('m-income-target'); }
 function saveIncomeTarget() {
   const val = parseFloat(document.getElementById('it-amount').value) || 0;
   incomeTarget = val; localStorage.setItem('nl-income-target', val);
-  closeModal('m-income-target'); renderHomeIncome(); toast('Target saved', 'success');
-}
-function openAddGoalModal() { openModal('m-add-goal-type'); }
-function openQuranModal(id) {
-  editQuranId = id;
-  const delBtn = document.getElementById('q-delete-btn');
-  if (id) {
-    const g = quranGoals.find(x => x.id === id);
-    if (!g) return;
-    document.getElementById('quran-modal-title').textContent = 'Edit Quran Goal';
-    document.getElementById('q-name').value = g.name || '';
-    document.getElementById('q-target').value = g.target || '';
-    delBtn.style.display = 'block';
-  } else {
-    document.getElementById('quran-modal-title').textContent = 'Quran Goal';
-    document.getElementById('q-name').value = ''; document.getElementById('q-target').value = '';
-    delBtn.style.display = 'none';
-  }
-  openModal('m-quran');
-}
-async function saveQuranGoal() {
-  const name = document.getElementById('q-name').value.trim();
-  const target = parseInt(document.getElementById('q-target').value) || 0;
-  if (!name || !target) { toast('Fill in surah name and target', 'error'); return; }
-  if (editQuranId) {
-    const { error } = await sb.from('quran_goals').update({ name, target }).eq('id', editQuranId).eq('user_id', currentUser.id);
-    if (error) { toast('Error: ' + error.message, 'error'); return; }
-    toast('Updated', 'success');
-  } else {
-    const { error } = await sb.from('quran_goals').insert({ user_id: currentUser.id, name, target, logged: 0 });
-    if (error) { toast('Error: ' + error.message, 'error'); return; }
-    toast('Quran goal added', 'success');
-  }
-  closeModal('m-quran'); await loadGoals();
-}
-async function deleteQuranGoal() {
-  if (!editQuranId || !confirm('Delete this goal?')) return;
-  await sb.from('quran_goals').delete().eq('id', editQuranId).eq('user_id', currentUser.id);
-  closeModal('m-quran'); toast('Deleted', 'success'); await loadGoals();
-}
-function openLogAyat(id) {
-  logAyatGoalId = id;
-  const g = quranGoals.find(x => x.id === id);
-  if (!g) return;
-  document.getElementById('ayat-goal-info').innerHTML = `<strong>${g.name}</strong> &nbsp;&middot;&nbsp; <span style="color:var(--accent)">${g.logged||0} / ${g.target} ayat</span>`;
-  document.getElementById('ayat-count').value = '';
-  openModal('m-log-ayat');
-}
-async function submitAyat() {
-  const count = parseInt(document.getElementById('ayat-count').value) || 0;
-  if (!count || !logAyatGoalId) { toast('Enter ayat count', 'error'); return; }
-  const g = quranGoals.find(x => x.id === logAyatGoalId);
-  if (!g) return;
-  const newLogged = Math.min(g.target, (g.logged||0) + count);
-  const { error } = await sb.from('quran_goals').update({ logged: newLogged }).eq('id', logAyatGoalId).eq('user_id', currentUser.id);
-  if (error) { toast('Error: ' + error.message, 'error'); return; }
-  closeModal('m-log-ayat'); toast('Progress logged', 'success'); await loadGoals();
+  closeModal('m-income-target'); toast('Target saved', 'success');
+  if (currentView === 'revenue') loadRevenue();
 }
 
 // ── AUTH ──
@@ -1248,7 +1270,7 @@ async function signOut() {
   await sb.auth.signOut();
   document.getElementById('app-shell').classList.remove('visible');
   document.getElementById('auth-screen').classList.add('visible');
-  currentUser = null; quranGoals = [];
+  currentUser = null; goals = [];
 }
 
 // ── BOOT ──
@@ -1259,23 +1281,22 @@ async function bootApp() {
   document.getElementById('auth-screen').classList.remove('visible');
   document.getElementById('app-shell').classList.add('visible');
   const name = user.email.split('@')[0];
-  document.getElementById('topbar-user').textContent = name;
+  const displayName = localStorage.getItem('nl-display-name') || name;
+  document.getElementById('topbar-user').textContent = displayName;
   document.getElementById('settings-email').textContent = user.email;
-  document.getElementById('settings-name').textContent = name;
+  const nameInput = document.getElementById('settings-name-input');
+  if (nameInput) nameInput.value = displayName;
   const now = new Date();
   const y = now.getFullYear(), m = String(now.getMonth()+1).padStart(2,'0'), d = String(now.getDate()).padStart(2,'0');
   document.getElementById('d-to').value = `${y}-${m}-${d}`;
   document.getElementById('d-from').value = `${y}-${m}-01`;
   if (localStorage.getItem('nl-theme') === 'light') applyTheme(true);
-  if (localStorage.getItem('nl-sb-collapsed') === '1') {
-    document.getElementById('sidebar').classList.add('collapsed');
-    const icon = document.getElementById('sb-toggle-icon');
-    if (icon) icon.style.transform = 'rotate(180deg)';
-  }
+  if (localStorage.getItem('nl-sb-collapsed') === '1') document.getElementById('sidebar').classList.add('collapsed');
   currentRole = localStorage.getItem('nl-role') || 'setter';
   renderRoleBadge();
   await loadCompanies();
   await loadGoals();
+  showView('home');
 }
 
 // ── THEME ──
