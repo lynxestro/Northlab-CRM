@@ -343,11 +343,12 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 .rev-stat-val{font-size:24px;font-weight:300;letter-spacing:-.5px}
 
 /* SETTINGS VIEW */
-.settings-main{padding:24px 20px;width:100%}
-.settings-inner{max-width:700px}
-.settings-section{margin-bottom:28px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px}
-.settings-section-title{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.settings-main{padding:24px 20px 32px;width:100%}
+.settings-inner{width:min(1120px,100%);margin:0 auto;display:grid;grid-template-columns:repeat(2,minmax(320px,1fr));gap:20px;align-items:start}
+.settings-heading{grid-column:1/-1;font-size:18px;font-weight:600;margin-bottom:0}
+.settings-section{margin-bottom:0;background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:22px}
+.settings-section-title{font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:18px}
 .settings-row:last-child{border-bottom:none}
 .settings-row-label{font-size:13px;font-weight:500}
 .settings-row-sub{font-size:11px;color:var(--text3);margin-top:2px}
@@ -357,9 +358,13 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 .role-btn.closer.active{background:#30d15818;border-color:#30d15866;color:var(--green)}
 .role-btn.admin.active{background:#ff9f0a18;border-color:#ff9f0a66;color:var(--orange)}
 .role-btn:hover{background:var(--surface2);color:var(--text)}
-.name-edit-wrap{display:flex;align-items:center;gap:8px}
-.name-edit-input{background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;width:160px;transition:border-color .2s}
+.name-edit-wrap{display:flex;align-items:center;gap:10px;width:min(100%,420px)}
+.name-edit-input{background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;width:100%;min-width:0;transition:border-color .2s}
 .name-edit-input:focus{border-color:var(--accent)}
+.home-main{width:min(100%,960px);margin:0 auto}
+.home-goals-card{width:100%}
+.home-goal-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0}
+.home-goal-row + .home-goal-row{border-top:1px solid var(--border)}
 
 /* MOBILE */
 @media(max-width:700px){
@@ -387,7 +392,13 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
   .hero-card{padding:14px 14px 12px}
   .home-grid{grid-template-columns:1fr}
   .rev-stats-grid{grid-template-columns:1fr 1fr}
+  .rev-stats-grid > .rev-stat-card:last-child{grid-column:1 / -1}
   .rev-number{font-size:40px}
+  .settings-main{padding:16px 12px 24px}
+  .settings-inner{grid-template-columns:1fr;gap:14px}
+  .settings-row{align-items:flex-start;flex-direction:column}
+  .name-edit-wrap{width:100%}
+  .home-main{width:100%}
 }
 </style>
 </head>
@@ -496,24 +507,19 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 
     <!-- VIEW: HOME -->
     <div class="view" id="view-home">
-      <div class="rev-main" style="max-width:700px">
+      <div class="rev-main home-main">
         <div style="margin-bottom:24px">
           <div style="font-size:22px;font-weight:600;margin-bottom:4px" id="home-greeting-name">Welcome back</div>
           <div style="font-size:13px;color:var(--text3)" id="home-greeting-sub"></div>
         </div>
         <!-- Goals summary -->
-        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-bottom:14px">
+        <div class="home-goals-card" style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-bottom:14px">
           <div style="font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Goals</div>
           <div id="home-goals-summary" style="display:flex;flex-direction:column;gap:10px">
             <div style="font-size:12px;color:var(--text3)">No goals yet</div>
           </div>
           <button class="crm-link-btn" style="margin-top:14px" onclick="showView('goals')">View Goals</button>
         </div>
-        <!-- Open CRM -->
-        <button class="crm-link-btn" onclick="showView('dashboard')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          Open CRM
-        </button>
       </div>
     </div>
 
@@ -622,7 +628,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
     <div class="view" id="view-settings">
       <div class="rev-main settings-main">
         <div class="settings-inner">
-        <div style="font-size:18px;font-weight:600;margin-bottom:20px">Settings</div>
+        <div class="settings-heading">Settings</div>
         <div class="settings-section">
           <div class="settings-section-title">Profile</div>
           <div class="settings-row">
@@ -819,12 +825,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       <button class="modal-close" onclick="closeModal('m-goal')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div class="fgroup"><label class="flabel">Goal name</label><input type="text" class="finput" autocomplete="off" id="g-name" placeholder="e.g. Memorise Al-Mulk"/></div>
-      <div class="fgroup"><label class="flabel">Notes <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="text" class="finput" autocomplete="off" id="g-notes" placeholder="Add a note..."/></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="fgroup"><label class="flabel">Target <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="number" class="finput" autocomplete="off" id="g-target" placeholder="e.g. 30"/></div>
-        <div class="fgroup"><label class="flabel">Current progress</label><input type="number" class="finput" autocomplete="off" id="g-progress" placeholder="0"/></div>
-      </div>
+      <div class="fgroup"><label class="flabel">Goal name</label><input type="text" class="finput" autocomplete="off" id="g-name" placeholder=""/></div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
         <input type="checkbox" id="g-done" style="width:15px;height:15px;accent-color:var(--green);cursor:pointer"/>
         <label for="g-done" style="font-size:13px;color:var(--text2);cursor:pointer">Mark as done</label>
@@ -935,11 +936,16 @@ function renderRoleBadge() {
 }
 
 // ── DISPLAY NAME ──
+function getDisplayName() {
+  if (!currentUser) return '';
+  return localStorage.getItem('nl-display-name') || currentUser.email.split('@')[0];
+}
 function saveDisplayName() {
   const val = document.getElementById('settings-name-input').value.trim();
   if (!val) { toast('Enter a name', 'error'); return; }
   localStorage.setItem('nl-display-name', val);
   document.getElementById('topbar-user').textContent = val;
+  renderHomeView();
   toast('Name saved', 'success');
 }
 
@@ -990,84 +996,106 @@ async function loadRevenue() {
   const closed = arr.length;
   const ccpc = closed > 0 ? Math.round(total/closed) : 0;
 
-  // Animate number
-  animateNumber('rev-number', total, '$');
+  const animDuration = 1000;
+  animateNumber('rev-number', total, '$', animDuration);
   document.getElementById('rev-sub').textContent = from === to ? from : `${from} — ${to}`;
   document.getElementById('rev-closed').textContent = closed;
   document.getElementById('rev-ccpc').textContent = '$'+Number(ccpc).toLocaleString();
   document.getElementById('rev-commission').textContent = '$'+Number(commission).toLocaleString();
 
-  // Build chart
-  drawRevChart(arr, from, to);
+  drawRevChart(arr, from, to, animDuration);
 }
 
-function animateNumber(elId, target, prefix='') {
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function animateNumber(elId, target, prefix='', duration=1000) {
   const el = document.getElementById(elId);
-  const start = 0;
-  const duration = 800;
+  if (!el) return;
   const startTime = performance.now();
   function update(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const current = Math.round(start + (target - start) * eased);
+    const progress = Math.min((now - startTime) / duration, 1);
+    const current = Math.round(target * easeOutCubic(progress));
     el.textContent = prefix + Number(current).toLocaleString();
     if (progress < 1) requestAnimationFrame(update);
   }
   requestAnimationFrame(update);
 }
 
-function drawRevChart(calls, from, to) {
+function drawRevChart(calls, from, to, duration=1000) {
   const svg = document.getElementById('rev-svg');
-  svg.innerHTML = '';
-  // Build daily buckets
+  if (!svg) return;
+
   const fromD = new Date(from), toD = new Date(to);
   const days = [];
   const cur = new Date(fromD);
-  while (cur <= toD) { days.push(cur.toISOString().slice(0,10)); cur.setDate(cur.getDate()+1); }
+  while (cur <= toD) {
+    days.push(cur.toISOString().slice(0,10));
+    cur.setDate(cur.getDate()+1);
+  }
+
   const buckets = {};
   days.forEach(d => buckets[d] = 0);
-  calls.forEach(c => { const d = c.created_at?.slice(0,10); if(d && buckets[d]!==undefined) buckets[d] += c.amount||0; });
+  calls.forEach(c => {
+    const d = c.created_at?.slice(0,10);
+    if (d && buckets[d] !== undefined) buckets[d] += c.amount || 0;
+  });
+
   const vals = days.map(d => buckets[d]);
-  if (vals.length < 2) {
-    svg.innerHTML = '<text x="400" y="100" text-anchor="middle" fill="var(--text3)" font-size="12">Not enough data for this period</text>';
-    return;
-  }
-  const W=800, H=200, padX=10, padY=20;
-  const max = Math.max(...vals, 1);
-  // Cumulative
+  if (vals.length === 1) vals.unshift(0);
+
   const cumVals = [];
   let run = 0;
   vals.forEach(v => { run += v; cumVals.push(run); });
+
+  const W = 800, H = 200;
+  const padLeft = 20, padRight = 16, padTop = 16, padBottom = 20;
+  const chartW = W - padLeft - padRight;
+  const chartH = H - padTop - padBottom;
   const cMax = Math.max(...cumVals, 1);
-  const pts = cumVals.map((v,i) => {
-    const x = padX + (i/(cumVals.length-1||1))*(W-padX*2);
-    const y = padY + ((1 - v/cMax)*(H-padY*2));
-    return `${x},${y}`;
-  }).join(' ');
-  const areaClose = ` ${W-padX},${H-padY} ${padX},${H-padY}`;
-  const gid = 'rg'+Math.random().toString(36).slice(2,6);
   const isLight = document.body.classList.contains('light');
   const lineColor = '#30d158';
-  svg.innerHTML = `
-    <defs>
-      <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.25"/>
-        <stop offset="100%" stop-color="${lineColor}" stop-opacity="0.02"/>
-      </linearGradient>
-    </defs>
-    <polygon points="${pts}${areaClose}" fill="url(#${gid})"/>
-    <polyline points="${pts}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1200" stroke-dashoffset="1200">
-      <animate attributeName="stroke-dashoffset" from="1200" to="0" dur="1s" fill="freeze"/>
-    </polyline>`;
-  // Dots on data points
-  cumVals.forEach((v,i) => {
-    if (vals[i] > 0) {
-      const x = padX + (i/(cumVals.length-1||1))*(W-padX*2);
-      const y = padY + ((1 - v/cMax)*(H-padY*2));
-      svg.innerHTML += `<circle cx="${x}" cy="${y}" r="4" fill="${lineColor}" opacity="0.8"/>`;
-    }
-  });
+  const gridColor = isLight ? '#00000014' : '#ffffff12';
+  const labelColor = isLight ? '#11111180' : '#ffffff66';
+  const gid = 'rg' + Math.random().toString(36).slice(2, 8);
+
+  const xFor = i => padLeft + (i / Math.max(cumVals.length - 1, 1)) * chartW;
+  const yFor = v => padTop + (1 - (v / cMax)) * chartH;
+  const grid = [0, 0.33, 0.66, 1].map(r => {
+    const y = padTop + chartH * r;
+    return `<line x1="${padLeft}" y1="${y}" x2="${W - padRight}" y2="${y}" stroke="${gridColor}" stroke-width="1"/>`;
+  }).join('');
+
+  function renderFrame(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = easeOutCubic(progress);
+    const animatedVals = cumVals.map(v => v * eased);
+    const pts = animatedVals.map((v, i) => `${xFor(i)},${yFor(v)}`).join(' ');
+    const areaPts = `${padLeft},${H - padBottom} ${pts} ${W - padRight},${H - padBottom}`;
+    const lastVal = animatedVals[animatedVals.length - 1] || 0;
+    const lastX = xFor(animatedVals.length - 1);
+    const lastY = yFor(lastVal);
+
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="${lineColor}" stop-opacity="0.015"/>
+        </linearGradient>
+      </defs>
+      ${grid}
+      <polygon points="${areaPts}" fill="url(#${gid})"/>
+      <polyline points="${pts}" fill="none" stroke="${lineColor}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${lastX}" cy="${lastY}" r="4.5" fill="${lineColor}" stroke="${isLight ? '#ffffff' : '#0f0f10'}" stroke-width="2"/>
+      <text x="${padLeft}" y="${H - 4}" fill="${labelColor}" font-size="11">${from}</text>
+      <text x="${W - padRight}" y="${H - 4}" fill="${labelColor}" font-size="11" text-anchor="end">${to}</text>`;
+
+    if (progress < 1) requestAnimationFrame(renderFrame);
+  }
+
+  const startTime = performance.now();
+  requestAnimationFrame(renderFrame);
 }
 
 function setRevFilter(filter, btn) {
@@ -1130,7 +1158,7 @@ function renderGoalsList() {
 function renderHomeView() {
   const h = new Date().getHours();
   const gr = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  const name = currentUser?.email?.split('@')[0] || '';
+  const name = getDisplayName();
   const el = document.getElementById('home-greeting-name');
   if (el) el.textContent = gr + (name ? ', ' + name : '');
   const subEl = document.getElementById('home-greeting-sub');
@@ -1141,11 +1169,11 @@ function renderHomeView() {
   summary.innerHTML = goals.slice(0,5).map(g => {
     const pct = g.target > 0 ? Math.min(100, Math.round((g.progress||0)/g.target*100)) : 0;
     const done = g.done;
-    return `<div style="display:flex;align-items:center;gap:10px">
+    return `<div class="home-goal-row">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;color:var(--text);margin-bottom:3px;display:flex;justify-content:space-between">
+        <div style="font-size:13px;color:var(--text);margin-bottom:3px;display:flex;justify-content:space-between;gap:10px">
           <span>${g.name}</span>
-          <span style="font-size:11px;color:${done?'var(--green)':'var(--text3)'}">${done?'Done':g.target>0?pct+'%':''}</span>
+          <span style="font-size:11px;color:${done?'var(--green)':'var(--text3)'};white-space:nowrap">${done?'Done':g.target>0?pct+'%':''}</span>
         </div>
         ${g.target > 0 ? `<div style="height:2px;background:var(--border2);border-radius:1px;overflow:hidden"><div style="height:2px;border-radius:1px;width:${done?100:pct}%;background:${done?'var(--green)':'var(--accent)'}"></div></div>` : ''}
       </div>
@@ -1161,17 +1189,11 @@ function openGoalModal(id) {
     if (!g) return;
     document.getElementById('g-modal-title').textContent = 'Edit Goal';
     document.getElementById('g-name').value = g.name || '';
-    document.getElementById('g-notes').value = g.notes || '';
-    document.getElementById('g-target').value = g.target || '';
-    document.getElementById('g-progress').value = g.progress || '';
     document.getElementById('g-done').checked = !!g.done;
     delBtn.style.display = 'block';
   } else {
     document.getElementById('g-modal-title').textContent = 'Add Goal';
     document.getElementById('g-name').value = '';
-    document.getElementById('g-notes').value = '';
-    document.getElementById('g-target').value = '';
-    document.getElementById('g-progress').value = '';
     document.getElementById('g-done').checked = false;
     delBtn.style.display = 'none';
   }
@@ -1181,16 +1203,14 @@ function openGoalModal(id) {
 async function saveGoal() {
   const name = document.getElementById('g-name').value.trim();
   if (!name) { toast('Enter goal name', 'error'); return; }
-  const notes = document.getElementById('g-notes').value.trim();
-  const target = parseFloat(document.getElementById('g-target').value) || 0;
-  const progress = parseFloat(document.getElementById('g-progress').value) || 0;
   const done = document.getElementById('g-done').checked;
+  const payload = { name, done };
   if (editGoalId) {
-    const { error } = await sb.from('goals').update({ name, notes, target, progress, done }).eq('id', editGoalId).eq('user_id', currentUser.id);
+    const { error } = await sb.from('goals').update(payload).eq('id', editGoalId).eq('user_id', currentUser.id);
     if (error) { toast('Error: ' + error.message, 'error'); return; }
     toast('Updated', 'success');
   } else {
-    const { error } = await sb.from('goals').insert({ user_id: currentUser.id, name, notes, target, progress: 0, done: false });
+    const { error } = await sb.from('goals').insert({ user_id: currentUser.id, ...payload });
     if (error) { toast('Error: ' + error.message, 'error'); return; }
     toast('Goal added', 'success');
   }
