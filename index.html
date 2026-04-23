@@ -332,8 +332,8 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 .rev-number{font-size:52px;font-weight:300;letter-spacing:-2px;color:var(--green);line-height:1;transition:color .3s}
 .rev-sub{font-size:13px;color:var(--text3);margin-top:6px}
 .rev-chart-wrap{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-bottom:20px}
-.rev-chart-area{height:200px;position:relative}
-.rev-chart-area svg{width:100%;height:100%}
+.rev-chart-area{width:100%;position:relative;overflow:hidden}
+.rev-chart-area svg{width:100%;height:auto;display:block}
 .rev-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .rev-dd-item{padding:8px 12px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--text2);transition:background .15s}
 .rev-dd-item:hover{background:var(--surface3);color:var(--text)}
@@ -586,7 +586,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
         </div>
         <div class="rev-chart-wrap">
           <div class="rev-chart-area" id="rev-chart-area">
-            <svg id="rev-svg" viewBox="0 0 800 220" preserveAspectRatio="none"></svg>
+            <svg id="rev-svg" viewBox="0 0 800 220" preserveAspectRatio="xMidYMid meet"></svg>
           </div>
         </div>
         <div class="rev-stats-grid">
@@ -825,8 +825,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       <button class="modal-close" onclick="closeModal('m-goal')">&#x2715;</button>
     </div>
     <div class="modal-body">
-      <div class="fgroup"><label class="flabel">Notes <span style="color:var(--text3);font-weight:400;letter-spacing:0">— optional</span></label><input type="text" class="finput" autocomplete="off" id="g-notes" placeholder="e.g. Daily habit, 30 days"/></div>
-      <div class="fgroup"><label class="flabel">Goal name</label><input type="text" class="finput" autocomplete="off" id="g-name" placeholder="e.g. Memorise Al-Mulk"/></div>
+      <div class="fgroup"><label class="flabel">Goal name</label><input type="text" class="finput" autocomplete="off" id="g-name" placeholder=""/></div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
         <input type="checkbox" id="g-done" style="width:15px;height:15px;accent-color:var(--green);cursor:pointer"/>
         <label for="g-done" style="font-size:13px;color:var(--text2);cursor:pointer">Mark as done</label>
@@ -1031,7 +1030,10 @@ function drawRevChart(calls, from, to, duration=1000) {
   const fromD = new Date(from), toD = new Date(to);
   const days = [];
   const cur = new Date(fromD);
-  while (cur <= toD) { days.push(cur.toISOString().slice(0,10)); cur.setDate(cur.getDate()+1); }
+  while (cur <= toD) {
+    days.push(cur.toISOString().slice(0,10));
+    cur.setDate(cur.getDate()+1);
+  }
 
   const buckets = {};
   days.forEach(d => buckets[d] = 0);
@@ -1040,74 +1042,54 @@ function drawRevChart(calls, from, to, duration=1000) {
     if (d && buckets[d] !== undefined) buckets[d] += c.amount || 0;
   });
 
-  // Cumulative values
   const vals = days.map(d => buckets[d]);
+  if (vals.length === 1) vals.unshift(0);
+
   const cumVals = [];
   let run = 0;
   vals.forEach(v => { run += v; cumVals.push(run); });
 
   const W = 800, H = 220;
-  const padLeft = 70, padRight = 20, padTop = 16, padBottom = 36;
+  const padLeft = 20, padRight = 16, padTop = 16, padBottom = 20;
   const chartW = W - padLeft - padRight;
   const chartH = H - padTop - padBottom;
   const cMax = Math.max(...cumVals, 1);
   const isLight = document.body.classList.contains('light');
   const lineColor = '#30d158';
   const gridColor = isLight ? '#00000014' : '#ffffff12';
-  const labelColor = isLight ? '#636366' : '#888';
+  const labelColor = isLight ? '#11111180' : '#ffffff66';
   const gid = 'rg' + Math.random().toString(36).slice(2, 8);
 
   const xFor = i => padLeft + (i / Math.max(cumVals.length - 1, 1)) * chartW;
-  const yFor = v => padTop + (1 - v / cMax) * chartH;
-
-  // Y axis labels — 4 gridlines with dollar amounts
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(r => ({
-    y: padTop + chartH * (1 - r),
-    val: Math.round(cMax * r)
-  }));
-  const gridLines = yTicks.map(t =>
-    `<line x1="${padLeft}" y1="${t.y}" x2="${W - padRight}" y2="${t.y}" stroke="${gridColor}" stroke-width="1"/>
-     <text x="${padLeft - 8}" y="${t.y + 4}" fill="${labelColor}" font-size="10" text-anchor="end">$${t.val >= 1000 ? (t.val/1000).toFixed(t.val%1000===0?0:1)+'k' : t.val}</text>`
-  ).join('');
-
-  // X axis labels — show first, middle, last dates
-  const xLabels = [];
-  const labelIdxs = [0, Math.floor((days.length-1)/2), days.length-1].filter((v,i,a) => a.indexOf(v)===i);
-  labelIdxs.forEach(i => {
-    const d = days[i];
-    const label = new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric' });
-    xLabels.push(`<text x="${xFor(i)}" y="${H - 6}" fill="${labelColor}" font-size="10" text-anchor="middle">${label}</text>`);
-  });
-
-  // Bottom axis line
-  const axisLine = `<line x1="${padLeft}" y1="${H - padBottom}" x2="${W - padRight}" y2="${H - padBottom}" stroke="${gridColor}" stroke-width="1"/>`;
-
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  const yFor = v => padTop + (1 - (v / cMax)) * chartH;
+  const grid = [0, 0.33, 0.66, 1].map(r => {
+    const y = padTop + chartH * r;
+    return `<line x1="${padLeft}" y1="${y}" x2="${W - padRight}" y2="${y}" stroke="${gridColor}" stroke-width="1"/>`;
+  }).join('');
 
   function renderFrame(now) {
     const progress = Math.min((now - startTime) / duration, 1);
     const eased = easeOutCubic(progress);
     const animatedVals = cumVals.map(v => v * eased);
     const pts = animatedVals.map((v, i) => `${xFor(i)},${yFor(v)}`).join(' ');
-    const firstX = xFor(0), lastX = xFor(animatedVals.length - 1);
-    const bottomY = H - padBottom;
-    const areaPts = `${firstX},${bottomY} ${pts} ${lastX},${bottomY}`;
+    const areaPts = `${padLeft},${H - padBottom} ${pts} ${W - padRight},${H - padBottom}`;
     const lastVal = animatedVals[animatedVals.length - 1] || 0;
+    const lastX = xFor(animatedVals.length - 1);
     const lastY = yFor(lastVal);
 
     svg.innerHTML = `
       <defs>
         <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.22"/>
-          <stop offset="100%" stop-color="${lineColor}" stop-opacity="0.02"/>
+          <stop offset="100%" stop-color="${lineColor}" stop-opacity="0.015"/>
         </linearGradient>
       </defs>
-      ${gridLines}
-      ${axisLine}
-      ${xLabels.join('')}
+      ${grid}
       <polygon points="${areaPts}" fill="url(#${gid})"/>
-      <polyline points="${pts}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-      <circle cx="${lastX}" cy="${lastY}" r="4" fill="${lineColor}" stroke="${isLight?'#fff':'#0f0f10'}" stroke-width="2"/>`;
+      <polyline points="${pts}" fill="none" stroke="${lineColor}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${lastX}" cy="${lastY}" r="4.5" fill="${lineColor}" stroke="${isLight ? '#ffffff' : '#0f0f10'}" stroke-width="2"/>
+      <text x="${padLeft}" y="${H - 4}" fill="${labelColor}" font-size="11">${from}</text>
+      <text x="${W - padRight}" y="${H - 4}" fill="${labelColor}" font-size="11" text-anchor="end">${to}</text>`;
 
     if (progress < 1) requestAnimationFrame(renderFrame);
   }
@@ -1206,13 +1188,11 @@ function openGoalModal(id) {
     const g = goals.find(x => x.id === id);
     if (!g) return;
     document.getElementById('g-modal-title').textContent = 'Edit Goal';
-    document.getElementById('g-notes').value = g.notes || '';
     document.getElementById('g-name').value = g.name || '';
     document.getElementById('g-done').checked = !!g.done;
     delBtn.style.display = 'block';
   } else {
     document.getElementById('g-modal-title').textContent = 'Add Goal';
-    document.getElementById('g-notes').value = '';
     document.getElementById('g-name').value = '';
     document.getElementById('g-done').checked = false;
     delBtn.style.display = 'none';
@@ -1223,9 +1203,8 @@ function openGoalModal(id) {
 async function saveGoal() {
   const name = document.getElementById('g-name').value.trim();
   if (!name) { toast('Enter goal name', 'error'); return; }
-  const notes = document.getElementById('g-notes').value.trim();
   const done = document.getElementById('g-done').checked;
-  const payload = { name, notes, done };
+  const payload = { name, done };
   if (editGoalId) {
     const { error } = await sb.from('goals').update(payload).eq('id', editGoalId).eq('user_id', currentUser.id);
     if (error) { toast('Error: ' + error.message, 'error'); return; }
@@ -1335,10 +1314,9 @@ async function bootApp() {
   if (localStorage.getItem('nl-sb-collapsed') === '1') document.getElementById('sidebar').classList.add('collapsed');
   currentRole = localStorage.getItem('nl-role') || 'setter';
   renderRoleBadge();
-  // Show home FIRST before any async loads to prevent dashboard flash
-  showView('home');
-  await loadGoals();
   await loadCompanies();
+  await loadGoals();
+  showView('home');
 }
 
 // ── THEME ──
