@@ -332,7 +332,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
 .rev-number{font-size:52px;font-weight:300;letter-spacing:-2px;color:var(--green);line-height:1;transition:color .3s}
 .rev-sub{font-size:13px;color:var(--text3);margin-top:6px}
 .rev-chart-wrap{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-bottom:20px}
-.rev-chart-area{width:100%;position:relative;overflow:hidden}
+.rev-chart-area{width:100%;position:relative}
 .rev-chart-area svg{width:100%;height:auto;display:block}
 .rev-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .rev-dd-item{padding:8px 12px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--text2);transition:background .15s}
@@ -559,7 +559,7 @@ tbody td{padding:10px 14px;font-size:12px;white-space:nowrap}
       <div class="rev-main">
         <div style="position:relative;margin-bottom:24px">
           <button class="rev-filter-btn active" id="rev-period-btn" onclick="toggleRevDropdown()" style="display:flex;align-items:center;gap:6px;min-width:120px;justify-content:space-between">
-            <span id="rev-period-label">Total</span>
+            <span id="rev-period-label">This Month</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div id="rev-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:6px;z-index:100;min-width:180px;box-shadow:0 8px 24px #00000066">
@@ -889,7 +889,7 @@ let activeCloseTab = 'ss', instToggleOn = false, payDealId = null;
 let incomeTarget = 0, comToggleOn = false;
 let currentView = 'dashboard';
 let currentRole = 'setter';
-let revFilter = 'total';
+let revFilter = 'month';
 
 // ── SIDEBAR ──
 function toggleSidebar() {
@@ -914,7 +914,7 @@ function showView(view) {
     document.getElementById('nav-'+v)?.classList.toggle('active', v === view);
   });
   if (view === 'revenue') loadRevenue();
-  if (view === 'goals') { renderGoalCards(); }
+  if (view === 'goals') { renderGoalsList(); }
   if (view === 'home') { renderHomeView(); }
   if (window.innerWidth <= 768) closeSidebar();
 }
@@ -1472,7 +1472,8 @@ function computeKPIs(calls) {
   const closed = deduped.filter(c => c.status === 'closed').length;
   const resch = deduped.filter(c => c.status === 'rescheduled').length;
   const pif = deduped.filter(c => c.payment_type === 'pif').length;
-  const cash = deduped.reduce((s,c) => s + (c.amount||0), 0);
+  // Cash sums ALL closed calls (not deduped) to correctly count installment payments
+  const cash = calls.filter(c => c.status === 'closed').reduce((s,c) => s + (c.amount||0), 0);
   const showPct = booked > 0 ? (showed/booked*100).toFixed(1) : '0.0';
   const nsPct = booked > 0 ? (ns/booked*100).toFixed(1) : '0.0';
   const rescPct = booked > 0 ? (resch/booked*100).toFixed(1) : '0.0';
