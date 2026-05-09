@@ -57,6 +57,41 @@ tailwind.config = {
   th{text-align:left;font-size:10px;font-weight:600;color:#8891b8;text-transform:uppercase;letter-spacing:0.05em;padding:8px 10px;border-bottom:1px solid #1e2540;}
   td{padding:9px 10px;font-size:12px;border-bottom:1px solid #1e254033;}
   tr:hover td{background:#1e254022;}
+
+  /* Fixed sidebar styles - no longer relying on inline style overrides */
+  .desktop-sidebar {
+    width: 220px;
+    min-height: 100vh;
+    background: #0d1120;
+    border-right: 1px solid #1e2540;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-menu-btn {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 35;
+    background: #0d1120;
+    border: 1px solid #1e2540;
+    border-radius: 8px;
+    padding: 6px 8px;
+    cursor: pointer;
+    display: none;
+  }
+  .main-content {
+    margin-left: 220px;
+    padding: 20px 24px;
+  }
+  @media (max-width: 767px) {
+    .desktop-sidebar { display: none !important; }
+    .mobile-menu-btn { display: flex !important; }
+    .main-content { margin-left: 0; padding: 20px 16px; }
+  }
 </style>
 </head>
 <body>
@@ -168,12 +203,12 @@ function Sidebar({ page, setPage, userName, role, onSignOut, mobileOpen, setMobi
   );
   return (
     <>
-      <aside style={{width:220,minHeight:'100vh',background:'#0d1120',borderRight:'1px solid #1e2540',position:'fixed',top:0,left:0,zIndex:40,display:'none'}} className="desktop-sidebar">
+      <aside className="desktop-sidebar">
         {nav}
       </aside>
       {mobileOpen && <>
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',zIndex:40}} onClick={() => setMobileOpen(false)}/>
-        <aside style={{width:220,position:'fixed',top:0,left:0,height:'100%',background:'#0d1120',borderRight:'1px solid #1e2540',zIndex:50}}>
+        <aside style={{width:220,position:'fixed',top:0,left:0,height:'100%',background:'#0d1120',borderRight:'1px solid #1e2540',zIndex:50,display:'flex',flexDirection:'column'}}>
           {nav}
         </aside>
       </>}
@@ -562,7 +597,6 @@ function NotesModal({ open, onClose, call, calls, setCalls }) {
     const updated = [...notes, { id:db.uid(), text:txt.trim(), date:db.now() }];
     localStorage.setItem('nl_notes_'+call.id, JSON.stringify(updated));
     setTxt('');
-    // force re-render
     onClose(); setTimeout(()=>{},0);
   };
   return (
@@ -818,15 +852,12 @@ function App() {
 
   return (
     <>
-      <style>{`.desktop-sidebar{display:flex!important;}`}</style>
       <Sidebar page={page} setPage={setPage} userName={user.name} role={user.role} onSignOut={signOut} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
       {/* Mobile hamburger */}
-      <button onClick={()=>setMobileOpen(true)} style={{position:'fixed',top:12,left:12,zIndex:35,background:'#0d1120',border:'1px solid #1e2540',borderRadius:8,padding:'6px 8px',cursor:'pointer',display:'none'}} className="mobile-menu-btn">
+      <button onClick={()=>setMobileOpen(true)} className="mobile-menu-btn">
         <Icon d={Icons.menu} size={18} color="#8891b8"/>
       </button>
-      <style>{`@media(max-width:767px){.desktop-sidebar{display:none!important;}.mobile-menu-btn{display:flex!important;}}`}</style>
-      <main style={{marginLeft:0,padding:'20px 16px'}} className="main-content">
-        <style>{`@media(min-width:768px){.main-content{margin-left:220px;padding:20px 24px;}}`}</style>
+      <main className="main-content">
         {pages[page]}
       </main>
     </>
