@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="theme-color" content="#0a0d16"/>
 <title>NorthLab CRM</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -61,7 +61,26 @@ tailwind.config = {
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
+<div id="__err" style="display:none;position:fixed;inset:0;background:#080b14;color:#ff8080;font:13px/1.5 system-ui;padding:24px;white-space:pre-wrap;z-index:9999;overflow:auto"></div>
+<script>
+window.addEventListener('error', function(e){
+  var el=document.getElementById('__err');
+  if(!el) return;
+  el.style.display='block';
+  el.textContent='Script error:\n'+(e.message||e.error||e)+'\n\nSource: '+(e.filename||'')+'\n\nIf you see this on a custom domain but not locally, a CDN script (React/Babel/Tailwind/Recharts) was blocked. Check your DNS/CSP/ad-blocker.';
+});
+setTimeout(function(){
+  if(!document.getElementById('root').children.length){
+    var el=document.getElementById('__err');
+    if(el && el.style.display==='none'){
+      el.style.display='block';
+      el.textContent='App did not mount within 8s. A CDN script likely failed to load on this domain. Open DevTools → Network and check if any of these are blocked:\n  • unpkg.com (React, ReactDOM, Babel)\n  • cdn.jsdelivr.net (Recharts)\n  • cdn.tailwindcss.com';
+    }
+  }
+}, 8000);
+</script>
+
+<script type="text/babel" data-type="module" data-presets="react">
 const { useState, useEffect, useMemo, useCallback } = React;
 const { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } = Recharts;
 
