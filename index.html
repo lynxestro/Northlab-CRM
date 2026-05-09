@@ -2,906 +2,1022 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <meta name="theme-color" content="#080b14"/>
 <title>NorthLab CRM</title>
-<!-- FIXED: switched from unpkg → jsdelivr (reliable on any domain/hosting) -->
-<!-- FIXED: removed Tailwind CDN (was unused & slowing load) -->
-<!-- FIXED: correct script load order -->
-<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.10/babel.min.js"></script>
 <style>
+/* ── Reset & Base ── */
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#080b14;color:#eef0ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0}
+body{background:#080b14;color:#eef0ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:#1e2540;border-radius:99px}
-input,select,textarea{background:#0d1120;color:#eef0ff;border:1px solid #1e2540;border-radius:8px;padding:6px 10px;outline:none;width:100%;box-sizing:border-box;font-size:13px;font-family:inherit}
+input,select,textarea,button{font-family:inherit}
+input,select,textarea{background:#0d1120;color:#eef0ff;border:1px solid #1e2540;border-radius:8px;padding:7px 11px;outline:none;font-size:13px;transition:border-color .15s}
 input:focus,select:focus,textarea:focus{border-color:#2563eb}
 select option{background:#0d1120}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
-.modal{background:#0d1120;border:1px solid #1e2540;border-radius:16px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s;font-family:inherit}
-.btn-primary{background:linear-gradient(to right,#2563eb,#06b6d4);color:#fff}
-.btn-primary:hover{opacity:.88}
+textarea{resize:vertical;width:100%}
+input[type=date]{width:auto}
+
+/* ── Layout ── */
+#sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:#0d1120;border-right:1px solid #1e2540;display:flex;flex-direction:column;z-index:40;transition:transform .25s}
+#main{margin-left:220px;padding:22px 24px;min-height:100vh}
+#mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:39}
+#hamburger{display:none;position:fixed;top:12px;left:12px;z-index:45;background:#0d1120;border:1px solid #1e2540;border-radius:8px;padding:7px 9px;cursor:pointer;color:#8891b8;align-items:center}
+
+/* ── Pages ── */
+.page{display:none}.page.active{display:block}
+
+/* ── Sidebar ── */
+.sb-logo{padding:18px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1e2540}
+.sb-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#2563eb,#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex-shrink:0}
+.sb-title{font-weight:700;font-size:14px;background:linear-gradient(to right,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sb-nav{flex:1;padding:8px 6px;overflow-y:auto;display:flex;flex-direction:column;gap:1px}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#8891b8;cursor:pointer;transition:all .15s;border:none;background:transparent;width:100%;text-align:left;position:relative}
+.nav-btn:hover{background:#1e254044;color:#eef0ff}
+.nav-btn.active{background:rgba(37,99,235,.18);color:#3b82f6}
+.nav-btn.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:linear-gradient(to bottom,#2563eb,#06b6d4);border-radius:0 3px 3px 0}
+.nav-ic{width:30px;height:30px;border-radius:8px;background:rgba(30,37,64,.5);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-btn.active .nav-ic{background:rgba(37,99,235,.2)}
+.sb-bottom{padding:10px 6px;border-top:1px solid #1e2540}
+.sb-user{display:flex;align-items:center;gap:9px;padding:8px 12px;margin-bottom:4px}
+.sb-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-uname{font-size:12px;font-weight:600}
+.sb-urole{font-size:10px;color:#8891b8}
+.signout{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#ef4444;cursor:pointer;border:none;background:transparent;width:100%}
+.signout:hover{background:rgba(239,68,68,.1)}
+
+/* ── Cards & Grid ── */
+.card{background:#0d1120;border:1px solid #1e2540;border-radius:12px;padding:16px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g6{grid-template-columns:repeat(6,1fr)}
+.gauto{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.gauto2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+
+/* ── KPI Cards ── */
+.kpi-hero{background:#0d1120;border:1px solid #1e2540;border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.kpi-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#2563eb,#06b6d4);opacity:.04;pointer-events:none}
+.kpi-label{font-size:10px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.kpi-val{font-size:22px;font-weight:700;background:linear-gradient(to right,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.kpi-sec{background:#0d1120;border:1px solid #1e2540;border-radius:12px;padding:12px}
+.kpi-sec .kpi-val{font-size:16px;-webkit-text-fill-color:unset;background:none;color:#eef0ff}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 15px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-primary{background:linear-gradient(135deg,#1d4ed8,#06b6d4);color:#fff}
 .btn-secondary{background:#0d1120;color:#8891b8;border:1px solid #1e2540}
-.btn-secondary:hover{color:#eef0ff;border-color:#2563eb66}
-.btn-danger{background:#991b1b22;color:#ef4444;border:1px solid #ef444433}
-.btn-danger:hover{background:#ef444433}
+.btn-secondary:hover{color:#eef0ff;border-color:#2563eb66;opacity:1}
+.btn-danger{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
+.btn-sm{padding:4px 10px;font-size:11px;border-radius:7px}
+.btn-icon{width:28px;height:28px;padding:0;border-radius:7px}
+
+/* ── Badges ── */
 .badge{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700}
-.badge-green{background:#05966920;color:#10b981}
-.badge-red{background:#ef444420;color:#ef4444}
-.badge-yellow{background:#f59e0b20;color:#f59e0b}
-.badge-blue{background:#2563eb20;color:#60a5fa}
-.badge-cyan{background:#06b6d420;color:#06b6d4}
-.badge-gray{background:#1e254033;color:#8891b8}
-.nav-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:#8891b8;cursor:pointer;transition:all .15s;border:none;background:transparent;width:100%;text-align:left;position:relative}
-.nav-item:hover{background:#1e254044;color:#eef0ff}
-.nav-item.active{background:#2563eb22;color:#3b82f6}
-.nav-item.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2.5px;background:linear-gradient(to bottom,#2563eb,#06b6d4);border-radius:0 3px 3px 0}
-.progress-bar{height:5px;background:#1e2540;border-radius:99px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(to right,#2563eb,#06b6d4);border-radius:99px;transition:width .3s}
+.bg{background:rgba(16,185,129,.12);color:#10b981}
+.br{background:rgba(239,68,68,.12);color:#ef4444}
+.by{background:rgba(245,158,11,.12);color:#f59e0b}
+.bb{background:rgba(37,99,235,.15);color:#60a5fa}
+.bc{background:rgba(6,182,212,.12);color:#06b6d4}
+.bgr{background:rgba(136,145,184,.1);color:#8891b8}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.page-title{font-size:18px;font-weight:700}
+.grad{background:linear-gradient(to right,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ── Stat bar ── */
+.stat-bar{background:#0d1120;border:1px solid #1e2540;border-radius:12px;padding:10px 16px;margin-bottom:16px;display:flex;gap:20px;flex-wrap:wrap}
+.stat-item .sl{font-size:10px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em}
+.stat-item .sv{font-size:14px;font-weight:700}
+
+/* ── Progress ── */
+.prog-track{height:5px;background:#1e2540;border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(to right,#2563eb,#06b6d4);border-radius:99px;transition:width .3s}
+
+/* ── Toggle ── */
+.toggle-row{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.tgl-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:#8891b8;cursor:pointer;user-select:none}
+.tgl{width:36px;height:20px;border-radius:99px;background:#1e2540;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;border:none}
+.tgl.on{background:#2563eb}
+.tgl::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}
+.tgl.on::after{left:18px}
+
+/* ── Table ── */
+.tbl-wrap{background:#0d1120;border:1px solid #1e2540;border-radius:12px;overflow-x:auto}
 table{width:100%;border-collapse:collapse}
-th{text-align:left;font-size:10px;font-weight:600;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;border-bottom:1px solid #1e2540;background:#080b14}
+th{text-align:left;font-size:10px;font-weight:600;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;padding:9px 12px;border-bottom:1px solid #1e2540;background:#080b14;white-space:nowrap}
 td{padding:9px 12px;font-size:12px;border-bottom:1px solid #1e254033;vertical-align:middle}
-tr:hover td{background:#1e254022}
-/* Loading screen */
-#app-loading{position:fixed;inset:0;background:#080b14;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
-.load-spin{width:28px;height:28px;border:3px solid #1e2540;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeToast{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
-/* Responsive */
-@media(min-width:768px){
-  .desktop-sidebar{display:flex!important}
-  .mobile-menu-btn{display:none!important}
-  .main-content{margin-left:220px!important;padding:20px 24px!important}
-}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#1e254018}
+
+/* ── Co chip ── */
+.co-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 8px 5px 13px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid #1e2540;background:#0d1120;color:#8891b8;cursor:pointer;transition:all .15s}
+.co-chip.active{border-color:#2563eb;background:rgba(37,99,235,.15);color:#60a5fa}
+.co-x{background:none;border:none;color:inherit;cursor:pointer;opacity:.45;font-size:17px;line-height:1;padding:0 2px;display:flex;align-items:center}
+.co-x:hover{opacity:1;color:#ef4444}
+
+/* ── Period chips ── */
+.period-chip{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid #1e2540;background:#0d1120;color:#8891b8;transition:all .15s}
+.period-chip.active{border-color:#2563eb;background:rgba(37,99,235,.15);color:#60a5fa}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#0d1120;border:1px solid #1e2540;border-radius:16px;padding:22px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-title{font-size:15px;font-weight:700}
+
+/* ── Form ── */
+.frow{display:grid;gap:10px;margin-bottom:10px}
+.f2{grid-template-columns:1fr 1fr}
+.fgroup{display:flex;flex-direction:column;gap:4px}
+.fgroup label{font-size:11px;color:#8891b8;font-weight:500}
+.fgroup input,.fgroup select,.fgroup textarea{width:100%}
+
+/* ── Toast ── */
+#toast-host{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:10px 16px;background:#0d1120;border-radius:11px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:tIn .25s ease;pointer-events:auto}
+.tok{border:1px solid rgba(16,185,129,.4);color:#10b981}
+.terr{border:1px solid rgba(239,68,68,.4);color:#ef4444}
+@keyframes tIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── SVG chart ── */
+.chart-svg{overflow:visible}
+.chart-area{fill:url(#areaGrad);opacity:.8}
+.chart-line{fill:none;stroke:#2563eb;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chart-dot{fill:#2563eb}
+
+/* ── Login ── */
+#login-screen{position:fixed;inset:0;background:#080b14;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.login-box{background:#0d1120;border:1px solid #1e2540;border-radius:16px;padding:32px;width:100%;max-width:360px}
+.login-logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#fff;margin:0 auto 12px}
+
+/* ── Note ── */
+.note-item{background:#080b14;border-radius:8px;padding:8px 12px;margin-bottom:7px}
+.note-text{font-size:12px}
+.note-meta{font-size:10px;color:#8891b8;margin-top:3px}
+
+/* ── Revenue number ── */
+.rev-big{font-size:42px;font-weight:800;background:linear-gradient(to right,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:14px;line-height:1}
+
+/* ── Responsive ── */
 @media(max-width:767px){
-  .desktop-sidebar{display:none!important}
-  .mobile-menu-btn{display:flex!important}
-  .main-content{margin-left:0!important;padding:58px 14px 20px!important}
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0;padding:58px 13px 20px}
+  #hamburger{display:flex}
+  .g4,.g6{grid-template-columns:repeat(2,1fr)}
+  .g3,.g2{grid-template-columns:1fr}
+  .f2{grid-template-columns:1fr}
+  .gauto{grid-template-columns:repeat(2,1fr)}
 }
+@media(max-width:480px){.g4{grid-template-columns:1fr 1fr}.g6{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 
-<!-- Loading screen shown until React mounts -->
-<div id="app-loading">
-  <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff">N</div>
-  <div class="load-spin"></div>
-  <div style="font-size:13px;color:#8891b8">Loading NorthLab CRM…</div>
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="text-align:center;margin-bottom:22px">
+      <div class="login-logo">N</div>
+      <div style="font-size:20px;font-weight:700">NorthLab CRM</div>
+      <div style="font-size:12px;color:#8891b8;margin-top:4px">Enter your details to continue</div>
+    </div>
+    <div class="fgroup" style="margin-bottom:12px">
+      <label>Your Name</label>
+      <input id="login-name" type="text" placeholder="e.g. lynx"/>
+    </div>
+    <div class="fgroup" style="margin-bottom:20px">
+      <label>Role</label>
+      <select id="login-role"><option>Setter</option><option selected>Closer</option><option>Admin</option></select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:10px" onclick="doLogin()">Enter CRM</button>
+  </div>
 </div>
 
-<div id="root"></div>
+<!-- App -->
+<div id="app" style="display:none">
 
-<script type="text/babel">
-const { useState, useEffect, useMemo } = React;
-const { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } = Recharts;
+<!-- Hamburger -->
+<button id="hamburger" onclick="toggleMob()">
+  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+</button>
+<div id="mob-overlay" onclick="toggleMob()"></div>
 
-/* ── LocalStorage DB ── */
-const db = {
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-icon">N</div>
+    <span class="sb-title">NorthLab</span>
+  </div>
+  <div class="sb-nav" id="sb-nav"></div>
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar" id="sb-avatar">U</div>
+      <div><div class="sb-uname" id="sb-uname">User</div><div class="sb-urole" id="sb-urole">Closer</div></div>
+    </div>
+    <button class="signout" onclick="doSignOut()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      Sign Out
+    </button>
+  </div>
+</nav>
+
+<!-- Main -->
+<main id="main">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="home-greet">Good morning</div>
+        <div style="font-size:11px;color:#8891b8;margin-top:2px" id="home-date"></div>
+      </div>
+      <button class="btn btn-primary" onclick="nav('dashboard')">Open CRM</button>
+    </div>
+    <div class="grid g2" style="margin-bottom:14px">
+      <div class="card"><div class="kpi-label">Total Cash Collected</div><div class="kpi-val" id="home-cc">$0.00</div></div>
+      <div class="card"><div class="kpi-label">Active Goals</div><div class="kpi-val" id="home-goals-count">0</div></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:13px;font-weight:600">Goals Overview</span>
+        <button class="btn btn-secondary btn-sm" onclick="nav('goals')">View All</button>
+      </div>
+      <div id="home-goals-list"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page" id="page-dashboard">
+    <div class="topbar">
+      <div class="page-title">Dashboard <span class="grad">CRM</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="openModal('modal-outcome')">Log Outcome</button>
+        <button class="btn btn-primary" onclick="openModal('modal-close')">+ Log Close</button>
+      </div>
+    </div>
+    <!-- Company row -->
+    <div id="co-row" style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center"></div>
+    <!-- Toggles -->
+    <div class="toggle-row" id="toggle-row"></div>
+    <!-- Date filter -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <input type="date" id="f-from" onchange="renderDash()"/>
+      <span style="color:#8891b8;font-size:12px">to</span>
+      <input type="date" id="f-to" onchange="renderDash()"/>
+      <button class="btn btn-secondary btn-sm" onclick="clearFilter()">Clear</button>
+    </div>
+    <!-- Stat bar -->
+    <div class="stat-bar" id="stat-bar"></div>
+    <!-- Hero KPIs -->
+    <div class="grid gauto" style="margin-bottom:12px" id="hero-kpis"></div>
+    <!-- Sec KPIs -->
+    <div class="grid g6" style="margin-bottom:20px" id="sec-kpis"></div>
+    <!-- Installment section -->
+    <div id="install-section" style="display:none;margin-bottom:20px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Installment Plans</div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Prospect</th><th>Plan</th><th>Collected</th><th>Pending</th><th>Progress</th><th>Actions</th></tr></thead>
+        <tbody id="install-tbody"></tbody>
+      </table></div>
+    </div>
+    <!-- Calls -->
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Recent Calls</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Prospect</th><th>Date</th><th>Status</th><th>Amount</th><th>Type</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="calls-tbody"></tbody>
+    </table></div>
+  </div>
+
+  <!-- REVENUE -->
+  <div class="page" id="page-revenue">
+    <div class="topbar"><div class="page-title">Revenue <span class="grad">Overview</span></div></div>
+    <div style="display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap" id="period-chips"></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="kpi-label">Cash Collected</div>
+      <div class="rev-big" id="rev-cc">$0.00</div>
+      <div id="rev-chart-wrap" style="width:100%;height:180px"></div>
+    </div>
+    <div class="grid g3" style="margin-bottom:16px" id="rev-stats"></div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:13px;font-weight:600">Monthly Target</span>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-target')">Edit</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px">
+        <span id="tgt-collected">$0.00 collected</span>
+        <span style="color:#8891b8" id="tgt-label">Target: $0.00</span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="tgt-bar" style="width:0%"></div></div>
+      <div style="font-size:11px;color:#8891b8;margin-top:5px" id="tgt-pct">0% of target</div>
+    </div>
+  </div>
+
+  <!-- GOALS -->
+  <div class="page" id="page-goals">
+    <div class="topbar">
+      <div class="page-title">Goals <span class="grad">Tracker</span></div>
+      <button class="btn btn-primary" onclick="openModal('modal-goal')">+ New Goal</button>
+    </div>
+    <div class="grid gauto2" id="goals-grid"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="topbar"><div class="page-title">Settings</div></div>
+    <div class="card" style="max-width:400px">
+      <div style="font-size:11px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px">Profile</div>
+      <div class="fgroup" style="margin-bottom:10px"><label>Display Name</label><input id="set-name" type="text"/></div>
+      <div class="fgroup" style="margin-bottom:18px"><label>Role</label>
+        <select id="set-role"><option>Setter</option><option>Closer</option><option>Admin</option></select>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-outcome">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-title">Log Outcome</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-outcome')" style="font-size:17px">×</button></div>
+    <div class="frow"><div class="fgroup"><label>Prospect Name</label><input id="out-name" type="text" placeholder="Full name"/></div></div>
+    <div class="frow"><div class="fgroup"><label>Status</label>
+      <select id="out-status"><option>Showed</option><option>No Show</option><option>Rescheduled</option><option>Cancelled</option><option>Offered</option></select>
+    </div></div>
+    <div class="frow"><div class="fgroup"><label>Notes</label><textarea id="out-notes" rows="3" placeholder="Optional..."></textarea></div></div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addOutcome()">Save Outcome</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-close">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-title">Log Close</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-close')" style="font-size:17px">×</button></div>
+    <div class="frow f2">
+      <div class="fgroup"><label>Prospect</label><input id="cl-prospect" type="text"/></div>
+      <div class="fgroup"><label>Plan</label><input id="cl-plan" type="text"/></div>
+    </div>
+    <div class="frow f2">
+      <div class="fgroup"><label>Amount ($)</label><input id="cl-amount" type="number" min="0"/></div>
+      <div class="fgroup"><label>Type</label>
+        <select id="cl-type" onchange="onCloseType()"><option>PIF</option><option>Installment</option></select>
+      </div>
+    </div>
+    <div id="inst-extra" style="display:none">
+      <div class="frow f2">
+        <div class="fgroup"><label>Total Plan Value ($)</label><input id="cl-total" type="number" min="0"/></div>
+        <div class="fgroup"><label>First Payment ($)</label><input id="cl-first" type="number" min="0"/></div>
+      </div>
+    </div>
+    <div class="frow f2">
+      <div class="fgroup"><label>Commission ($)</label><input id="cl-comm" type="number" min="0"/></div>
+      <div class="fgroup"><label>Notes</label><input id="cl-notes" type="text" placeholder="Optional"/></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addClose()">Save Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-payment">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-title">Add Payment</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-payment')" style="font-size:17px">×</button></div>
+    <input type="hidden" id="pay-id"/>
+    <div class="frow f2">
+      <div class="fgroup"><label>Amount ($)</label><input id="pay-amount" type="number" min="0"/></div>
+      <div class="fgroup"><label>Commission ($)</label><input id="pay-comm" type="number" min="0"/></div>
+    </div>
+    <div class="frow"><div class="fgroup"><label>Notes</label><input id="pay-notes" type="text" placeholder="Optional"/></div></div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addPayment()">Save Payment</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-company">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-title">Add Company</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-company')" style="font-size:17px">×</button></div>
+    <div class="frow"><div class="fgroup"><label>Company Name</label><input id="co-name" type="text" placeholder="e.g. Acme Corp"/></div></div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addCompany()">Add Company</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-goal">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-title">New Goal</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-goal')" style="font-size:17px">×</button></div>
+    <div class="frow"><div class="fgroup"><label>Goal Name</label><input id="goal-name" type="text" placeholder="e.g. Hit $10k this month"/></div></div>
+    <div class="frow f2">
+      <div class="fgroup"><label>Target (optional)</label><input id="goal-target" type="number" min="0"/></div>
+      <div class="fgroup"><label>Unit</label><input id="goal-unit" type="text" placeholder="$, calls, deals"/></div>
+    </div>
+    <div class="frow"><div class="fgroup"><label>Notes</label><textarea id="goal-notes" rows="2" placeholder="Why this matters..."></textarea></div></div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addGoal()">Create Goal</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-gprog">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-title">Log Progress</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-gprog')" style="font-size:17px">×</button></div>
+    <input type="hidden" id="gp-id"/>
+    <div class="frow f2">
+      <div class="fgroup"><label>Amount</label><input id="gp-val" type="number" min="0"/></div>
+      <div class="fgroup"><label>Note</label><input id="gp-note" type="text" placeholder="Optional"/></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="saveGoalProg()">Log Progress</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-target">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-title">Monthly Target</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-target')" style="font-size:17px">×</button></div>
+    <div class="frow"><div class="fgroup"><label>Target ($)</label><input id="target-val" type="number" min="0"/></div></div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="saveTarget()">Save</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-notes">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-hdr"><span class="modal-title">Notes — <span id="notes-title"></span></span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-notes')" style="font-size:17px">×</button></div>
+    <input type="hidden" id="notes-cid"/>
+    <div id="notes-list" style="max-height:180px;overflow-y:auto;margin-bottom:12px"></div>
+    <div class="fgroup" style="margin-bottom:10px"><label>Add Note</label><textarea id="note-txt" rows="3" placeholder="Type your note..."></textarea></div>
+    <button class="btn btn-primary" style="width:100%" onclick="saveNote()">Save Note</button>
+  </div>
+</div>
+
+<div id="toast-host"></div>
+
+<script>
+// ── DB ──────────────────────────────────────────────────────────
+const db={
   get:(k,d=[])=>{try{const v=localStorage.getItem('nl_'+k);return v!=null?JSON.parse(v):d;}catch{return d;}},
   set:(k,v)=>{try{localStorage.setItem('nl_'+k,JSON.stringify(v));}catch{}},
   uid:()=>Math.random().toString(36).slice(2)+Date.now().toString(36),
   now:()=>new Date().toISOString(),
 };
 
-/* ── Utils ── */
-const fmtMoney=(n)=>'$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmtDate=(s)=>s?new Date(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-const gradStyle={background:'linear-gradient(135deg,#2563eb,#06b6d4)'};
-const gradText={background:'linear-gradient(to right,#3b82f6,#06b6d4)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'};
+// ── State ──────────────────────────────────────────────────────
+let user=null,calls=[],installments=[],companies=[],goals=[],goalLogs=[];
+let activeComp=null,revPeriod='all';
 
-/* ── Icons ── */
-const Ic=({d,size=15,color='currentColor'})=>(
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d={d}/>
-  </svg>
-);
-const I={
-  home:"M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10",
-  dash:"M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
-  rev:"M12 1v22 M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6",
-  goal:"M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M12 8v4l3 3",
-  cfg:"M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z",
-  out:"M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4 M16 17l5-5-5-5 M21 12H9",
-  plus:"M12 5v14 M5 12h14",
-  trash:"M3 6h18 M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6 M10 11v6 M14 11v6 M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2",
-  menu:"M3 12h18 M3 6h18 M3 18h18",
-  x:"M18 6L6 18 M6 6l12 12",
+// ── Utils ─────────────────────────────────────────────────────
+const fmt$=n=>'$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtD=s=>s?new Date(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const statusBadge=s=>{
+  const m={Showed:'bg',Installment:'bb','No Show':'br',Rescheduled:'by',Cancelled:'br',Offered:'bb',PIF:'bc'};
+  return `<span class="badge ${m[s]||'bgr'}">${esc(s)||'—'}</span>`;
 };
 
-/* ── Toast system ── */
-let _addToast=null;
-function ToastHost(){
-  const [list,setList]=useState([]);
-  _addToast=(msg,type='ok')=>{
-    const id=Date.now();
-    setList(l=>[...l,{id,msg,type}]);
-    setTimeout(()=>setList(l=>l.filter(x=>x.id!==id)),3200);
-  };
-  if(!list.length)return null;
-  return(
-    <div style={{position:'fixed',bottom:20,right:20,zIndex:9999,display:'flex',flexDirection:'column',gap:8,pointerEvents:'none'}}>
-      {list.map(t=>(
-        <div key={t.id} style={{padding:'10px 16px',background:'#0d1120',border:`1px solid ${t.type==='ok'?'#10b98155':'#ef444455'}`,borderRadius:11,fontSize:13,fontWeight:500,color:t.type==='ok'?'#10b981':'#ef4444',boxShadow:'0 8px 24px rgba(0,0,0,.5)',animation:'fadeToast .25s ease'}}>
-          {t.type==='ok'?'✓':'✕'} {t.msg}
-        </div>
-      ))}
-    </div>
-  );
-}
-const toast=(msg,type='ok')=>_addToast?.(msg,type);
-
-/* ── Status badge ── */
-const SBadge=({s})=>{
-  const m={'PIF':'badge-cyan','Installment':'badge-blue','Showed':'badge-green','No Show':'badge-red','Rescheduled':'badge-yellow','Cancelled':'badge-red','Offered':'badge-blue'};
-  return <span className={`badge ${m[s]||'badge-gray'}`}>{s||'—'}</span>;
-};
-
-/* ── Toggle ── */
-const Toggle=({on,onClick})=>(
-  <div onClick={onClick} style={{width:36,height:20,borderRadius:99,background:on?'#2563eb':'#1e2540',position:'relative',cursor:'pointer',transition:'background .2s',flexShrink:0}}>
-    <div style={{position:'absolute',top:2,left:on?18:2,width:16,height:16,borderRadius:'50%',background:'#fff',transition:'left .2s'}}/>
-  </div>
-);
-
-/* ── Modal ── */
-function Modal({open,onClose,title,children}){
-  if(!open)return null;
-  return(
-    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal">
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
-          <span style={{fontWeight:700,fontSize:15}}>{title}</span>
-          <button className="btn btn-secondary" style={{padding:'3px 8px',fontSize:16}} onClick={onClose}>×</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
+// ── Toast ─────────────────────────────────────────────────────
+function toast(msg,type='ok'){
+  const el=document.createElement('div');
+  el.className=`toast ${type==='ok'?'tok':'terr'}`;
+  el.textContent=(type==='ok'?'✓ ':'✕ ')+msg;
+  document.getElementById('toast-host').appendChild(el);
+  setTimeout(()=>el.remove(),3200);
 }
 
-/* ── Sidebar ── */
-function Sidebar({page,setPage,user,onSignOut,mobileOpen,setMobileOpen}){
-  const nav=[
-    {id:'home',label:'Home',icon:I.home},
-    {id:'dashboard',label:'Dashboard',icon:I.dash},
-    {id:'revenue',label:'Revenue',icon:I.rev},
-    {id:'goals',label:'Goals',icon:I.goal},
-    {id:'settings',label:'Settings',icon:I.cfg},
-  ];
-  const go=(id)=>{setPage(id);setMobileOpen(false);};
-  const Content=(
-    <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
-      <div style={{padding:'18px 16px 14px',display:'flex',alignItems:'center',gap:10,borderBottom:'1px solid #1e2540',flexShrink:0}}>
-        <div style={{width:30,height:30,borderRadius:8,...gradStyle,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:'#fff',flexShrink:0}}>N</div>
-        <span style={{fontWeight:700,fontSize:14,...gradText}}>NorthLab</span>
-      </div>
-      <nav style={{flex:1,padding:'8px 8px',display:'flex',flexDirection:'column',gap:1,overflowY:'auto'}}>
-        {nav.map(it=>(
-          <button key={it.id} className={`nav-item${page===it.id?' active':''}`} onClick={()=>go(it.id)}>
-            <div style={{width:30,height:30,borderRadius:8,background:page===it.id?'rgba(37,99,235,.2)':'rgba(30,37,64,.4)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              <Ic d={it.icon} size={14}/>
-            </div>
-            {it.label}
-          </button>
-        ))}
-      </nav>
-      <div style={{padding:'10px 8px',borderTop:'1px solid #1e2540',flexShrink:0}}>
-        <div style={{display:'flex',alignItems:'center',gap:9,padding:'8px 12px',marginBottom:4}}>
-          <div style={{position:'relative',flexShrink:0}}>
-            <div style={{width:28,height:28,borderRadius:'50%',...gradStyle,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>
-              {(user?.name||'U').charAt(0).toUpperCase()}
-            </div>
-            <span style={{position:'absolute',bottom:0,right:0,width:8,height:8,background:'#10b981',borderRadius:'50%',border:'2px solid #0d1120'}}/>
-          </div>
-          <div style={{overflow:'hidden'}}>
-            <div style={{fontSize:12,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user?.name}</div>
-            <div style={{fontSize:10,color:'#8891b8'}}>{user?.role}</div>
-          </div>
-        </div>
-        <button className="nav-item" onClick={onSignOut} style={{color:'#8891b8'}}>
-          <div style={{width:30,height:30,borderRadius:8,background:'rgba(239,68,68,.1)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'#ef4444'}}>
-            <Ic d={I.out} size={14}/>
-          </div>
-          <span style={{color:'#ef4444'}}>Sign Out</span>
-        </button>
-      </div>
-    </div>
-  );
-  return(
-    <>
-      <aside className="desktop-sidebar" style={{width:220,minHeight:'100vh',background:'#0d1120',borderRight:'1px solid #1e2540',position:'fixed',top:0,left:0,zIndex:40,flexDirection:'column',display:'none'}}>
-        {Content}
-      </aside>
-      {mobileOpen&&<>
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',zIndex:40}} onClick={()=>setMobileOpen(false)}/>
-        <aside style={{width:220,position:'fixed',top:0,left:0,height:'100%',background:'#0d1120',borderRight:'1px solid #1e2540',zIndex:50,display:'flex',flexDirection:'column'}}>
-          {Content}
-        </aside>
-      </>}
-    </>
-  );
+// ── Modals ────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+
+// ── Sidebar / nav ─────────────────────────────────────────────
+const navItems=[
+  {id:'home',label:'Home',svg:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  {id:'dashboard',label:'Dashboard',svg:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>'},
+  {id:'revenue',label:'Revenue',svg:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>'},
+  {id:'goals',label:'Goals',svg:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>'},
+  {id:'settings',label:'Settings',svg:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>'},
+];
+function buildSidebar(){
+  const nav=document.getElementById('sb-nav');
+  nav.innerHTML=navItems.map(it=>`
+    <button class="nav-btn" id="nav-${it.id}" onclick="nav('${it.id}')">
+      <div class="nav-ic"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">${it.svg}</svg></div>
+      ${it.label}
+    </button>`).join('');
 }
 
-/* ── Login ── */
-function Login({onLogin}){
-  const [name,setName]=useState('');
-  const [role,setRole]=useState('Closer');
-  const go=()=>{
-    if(!name.trim()){toast('Enter your name','err');return;}
-    const u={name:name.trim(),role};db.set('user',u);onLogin(u);
-  };
-  return(
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-      <div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:16,padding:32,width:'100%',maxWidth:360}}>
-        <div style={{textAlign:'center',marginBottom:24}}>
-          <div style={{width:48,height:48,borderRadius:12,...gradStyle,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:22,color:'#fff',margin:'0 auto 12px'}}>N</div>
-          <div style={{fontSize:20,fontWeight:700}}>NorthLab CRM</div>
-          <div style={{fontSize:12,color:'#8891b8',marginTop:4}}>Enter your details to continue</div>
-        </div>
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div>
-            <label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Your Name</label>
-            <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. lynx" onKeyDown={e=>e.key==='Enter'&&go()}/>
-          </div>
-          <div>
-            <label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Role</label>
-            <select value={role} onChange={e=>setRole(e.target.value)}>
-              <option>Setter</option><option>Closer</option><option>Admin</option>
-            </select>
-          </div>
-          <button className="btn btn-primary" style={{width:'100%',padding:'10px'}} onClick={go}>Enter CRM</button>
-        </div>
-      </div>
-    </div>
-  );
+function nav(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('nav-'+page)?.classList.add('active');
+  closeMob();
+  if(page==='home')renderHome();
+  if(page==='dashboard')renderDash();
+  if(page==='revenue')renderRevenue();
+  if(page==='goals')renderGoals();
+  if(page==='settings')renderSettings();
 }
 
-/* ── Home ── */
-function Home({calls,installments,goals,goalLogs,setPage,user}){
+function toggleMob(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('mob-overlay').style.display=document.getElementById('sidebar').classList.contains('open')?'block':'none';
+}
+function closeMob(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mob-overlay').style.display='none';
+}
+
+// ── Login ─────────────────────────────────────────────────────
+function doLogin(){
+  const name=document.getElementById('login-name').value.trim();
+  const role=document.getElementById('login-role').value;
+  if(!name){toast('Enter your name','err');return;}
+  user={name,role};db.set('user',user);
+  initApp();
+}
+function doSignOut(){db.set('user',null);user=null;location.reload();}
+
+// ── Init ──────────────────────────────────────────────────────
+function initApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  calls=db.get('calls');
+  installments=db.get('installments');
+  companies=db.get('companies');
+  goals=db.get('goals');
+  goalLogs=db.get('goalLogs');
+  activeComp=companies[0]?.id||null;
+  document.getElementById('sb-uname').textContent=user.name;
+  document.getElementById('sb-urole').textContent=user.role;
+  document.getElementById('sb-avatar').textContent=user.name.charAt(0).toUpperCase();
+  buildSidebar();
+  nav('home');
+}
+
+// ── HOME ──────────────────────────────────────────────────────
+function renderHome(){
   const h=new Date().getHours();
-  const greet=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
-  const cc=calls.filter(c=>c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0)
-          +installments.reduce((s,i)=>s+parseFloat(i.collected||0),0);
-  return(
-    <div>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:22,flexWrap:'wrap',gap:12}}>
-        <div>
-          <div style={{fontSize:18,fontWeight:700}}>{greet}, {user?.name||'User'}</div>
-          <div style={{fontSize:11,color:'#8891b8',marginTop:2}}>{new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</div>
-        </div>
-        <button className="btn btn-primary" onClick={()=>setPage('dashboard')}>Open CRM</button>
+  document.getElementById('home-greet').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+user.name;
+  document.getElementById('home-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const cc=calls.filter(c=>c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0)+installments.reduce((s,i)=>s+parseFloat(i.collected||0),0);
+  document.getElementById('home-cc').textContent=fmt$(cc);
+  const active=goals.filter(g=>!g.done);
+  document.getElementById('home-goals-count').textContent=active.length;
+  const el=document.getElementById('home-goals-list');
+  if(!goals.length){el.innerHTML='<div style="text-align:center;padding:20px 0;color:#8891b8;font-size:13px">No goals yet.</div>';return;}
+  el.innerHTML=goals.slice(0,6).map(g=>{
+    const prog=goalLogs.filter(l=>l.goal_id===g.id).reduce((s,l)=>s+parseFloat(l.value||0),0);
+    const pct=g.target?Math.min(100,Math.round(prog/g.target*100)):0;
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="font-weight:500">${esc(g.name)}${g.done?'<span class="badge bg" style="margin-left:6px">Done</span>':''}</span>
+        ${g.target?`<span style="color:#8891b8">${pct}%</span>`:''}
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginBottom:16}}>
-        {[['Total Cash Collected',fmtMoney(cc)],['Active Goals',goals.filter(g=>!g.done).length]].map(([l,v])=>(
-          <div key={l} style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:16}}>
-            <div style={{fontSize:10,color:'#8891b8',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:4}}>{l}</div>
-            <div style={{fontSize:22,fontWeight:700,...gradText}}>{v}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:16}}>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-          <span style={{fontSize:13,fontWeight:600}}>Goals Overview</span>
-          <button className="btn btn-secondary" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>setPage('goals')}>View All</button>
-        </div>
-        {goals.length===0
-          ?<div style={{textAlign:'center',padding:'20px 0',color:'#8891b8',fontSize:13}}>No goals yet.</div>
-          :goals.slice(0,6).map(g=>{
-            const prog=goalLogs.filter(l=>l.goal_id===g.id).reduce((s,l)=>s+parseFloat(l.value||0),0);
-            const pct=g.target?Math.min(100,Math.round(prog/g.target*100)):0;
-            return(
-              <div key={g.id} style={{marginBottom:12}}>
-                <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}>
-                  <span style={{fontWeight:500}}>{g.name}{g.done&&<span className="badge badge-green" style={{marginLeft:6}}>Done</span>}</span>
-                  {g.target&&<span style={{color:'#8891b8'}}>{pct}%</span>}
-                </div>
-                {g.target&&<div className="progress-bar"><div className="progress-fill" style={{width:pct+'%'}}/></div>}
-              </div>
-            );
-          })
-        }
-      </div>
-    </div>
-  );
+      ${g.target?`<div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>`:''}
+    </div>`;
+  }).join('');
 }
 
-/* ── Dashboard ── */
-function Dashboard({calls,setCalls,installments,setInstallments,companies,setCompanies}){
-  const [activeComp,setActiveComp]=useState(()=>companies[0]?.id||null);
-  const [fFrom,setFFrom]=useState('');
-  const [fTo,setFTo]=useState('');
-  const [outcomeOpen,setOutcomeOpen]=useState(false);
-  const [closeOpen,setCloseOpen]=useState(false);
-  const [notesOpen,setNotesOpen]=useState(false);
-  const [notesCall,setNotesCall]=useState(null);
-  const [payOpen,setPayOpen]=useState(false);
-  const [payInst,setPayInst]=useState(null);
-  const [addCoOpen,setAddCoOpen]=useState(false);
-  const [coName,setCoName]=useState('');
-  const [oF,setOF]=useState({prospect:'',status:'Showed',notes:''});
-  const [cF,setCF]=useState({prospect:'',type:'PIF',amount:'',plan:'',total_value:'',first_payment:'',commission:'',notes:''});
-  const [pF,setPF]=useState({amount:'',commission:'',notes:''});
+// ── DASHBOARD ─────────────────────────────────────────────────
+function getFC(){
+  let r=activeComp?calls.filter(c=>c.company_id===activeComp):calls;
+  const fFrom=document.getElementById('f-from')?.value;
+  const fTo=document.getElementById('f-to')?.value;
+  if(fFrom)r=r.filter(c=>new Date(c.created_date)>=new Date(fFrom));
+  if(fTo)r=r.filter(c=>new Date(c.created_date)<=new Date(fTo+'T23:59:59'));
+  return r;
+}
+function getFI(){return activeComp?installments.filter(i=>i.company_id===activeComp):installments;}
+function getCo(){return companies.find(c=>c.id===activeComp);}
 
-  const compId=activeComp||companies[0]?.id||null;
-  const co=companies.find(c=>c.id===compId);
-
-  const fc=useMemo(()=>{
-    let r=compId?calls.filter(c=>c.company_id===compId):calls;
-    if(fFrom)r=r.filter(c=>new Date(c.created_date)>=new Date(fFrom));
-    if(fTo)r=r.filter(c=>new Date(c.created_date)<=new Date(fTo+'T23:59:59'));
-    return r;
-  },[calls,compId,fFrom,fTo]);
-
-  const fi=useMemo(()=>compId?installments.filter(i=>i.company_id===compId):installments,[installments,compId]);
-
-  const kpis=useMemo(()=>{
-    const pifC=fc.filter(c=>c.type==='PIF');
-    const closed=fc.filter(c=>['PIF','Installment'].includes(c.type));
-    const cc=pifC.reduce((s,c)=>s+parseFloat(c.amount||0),0)+fi.reduce((s,i)=>s+parseFloat(i.collected||0),0);
-    const pending=fi.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
-    const showed=fc.filter(c=>c.status==='Showed').length;
-    const noshow=fc.filter(c=>c.status==='No Show').length;
-    const resched=fc.filter(c=>c.status==='Rescheduled').length;
-    const tot=fc.filter(c=>['Showed','No Show','Rescheduled','Cancelled'].includes(c.status)).length;
-    const cust=[...new Set(fc.filter(c=>c.prospect&&c.amount).map(c=>c.prospect))].length;
-    return{cc,pending,closed:closed.length,booked:fc.length,
-      ccpc:closed.length>0?cc/closed.length:0,
-      showPct:tot>0?Math.round(showed/tot*100):0,
-      noshowPct:tot>0?Math.round(noshow/tot*100):0,
-      reschedPct:tot>0?Math.round(resched/tot*100):0,
-      pifPct:closed.length>0?Math.round(pifC.length/closed.length*100):0,
-      customers:cust};
-  },[fc,fi]);
-
-  const addOutcome=()=>{
-    if(!oF.prospect.trim()){toast('Enter prospect name','err');return;}
-    const r={id:db.uid(),company_id:compId,prospect:oF.prospect.trim(),status:oF.status,notes:oF.notes,created_date:db.now()};
-    const u=[...calls,r];setCalls(u);db.set('calls',u);
-    setOF({prospect:'',status:'Showed',notes:''});setOutcomeOpen(false);toast('Outcome logged');
-  };
-
-  const addClose=()=>{
-    if(!cF.prospect.trim()){toast('Enter prospect name','err');return;}
-    const amt=parseFloat(cF.amount)||0;
-    const r={id:db.uid(),company_id:compId,prospect:cF.prospect.trim(),status:cF.type,type:cF.type,
-      amount:amt,plan:cF.plan,commission:parseFloat(cF.commission)||0,notes:cF.notes,created_date:db.now()};
-    const uC=[...calls,r];setCalls(uC);db.set('calls',uC);
-    if(cF.type==='Installment'){
-      const tv=parseFloat(cF.total_value)||amt;
-      const fp=parseFloat(cF.first_payment)||amt;
-      const inst={id:db.uid(),company_id:compId,prospect:cF.prospect.trim(),plan:cF.plan,
-        total_value:tv,first_payment:fp,collected:fp,commission:parseFloat(cF.commission)||0,created_date:db.now()};
-      const uI=[...installments,inst];setInstallments(uI);db.set('installments',uI);
-    }
-    setCF({prospect:'',type:'PIF',amount:'',plan:'',total_value:'',first_payment:'',commission:'',notes:''});
-    setCloseOpen(false);toast('Close logged');
-  };
-
-  const addPay=()=>{
-    const amt=parseFloat(pF.amount)||0;
-    if(!amt){toast('Enter amount','err');return;}
-    const uI=installments.map(i=>i.id===payInst.id?{...i,collected:parseFloat(i.collected||0)+amt,commission:parseFloat(i.commission||0)+parseFloat(pF.commission||0)}:i);
-    setInstallments(uI);db.set('installments',uI);
-    const r={id:db.uid(),company_id:compId,prospect:payInst.prospect,status:'Installment',type:'Installment',
-      amount:amt,plan:payInst.plan,commission:parseFloat(pF.commission)||0,notes:pF.notes,created_date:db.now()};
-    const uC=[...calls,r];setCalls(uC);db.set('calls',uC);
-    setPF({amount:'',commission:'',notes:''});setPayOpen(false);toast('Payment added');
-  };
-
-  const delCall=(id)=>{if(!confirm('Delete this call?'))return;const u=calls.filter(c=>c.id!==id);setCalls(u);db.set('calls',u);toast('Deleted');};
-  const delInst=(id)=>{if(!confirm('Delete this plan?'))return;const u=installments.filter(i=>i.id!==id);setInstallments(u);db.set('installments',u);toast('Deleted');};
-  const addCo=()=>{
-    if(!coName.trim())return;
-    const c={id:db.uid(),name:coName.trim(),installment_tracking:false,commission_tracking:false};
-    const u=[...companies,c];setCompanies(u);db.set('companies',u);
-    setCoName('');setAddCoOpen(false);setActiveComp(c.id);toast('Company added');
-  };
-  const delCo=(id)=>{
-    if(!confirm('Delete company?'))return;
-    const u=companies.filter(c=>c.id!==id);setCompanies(u);db.set('companies',u);
-    if(activeComp===id)setActiveComp(u[0]?.id||null);toast('Deleted');
-  };
-  const toggleCo=(field)=>{
-    if(!co)return;
-    const u=companies.map(c=>c.id===compId?{...c,[field]:!c[field]}:c);
-    setCompanies(u);db.set('companies',u);
-  };
-
-  const KCard=({label,val})=>(
-    <div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:16,minWidth:0,position:'relative',overflow:'hidden'}}>
-      <div style={{position:'absolute',inset:0,...gradStyle,opacity:.04}}/>
-      <div style={{fontSize:10,color:'#8891b8',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:5}}>{label}</div>
-      <div style={{fontSize:22,fontWeight:700,...gradText}}>{val}</div>
-    </div>
-  );
-  const SCard=({label,val})=>(
-    <div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:12}}>
-      <div style={{fontSize:10,color:'#8891b8',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:3}}>{label}</div>
-      <div style={{fontSize:15,fontWeight:700}}>{val}</div>
-    </div>
-  );
-
-  return(
-    <div>
-      {/* Header */}
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16,flexWrap:'wrap',gap:8}}>
-        <h1 style={{fontSize:18,fontWeight:700,margin:0}}>Dashboard <span style={gradText}>CRM</span></h1>
-        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-          <button className="btn btn-secondary" onClick={()=>setOutcomeOpen(true)}>Log Outcome</button>
-          <button className="btn btn-primary" onClick={()=>setCloseOpen(true)}><Ic d={I.plus} size={13}/>Log Close</button>
-        </div>
-      </div>
-
-      {/* Company row */}
-      <div style={{display:'flex',gap:7,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
-        {companies.map(c=>{
-          const active=(activeComp||companies[0]?.id)===c.id;
-          return(
-            <div key={c.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 8px 5px 13px',borderRadius:99,fontSize:12,fontWeight:500,border:`1px solid ${active?'#2563eb':'#1e2540'}`,background:active?'rgba(37,99,235,.15)':'#0d1120',color:active?'#60a5fa':'#8891b8',transition:'all .15s'}}>
-              <span style={{cursor:'pointer'}} onClick={()=>setActiveComp(c.id)}>{c.name}</span>
-              <button onClick={()=>delCo(c.id)} style={{background:'none',border:'none',color:'inherit',cursor:'pointer',opacity:.5,fontSize:17,lineHeight:1,padding:'0 2px',display:'flex',alignItems:'center'}}>&times;</button>
-            </div>
-          );
-        })}
-        <button className="btn btn-secondary" style={{width:30,height:30,padding:0,borderRadius:'50%',fontSize:18}} onClick={()=>setAddCoOpen(true)}>+</button>
-      </div>
-
-      {/* Toggles */}
-      {co&&<div style={{display:'flex',gap:16,marginBottom:14,flexWrap:'wrap'}}>
-        {[['installment_tracking','Installment Tracking'],['commission_tracking','Commission Tracking']].map(([f,l])=>(
-          <label key={f} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'#8891b8',cursor:'pointer'}}>
-            <Toggle on={!!co[f]} onClick={()=>toggleCo(f)}/>{l}
-          </label>
-        ))}
-      </div>}
-
-      {/* Date filter */}
-      <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
-        <input type="date" value={fFrom} onChange={e=>setFFrom(e.target.value)} style={{width:'auto'}}/>
-        <span style={{color:'#8891b8',fontSize:12}}>to</span>
-        <input type="date" value={fTo} onChange={e=>setFTo(e.target.value)} style={{width:'auto'}}/>
-        <button className="btn btn-secondary" style={{fontSize:12}} onClick={()=>{setFFrom('');setFTo('');}}>Clear</button>
-      </div>
-
-      {/* Stat bar */}
-      <div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:'10px 16px',marginBottom:16,display:'flex',gap:20,flexWrap:'wrap'}}>
-        {[['CC',fmtMoney(kpis.cc)],['Closed',kpis.closed],['Pending',fmtMoney(kpis.pending)],['Calls',kpis.booked],['Show%',kpis.showPct+'%'],['Customers',kpis.customers]].map(([l,v])=>(
-          <div key={l}><div style={{fontSize:10,color:'#8891b8',textTransform:'uppercase',letterSpacing:'.05em'}}>{l}</div><div style={{fontSize:14,fontWeight:700}}>{v}</div></div>
-        ))}
-      </div>
-
-      {/* Hero KPIs */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:12,marginBottom:12}}>
-        <KCard label="Cash Collected" val={fmtMoney(kpis.cc)}/>
-        <KCard label="Closed Deals" val={kpis.closed}/>
-        <KCard label="Pending" val={fmtMoney(kpis.pending)}/>
-        <KCard label="Booked Calls" val={kpis.booked}/>
-      </div>
-
-      {/* Sec KPIs */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(100px,1fr))',gap:10,marginBottom:20}}>
-        <SCard label="CCPC" val={fmtMoney(kpis.ccpc)}/>
-        <SCard label="Show %" val={kpis.showPct+'%'}/>
-        <SCard label="No Show %" val={kpis.noshowPct+'%'}/>
-        <SCard label="Resched %" val={kpis.reschedPct+'%'}/>
-        <SCard label="PIF Rate" val={kpis.pifPct+'%'}/>
-        <SCard label="Customers" val={kpis.customers}/>
-      </div>
-
-      {/* Installments */}
-      {co?.installment_tracking&&<div style={{marginBottom:20}}>
-        <div style={{fontSize:13,fontWeight:600,marginBottom:10}}>Installment Plans</div>
-        {fi.length===0
-          ?<div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:20,textAlign:'center',color:'#8891b8',fontSize:13}}>No plans yet. Log a close with type "Installment".</div>
-          :<div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,overflowX:'auto'}}>
-            <table>
-              <thead><tr><th>Prospect</th><th>Plan</th><th>Collected</th><th>Pending</th><th>Progress</th><th>Actions</th></tr></thead>
-              <tbody>
-                {fi.map(i=>{
-                  const pct=i.total_value>0?Math.min(100,Math.round(i.collected/i.total_value*100)):0;
-                  return(
-                    <tr key={i.id}>
-                      <td style={{fontWeight:500}}>{i.prospect||'—'}</td>
-                      <td style={{color:'#8891b8'}}>{i.plan||'—'}</td>
-                      <td style={{color:'#10b981'}}>{fmtMoney(i.collected)}</td>
-                      <td style={{color:'#f59e0b'}}>{fmtMoney(Math.max(0,(i.total_value||0)-(i.collected||0)))}</td>
-                      <td style={{minWidth:80}}><div className="progress-bar"><div className="progress-fill" style={{width:pct+'%'}}/></div><div style={{fontSize:10,color:'#8891b8',marginTop:2}}>{pct}%</div></td>
-                      <td style={{whiteSpace:'nowrap'}}>
-                        <button className="btn btn-secondary" style={{fontSize:11,padding:'3px 8px',marginRight:4}} onClick={()=>{setPayInst(i);setPayOpen(true);}}>+Pay</button>
-                        <button className="btn btn-danger" style={{padding:'3px 8px',fontSize:14}} onClick={()=>delInst(i.id)}>&times;</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        }
-      </div>}
-
-      {/* Calls table */}
-      <div style={{fontSize:13,fontWeight:600,marginBottom:10}}>Recent Calls</div>
-      {fc.length===0
-        ?<div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:20,textAlign:'center',color:'#8891b8',fontSize:13}}>No calls logged yet.</div>
-        :<div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,overflowX:'auto'}}>
-          <table>
-            <thead><tr><th>Prospect</th><th>Date</th><th>Status</th><th>Amount</th><th>Type</th><th>Notes</th><th></th></tr></thead>
-            <tbody>
-              {[...fc].reverse().map(c=>(
-                <tr key={c.id}>
-                  <td style={{fontWeight:500}}>{c.prospect||'—'}</td>
-                  <td style={{color:'#8891b8',fontSize:11}}>{fmtDate(c.created_date)}</td>
-                  <td><SBadge s={c.status}/></td>
-                  <td>{c.amount?fmtMoney(c.amount):'—'}</td>
-                  <td>{c.type?<span className={`badge ${c.type==='PIF'?'badge-cyan':'badge-blue'}`}>{c.type}</span>:'—'}</td>
-                  <td><button className="btn btn-secondary" style={{fontSize:11,padding:'3px 8px'}} onClick={()=>{setNotesCall(c);setNotesOpen(true);}}>Notes</button></td>
-                  <td><button className="btn btn-danger" style={{padding:'3px 8px',fontSize:14}} onClick={()=>delCall(c.id)}>&times;</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      }
-
-      {/* Modals */}
-      <Modal open={outcomeOpen} onClose={()=>setOutcomeOpen(false)} title="Log Outcome">
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Prospect Name</label><input value={oF.prospect} onChange={e=>setOF({...oF,prospect:e.target.value})} placeholder="Full name"/></div>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Status</label>
-            <select value={oF.status} onChange={e=>setOF({...oF,status:e.target.value})}>
-              {['Showed','No Show','Rescheduled','Cancelled','Offered'].map(s=><option key={s}>{s}</option>)}
-            </select>
-          </div>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Notes</label><textarea value={oF.notes} onChange={e=>setOF({...oF,notes:e.target.value})} rows={3}/></div>
-          <button className="btn btn-primary" style={{width:'100%',padding:10}} onClick={addOutcome}>Save Outcome</button>
-        </div>
-      </Modal>
-
-      <Modal open={closeOpen} onClose={()=>setCloseOpen(false)} title="Log Close">
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Prospect</label><input value={cF.prospect} onChange={e=>setCF({...cF,prospect:e.target.value})}/></div>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Plan</label><input value={cF.plan} onChange={e=>setCF({...cF,plan:e.target.value})}/></div>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Amount ($)</label><input type="number" value={cF.amount} onChange={e=>setCF({...cF,amount:e.target.value})}/></div>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Type</label>
-              <select value={cF.type} onChange={e=>setCF({...cF,type:e.target.value})}>
-                <option>PIF</option><option>Installment</option>
-              </select>
-            </div>
-          </div>
-          {cF.type==='Installment'&&<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Total Plan Value ($)</label><input type="number" value={cF.total_value} onChange={e=>setCF({...cF,total_value:e.target.value})}/></div>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>First Payment ($)</label><input type="number" value={cF.first_payment} onChange={e=>setCF({...cF,first_payment:e.target.value})}/></div>
-          </div>}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Commission ($)</label><input type="number" value={cF.commission} onChange={e=>setCF({...cF,commission:e.target.value})}/></div>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Notes</label><input value={cF.notes} onChange={e=>setCF({...cF,notes:e.target.value})} placeholder="Optional"/></div>
-          </div>
-          <button className="btn btn-primary" style={{width:'100%',padding:10}} onClick={addClose}>Save Close</button>
-        </div>
-      </Modal>
-
-      <Modal open={payOpen} onClose={()=>setPayOpen(false)} title={`Add Payment — ${payInst?.prospect||''}`}>
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Amount ($)</label><input type="number" value={pF.amount} onChange={e=>setPF({...pF,amount:e.target.value})}/></div>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Commission ($)</label><input type="number" value={pF.commission} onChange={e=>setPF({...pF,commission:e.target.value})}/></div>
-          </div>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Notes</label><input value={pF.notes} onChange={e=>setPF({...pF,notes:e.target.value})}/></div>
-          <button className="btn btn-primary" style={{width:'100%',padding:10}} onClick={addPay}>Save Payment</button>
-        </div>
-      </Modal>
-
-      <NotesModal open={notesOpen} onClose={()=>setNotesOpen(false)} call={notesCall}/>
-
-      <Modal open={addCoOpen} onClose={()=>setAddCoOpen(false)} title="Add Company">
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Company Name</label><input value={coName} onChange={e=>setCoName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addCo()}/></div>
-          <button className="btn btn-primary" style={{width:'100%',padding:10}} onClick={addCo}>Add Company</button>
-        </div>
-      </Modal>
-    </div>
-  );
+function clearFilter(){
+  document.getElementById('f-from').value='';
+  document.getElementById('f-to').value='';
+  renderDash();
 }
 
-/* ── Notes Modal ── */
-function NotesModal({open,onClose,call}){
-  const [txt,setTxt]=useState('');
-  const [tick,setTick]=useState(0);
-  if(!call)return null;
-  const key='nl_notes_'+call.id;
-  const notes=()=>{try{return JSON.parse(localStorage.getItem(key)||'[]');}catch{return[];}};
-  const save=()=>{
-    if(!txt.trim()){toast('Enter a note','err');return;}
-    const n={id:db.uid(),text:txt.trim(),date:db.now()};
-    localStorage.setItem(key,JSON.stringify([...notes(),n]));
-    setTxt('');setTick(t=>t+1);toast('Note saved');
-  };
-  const list=notes();
-  return(
-    <Modal open={open} onClose={onClose} title={`Notes — ${call.prospect||'Call'}`}>
-      <div style={{maxHeight:180,overflowY:'auto',marginBottom:12,display:'flex',flexDirection:'column',gap:8}}>
-        {list.length===0
-          ?<div style={{color:'#8891b8',fontSize:12,textAlign:'center',padding:'12px 0'}}>No notes yet.</div>
-          :list.map(n=>(
-            <div key={n.id} style={{background:'#080b14',borderRadius:8,padding:'8px 12px'}}>
-              <div style={{fontSize:12}}>{n.text}</div>
-              <div style={{fontSize:10,color:'#8891b8',marginTop:4}}>{fmtDate(n.date)}</div>
-            </div>
-          ))
-        }
-      </div>
-      <textarea value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Add a note..." rows={3} style={{marginBottom:8}}/>
-      <button className="btn btn-primary" style={{width:'100%'}} onClick={save}>Save Note</button>
-    </Modal>
-  );
+function renderDash(){
+  renderCoRow();
+  renderToggles();
+  const fc=getFC(),fi=getFI();
+  renderStatBar(fc,fi);
+  renderHeroKPIs(fc,fi);
+  renderSecKPIs(fc,fi);
+  renderInstallTable(fi);
+  renderCallsTable(fc);
 }
 
-/* ── Revenue ── */
-function Revenue({calls}){
-  const [period,setPeriod]=useState('all');
-  const [targetOpen,setTargetOpen]=useState(false);
-  const [targetVal,setTargetVal]=useState('');
-  const [tgt,setTgt]=useState(()=>parseFloat(localStorage.getItem('nl_target')||'0'));
-  const periods=[['all','Total'],['today','Today'],['3d','3 Days'],['7d','7 Days'],['month','This Month'],['year','This Year']];
+function renderCoRow(){
+  const row=document.getElementById('co-row');
+  let html=companies.map(c=>`
+    <div class="co-chip ${c.id===activeComp?'active':''}" onclick="switchCo('${c.id}')">
+      ${esc(c.name)}
+      <button class="co-x" onclick="event.stopPropagation();deleteCo('${c.id}')">×</button>
+    </div>`).join('');
+  html+=`<button class="btn btn-secondary" style="width:30px;height:30px;padding:0;border-radius:50%;font-size:18px" onclick="openModal('modal-company')">+</button>`;
+  row.innerHTML=html;
+}
 
-  const getFrom=p=>{
-    const n=new Date();
-    if(p==='today')return new Date(n.getFullYear(),n.getMonth(),n.getDate());
-    if(p==='3d'){const d=new Date(n);d.setDate(n.getDate()-3);return d;}
-    if(p==='7d'){const d=new Date(n);d.setDate(n.getDate()-7);return d;}
-    if(p==='month')return new Date(n.getFullYear(),n.getMonth(),1);
-    if(p==='year')return new Date(n.getFullYear(),0,1);
-    return null;
-  };
+function switchCo(id){activeComp=id;renderDash();}
 
-  const filtered=useMemo(()=>{
-    const from=getFrom(period);if(!from)return calls;
-    return calls.filter(c=>new Date(c.created_date)>=from);
-  },[calls,period]);
+function renderToggles(){
+  const co=getCo();
+  const row=document.getElementById('toggle-row');
+  if(!co){row.innerHTML='';return;}
+  row.innerHTML=[['installment_tracking','Installment Tracking'],['commission_tracking','Commission Tracking']].map(([f,l])=>`
+    <label class="tgl-wrap">
+      <button class="tgl ${co[f]?'on':''}" onclick="toggleCo('${f}')"></button>${l}
+    </label>`).join('');
+  document.getElementById('install-section').style.display=co.installment_tracking?'block':'none';
+}
 
+function toggleCo(field){
+  const co=getCo();if(!co)return;
+  const u=companies.map(c=>c.id===activeComp?{...c,[field]:!c[field]}:c);
+  companies=u;db.set('companies',u);
+  renderToggles();renderDash();
+}
+
+function renderStatBar(fc,fi){
+  const pifC=fc.filter(c=>c.type==='PIF');
+  const closed=fc.filter(c=>['PIF','Installment'].includes(c.type));
+  const cc=pifC.reduce((s,c)=>s+parseFloat(c.amount||0),0)+fi.reduce((s,i)=>s+parseFloat(i.collected||0),0);
+  const pending=fi.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
+  const showed=fc.filter(c=>c.status==='Showed').length;
+  const tot=fc.filter(c=>['Showed','No Show','Rescheduled','Cancelled'].includes(c.status)).length;
+  const cust=[...new Set(fc.filter(c=>c.prospect&&c.amount).map(c=>c.prospect))].length;
+  document.getElementById('stat-bar').innerHTML=[
+    ['CC',fmt$(cc)],['Closed',closed.length],['Pending',fmt$(pending)],
+    ['Show%',tot>0?Math.round(showed/tot*100)+'%':'0%'],['Customers',cust]
+  ].map(([l,v])=>`<div class="stat-item"><div class="sl">${l}</div><div class="sv">${v}</div></div>`).join('');
+}
+
+function calcKPIs(fc,fi){
+  const pifC=fc.filter(c=>c.type==='PIF');
+  const closed=fc.filter(c=>['PIF','Installment'].includes(c.type));
+  const cc=pifC.reduce((s,c)=>s+parseFloat(c.amount||0),0)+fi.reduce((s,i)=>s+parseFloat(i.collected||0),0);
+  const pending=fi.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
+  const showed=fc.filter(c=>c.status==='Showed').length;
+  const noshow=fc.filter(c=>c.status==='No Show').length;
+  const resched=fc.filter(c=>c.status==='Rescheduled').length;
+  const tot=fc.filter(c=>['Showed','No Show','Rescheduled','Cancelled'].includes(c.status)).length;
+  const cust=[...new Set(fc.filter(c=>c.prospect&&c.amount).map(c=>c.prospect))].length;
+  return{cc,pending,closed:closed.length,booked:fc.length,
+    ccpc:closed.length>0?cc/closed.length:0,
+    showPct:tot>0?Math.round(showed/tot*100):0,
+    noshowPct:tot>0?Math.round(noshow/tot*100):0,
+    reschedPct:tot>0?Math.round(resched/tot*100):0,
+    pifPct:closed.length>0?Math.round(pifC.length/closed.length*100):0,
+    customers:cust};
+}
+
+function renderHeroKPIs(fc,fi){
+  const k=calcKPIs(fc,fi);
+  document.getElementById('hero-kpis').innerHTML=[
+    ['Cash Collected',fmt$(k.cc)],['Closed Deals',k.closed],
+    ['Pending',fmt$(k.pending)],['Booked Calls',k.booked]
+  ].map(([l,v])=>`<div class="kpi-hero"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div></div>`).join('');
+}
+
+function renderSecKPIs(fc,fi){
+  const k=calcKPIs(fc,fi);
+  document.getElementById('sec-kpis').innerHTML=[
+    ['CCPC',fmt$(k.ccpc)],['Show%',k.showPct+'%'],['No Show%',k.noshowPct+'%'],
+    ['Resched%',k.reschedPct+'%'],['PIF Rate',k.pifPct+'%'],['Customers',k.customers]
+  ].map(([l,v])=>`<div class="kpi-sec"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div></div>`).join('');
+}
+
+function renderInstallTable(fi){
+  const tbody=document.getElementById('install-tbody');
+  if(!fi.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#8891b8;padding:20px">No plans yet. Log a close with type "Installment".</td></tr>';return;}
+  tbody.innerHTML=fi.map(i=>{
+    const col=parseFloat(i.collected||0),tot=parseFloat(i.total_value||0);
+    const pct=tot>0?Math.min(100,Math.round(col/tot*100)):0;
+    return `<tr>
+      <td style="font-weight:500">${esc(i.prospect)||'—'}</td>
+      <td style="color:#8891b8">${esc(i.plan)||'—'}</td>
+      <td style="color:#10b981">${fmt$(col)}</td>
+      <td style="color:#f59e0b">${fmt$(Math.max(0,tot-col))}</td>
+      <td style="min-width:80px"><div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:#8891b8">${pct}%</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-secondary btn-sm" onclick="openPayModal('${i.id}')" style="margin-right:4px">+Pay</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteInstall('${i.id}')" style="font-size:15px">×</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderCallsTable(fc){
+  const tbody=document.getElementById('calls-tbody');
+  if(!fc.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8891b8;padding:20px">No calls logged yet.</td></tr>';return;}
+  tbody.innerHTML=[...fc].reverse().map(c=>`<tr>
+    <td style="font-weight:500">${esc(c.prospect)||'—'}</td>
+    <td style="color:#8891b8;font-size:11px">${fmtD(c.created_date)}</td>
+    <td>${statusBadge(c.status)}</td>
+    <td>${c.amount?fmt$(c.amount):'—'}</td>
+    <td>${c.type?`<span class="badge ${c.type==='PIF'?'bc':'bb'}">${esc(c.type)}</span>`:'—'}</td>
+    <td><button class="btn btn-secondary btn-sm" onclick="openNotesModal('${c.id}','${esc(c.prospect||'Call')}')">Notes</button></td>
+    <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteCall('${c.id}')" style="font-size:15px">×</button></td>
+  </tr>`).join('');
+}
+
+// ── CRUD: Calls ───────────────────────────────────────────────
+function addOutcome(){
+  const name=document.getElementById('out-name').value.trim();
+  const status=document.getElementById('out-status').value;
+  const notes=document.getElementById('out-notes').value.trim();
+  if(!name){toast('Enter prospect name','err');return;}
+  calls.push({id:db.uid(),company_id:activeComp,prospect:name,status,notes,created_date:db.now()});
+  db.set('calls',calls);
+  document.getElementById('out-name').value='';document.getElementById('out-notes').value='';
+  closeModal('modal-outcome');renderDash();renderHome();toast('Outcome logged');
+}
+
+function onCloseType(){
+  document.getElementById('inst-extra').style.display=
+    document.getElementById('cl-type').value==='Installment'?'block':'none';
+}
+
+function addClose(){
+  const prospect=document.getElementById('cl-prospect').value.trim();
+  if(!prospect){toast('Enter prospect name','err');return;}
+  const type=document.getElementById('cl-type').value;
+  const amount=parseFloat(document.getElementById('cl-amount').value)||0;
+  const plan=document.getElementById('cl-plan').value.trim();
+  const comm=parseFloat(document.getElementById('cl-comm').value)||0;
+  const notes=document.getElementById('cl-notes').value.trim();
+  calls.push({id:db.uid(),company_id:activeComp,prospect,status:type,type,amount,plan,commission:comm,notes,created_date:db.now()});
+  db.set('calls',calls);
+  if(type==='Installment'){
+    const tv=parseFloat(document.getElementById('cl-total').value)||amount;
+    const fp=parseFloat(document.getElementById('cl-first').value)||amount;
+    installments.push({id:db.uid(),company_id:activeComp,prospect,plan,total_value:tv,first_payment:fp,collected:fp,commission:comm,created_date:db.now()});
+    db.set('installments',installments);
+  }
+  ['cl-prospect','cl-plan','cl-amount','cl-total','cl-first','cl-comm','cl-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('cl-type').value='PIF';
+  document.getElementById('inst-extra').style.display='none';
+  closeModal('modal-close');renderDash();renderHome();renderRevenue();toast('Close logged');
+}
+
+function deleteCall(id){
+  if(!confirm('Delete this call?'))return;
+  calls=calls.filter(c=>c.id!==id);db.set('calls',calls);renderDash();renderHome();toast('Deleted');
+}
+
+// ── CRUD: Installments ────────────────────────────────────────
+function openPayModal(id){
+  document.getElementById('pay-id').value=id;
+  ['pay-amount','pay-comm','pay-notes'].forEach(i=>document.getElementById(i).value='');
+  openModal('modal-payment');
+}
+function addPayment(){
+  const id=document.getElementById('pay-id').value;
+  const amt=parseFloat(document.getElementById('pay-amount').value)||0;
+  if(!amt){toast('Enter amount','err');return;}
+  const comm=parseFloat(document.getElementById('pay-comm').value)||0;
+  const notes=document.getElementById('pay-notes').value.trim();
+  const inst=installments.find(i=>i.id===id);if(!inst)return;
+  inst.collected=parseFloat(inst.collected||0)+amt;
+  inst.commission=parseFloat(inst.commission||0)+comm;
+  db.set('installments',installments);
+  calls.push({id:db.uid(),company_id:activeComp,prospect:inst.prospect,status:'Installment',type:'Installment',amount:amt,plan:inst.plan,commission:comm,notes,created_date:db.now()});
+  db.set('calls',calls);
+  closeModal('modal-payment');renderDash();renderRevenue();toast('Payment added');
+}
+function deleteInstall(id){
+  if(!confirm('Delete this plan?'))return;
+  installments=installments.filter(i=>i.id!==id);db.set('installments',installments);renderDash();toast('Deleted');
+}
+
+// ── CRUD: Companies ───────────────────────────────────────────
+function addCompany(){
+  const name=document.getElementById('co-name').value.trim();
+  if(!name){toast('Enter company name','err');return;}
+  const c={id:db.uid(),name,installment_tracking:false,commission_tracking:false};
+  companies.push(c);db.set('companies',companies);
+  activeComp=c.id;document.getElementById('co-name').value='';
+  closeModal('modal-company');renderDash();toast('Company added');
+}
+function deleteCo(id){
+  if(!confirm('Delete company?'))return;
+  companies=companies.filter(c=>c.id!==id);db.set('companies',companies);
+  if(activeComp===id)activeComp=companies[0]?.id||null;
+  renderDash();toast('Deleted');
+}
+
+// ── Notes ─────────────────────────────────────────────────────
+function openNotesModal(callId,name){
+  document.getElementById('notes-cid').value=callId;
+  document.getElementById('notes-title').textContent=name;
+  document.getElementById('note-txt').value='';
+  renderNotesList(callId);
+  openModal('modal-notes');
+}
+function renderNotesList(callId){
+  const key='nl_notes_'+callId;
+  const notes=JSON.parse(localStorage.getItem(key)||'[]');
+  document.getElementById('notes-list').innerHTML=notes.length
+    ?notes.map(n=>`<div class="note-item"><div class="note-text">${esc(n.text)}</div><div class="note-meta">${fmtD(n.date)}</div></div>`).join('')
+    :'<div style="color:#8891b8;font-size:12px;text-align:center;padding:12px 0">No notes yet.</div>';
+}
+function saveNote(){
+  const callId=document.getElementById('notes-cid').value;
+  const txt=document.getElementById('note-txt').value.trim();
+  if(!txt){toast('Enter a note','err');return;}
+  const key='nl_notes_'+callId;
+  const notes=JSON.parse(localStorage.getItem(key)||'[]');
+  notes.push({id:db.uid(),text:txt,date:db.now()});
+  localStorage.setItem(key,JSON.stringify(notes));
+  document.getElementById('note-txt').value='';
+  renderNotesList(callId);toast('Note saved');
+}
+
+// ── REVENUE ───────────────────────────────────────────────────
+function getRevFrom(p){
+  const n=new Date();
+  if(p==='today')return new Date(n.getFullYear(),n.getMonth(),n.getDate());
+  if(p==='3d'){const d=new Date(n);d.setDate(n.getDate()-3);return d;}
+  if(p==='7d'){const d=new Date(n);d.setDate(n.getDate()-7);return d;}
+  if(p==='month')return new Date(n.getFullYear(),n.getMonth(),1);
+  if(p==='year')return new Date(n.getFullYear(),0,1);
+  return null;
+}
+
+function setRevPeriod(p,el){
+  revPeriod=p;
+  document.querySelectorAll('.period-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderRevenue();
+}
+
+function renderRevenue(){
+  // Build period chips if needed
+  const chipsEl=document.getElementById('period-chips');
+  if(!chipsEl.children.length){
+    chipsEl.innerHTML=[['all','Total'],['today','Today'],['3d','3 Days'],['7d','7 Days'],['month','This Month'],['year','This Year']]
+      .map(([k,l])=>`<button class="period-chip ${revPeriod===k?'active':''}" onclick="setRevPeriod('${k}',this)">${l}</button>`).join('');
+  }
+
+  const from=getRevFrom(revPeriod);
+  const filtered=from?calls.filter(c=>new Date(c.created_date)>=from):calls;
   const cc=filtered.filter(c=>c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0);
   const closed=filtered.filter(c=>['PIF','Installment'].includes(c.type)).length;
   const comm=filtered.reduce((s,c)=>s+parseFloat(c.commission||0),0);
   const ccpc=closed>0?cc/closed:0;
 
-  const chartData=useMemo(()=>{
-    const sorted=[...filtered].filter(c=>c.amount).sort((a,b)=>new Date(a.created_date)-new Date(b.created_date));
-    let cum=0;
-    return sorted.map(c=>{cum+=parseFloat(c.amount||0);return{label:fmtDate(c.created_date),cc:+cum.toFixed(2)};});
-  },[filtered]);
+  document.getElementById('rev-cc').textContent=fmt$(cc);
+  document.getElementById('rev-stats').innerHTML=[
+    ['Closed Deals',closed],['CCPC',fmt$(ccpc)],['Commission',fmt$(comm)]
+  ].map(([l,v])=>`<div class="card"><div class="kpi-label">${l}</div><div style="font-size:16px;font-weight:700">${v}</div></div>`).join('');
 
+  // Chart
+  const sorted=[...filtered].filter(c=>c.amount).sort((a,b)=>new Date(a.created_date)-new Date(b.created_date));
+  let cum=0;
+  const pts=sorted.map(c=>{cum+=parseFloat(c.amount||0);return{d:fmtD(c.created_date),y:cum};});
+  drawChart(pts);
+
+  // Monthly target
+  const tgt=parseFloat(localStorage.getItem('nl_target')||'0');
   const now=new Date();
   const monthCC=calls.filter(c=>c.amount&&new Date(c.created_date).getMonth()===now.getMonth()&&new Date(c.created_date).getFullYear()===now.getFullYear()).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-  const tgtPct=tgt>0?Math.min(100,Math.round(monthCC/tgt*100)):0;
-
-  const saveTarget=()=>{
-    const v=parseFloat(targetVal)||0;
-    localStorage.setItem('nl_target',String(v));setTgt(v);setTargetOpen(false);toast('Target saved');
-  };
-
-  return(
-    <div>
-      <h1 style={{fontSize:18,fontWeight:700,marginBottom:16}}>Revenue <span style={gradText}>Overview</span></h1>
-      <div style={{display:'flex',gap:8,marginBottom:18,flexWrap:'wrap'}}>
-        {periods.map(([k,l])=>(
-          <button key={k} onClick={()=>setPeriod(k)} style={{padding:'6px 14px',borderRadius:99,fontSize:12,fontWeight:500,cursor:'pointer',border:`1px solid ${period===k?'#2563eb':'#1e2540'}`,background:period===k?'rgba(37,99,235,.15)':'#0d1120',color:period===k?'#60a5fa':'#8891b8',transition:'all .15s',fontFamily:'inherit'}}>{l}</button>
-        ))}
-      </div>
-      <div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:20,marginBottom:12}}>
-        <div style={{fontSize:10,color:'#8891b8',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:4}}>Cash Collected</div>
-        <div style={{fontSize:42,fontWeight:800,marginBottom:16,...gradText}}>{fmtMoney(cc)}</div>
-        <div style={{height:200}}>
-          {chartData.length>0
-            ?<ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{top:5,right:10,left:0,bottom:5}}>
-                <XAxis dataKey="label" tick={{fill:'rgba(136,145,184,.7)',fontSize:10}} tickLine={false} axisLine={false}/>
-                <YAxis tick={{fill:'rgba(136,145,184,.7)',fontSize:10}} tickLine={false} axisLine={false} tickFormatter={v=>'$'+Number(v).toLocaleString()} width={60}/>
-                <Tooltip contentStyle={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:8,fontSize:12}} formatter={v=>['$'+Number(v).toLocaleString(undefined,{minimumFractionDigits:2}),'CC']}/>
-                <Area type="monotone" dataKey="cc" stroke="#2563eb" fill="rgba(37,99,235,0.1)" strokeWidth={2}/>
-              </AreaChart>
-            </ResponsiveContainer>
-            :<div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'#8891b8',fontSize:13}}>No data for this period</div>
-          }
-        </div>
-      </div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:12,marginBottom:14}}>
-        {[['Closed Deals',closed],['CCPC',fmtMoney(ccpc)],['Commission',fmtMoney(comm)]].map(([l,v])=>(
-          <div key={l} style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:14}}>
-            <div style={{fontSize:10,color:'#8891b8',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:4}}>{l}</div>
-            <div style={{fontSize:16,fontWeight:700}}>{v}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:16}}>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-          <span style={{fontSize:13,fontWeight:600}}>Monthly Target</span>
-          <button className="btn btn-secondary" style={{fontSize:11,padding:'4px 10px'}} onClick={()=>{setTargetVal(String(tgt||''));setTargetOpen(true);}}>Edit</button>
-        </div>
-        <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:8}}>
-          <span>{fmtMoney(monthCC)} collected this month</span>
-          <span style={{color:'#8891b8'}}>Target: {fmtMoney(tgt)}</span>
-        </div>
-        <div className="progress-bar"><div className="progress-fill" style={{width:tgtPct+'%'}}/></div>
-        <div style={{fontSize:11,color:'#8891b8',marginTop:6}}>{tgtPct}% of target</div>
-      </div>
-      <Modal open={targetOpen} onClose={()=>setTargetOpen(false)} title="Monthly Target">
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Target ($)</label><input type="number" min="0" value={targetVal} onChange={e=>setTargetVal(e.target.value)}/></div>
-          <button className="btn btn-primary" style={{width:'100%',padding:10}} onClick={saveTarget}>Save</button>
-        </div>
-      </Modal>
-    </div>
-  );
+  const pct=tgt>0?Math.min(100,Math.round(monthCC/tgt*100)):0;
+  document.getElementById('tgt-collected').textContent=fmt$(monthCC)+' collected this month';
+  document.getElementById('tgt-label').textContent='Target: '+fmt$(tgt);
+  document.getElementById('tgt-bar').style.width=pct+'%';
+  document.getElementById('tgt-pct').textContent=pct+'% of target';
 }
 
-/* ── Goals ── */
-function Goals({goals,setGoals,goalLogs,setGoalLogs}){
-  const [goalOpen,setGoalOpen]=useState(false);
-  const [progOpen,setProgOpen]=useState(false);
-  const [progId,setProgId]=useState(null);
-  const [form,setForm]=useState({name:'',target:'',unit:'',notes:''});
-  const [pF,setPF]=useState({value:'',note:''});
+function drawChart(pts){
+  const wrap=document.getElementById('rev-chart-wrap');
+  if(!pts.length){wrap.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8891b8;font-size:13px">No data for this period</div>';return;}
+  const W=wrap.clientWidth||600,H=180;
+  const minY=0,maxY=Math.max(...pts.map(p=>p.y),1);
+  const pad={t:10,r:10,b:30,l:60};
+  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  const px=(i)=>pad.l+i*(cw/(pts.length-1||1));
+  const py=(v)=>pad.t+ch-(v-minY)/(maxY-minY)*ch;
+  const points=pts.map((p,i)=>`${px(i)},${py(p.y)}`).join(' ');
+  const areaPath=`M${px(0)},${py(pts[0].y)} `+pts.slice(1).map((p,i)=>`L${px(i+1)},${py(p.y)}`).join(' ')+` L${px(pts.length-1)},${H-pad.b} L${px(0)},${H-pad.b} Z`;
+  // Y axis ticks
+  const yTicks=[0,.25,.5,.75,1].map(f=>({v:minY+f*(maxY-minY),y:py(minY+f*(maxY-minY))}));
+  // X axis labels (max 6)
+  const step=Math.max(1,Math.ceil(pts.length/6));
+  const xLabels=pts.filter((_,i)=>i%step===0||i===pts.length-1);
 
-  const addGoal=()=>{
-    if(!form.name.trim()){toast('Enter goal name','err');return;}
-    const g={id:db.uid(),name:form.name.trim(),target:parseFloat(form.target)||null,unit:form.unit.trim(),notes:form.notes.trim(),done:false,created_date:db.now()};
-    const u=[...goals,g];setGoals(u);db.set('goals',u);
-    setForm({name:'',target:'',unit:'',notes:''});setGoalOpen(false);toast('Goal created');
-  };
-  const logProg=()=>{
-    const val=parseFloat(pF.value)||0;if(!val){toast('Enter value','err');return;}
-    const l={id:db.uid(),goal_id:progId,value:val,note:pF.note,created_date:db.now()};
-    const u=[...goalLogs,l];setGoalLogs(u);db.set('goalLogs',u);
-    setPF({value:'',note:''});setProgOpen(false);toast('Progress logged');
-  };
-  const markDone=(id,done)=>{const u=goals.map(g=>g.id===id?{...g,done}:g);setGoals(u);db.set('goals',u);};
-  const delGoal=(id)=>{if(!confirm('Delete?'))return;const u=goals.filter(g=>g.id!==id);setGoals(u);db.set('goals',u);toast('Deleted');};
-
-  return(
-    <div>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
-        <h1 style={{fontSize:18,fontWeight:700,margin:0}}>Goals <span style={gradText}>Tracker</span></h1>
-        <button className="btn btn-primary" onClick={()=>setGoalOpen(true)}><Ic d={I.plus} size={13}/>New Goal</button>
-      </div>
-      {goals.length===0
-        ?<div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:32,textAlign:'center',color:'#8891b8',fontSize:13}}>No goals yet. Create your first!</div>
-        :<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:12}}>
-          {goals.map(g=>{
-            const logs=goalLogs.filter(l=>l.goal_id===g.id);
-            const prog=logs.reduce((s,l)=>s+parseFloat(l.value||0),0);
-            const pct=g.target?Math.min(100,Math.round(prog/g.target*100)):0;
-            return(
-              <div key={g.id} style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:16,opacity:g.done?.5:1}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:600,marginBottom:2}}>{g.name}{g.done&&<span className="badge badge-green" style={{marginLeft:6}}>Done</span>}</div>
-                    {g.notes&&<div style={{fontSize:11,color:'#8891b8'}}>{g.notes}</div>}
-                  </div>
-                  <div style={{display:'flex',gap:4,marginLeft:8,flexShrink:0}}>
-                    {!g.done&&<button className="btn btn-secondary" style={{fontSize:11,padding:'3px 8px'}} onClick={()=>{setProgId(g.id);setProgOpen(true);}}>+Log</button>}
-                    <button className="btn btn-secondary" style={{fontSize:11,padding:'3px 8px'}} onClick={()=>markDone(g.id,!g.done)}>{g.done?'Reopen':'Done'}</button>
-                    <button className="btn btn-danger" style={{padding:'3px 8px',fontSize:14}} onClick={()=>delGoal(g.id)}>&times;</button>
-                  </div>
-                </div>
-                {g.target&&<>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#8891b8',marginBottom:4}}>
-                    <span>{prog.toLocaleString()} {g.unit||''}</span>
-                    <span>/ {parseFloat(g.target).toLocaleString()} {g.unit||''}</span>
-                  </div>
-                  <div className="progress-bar"><div className="progress-fill" style={{width:pct+'%'}}/></div>
-                  <div style={{fontSize:11,color:'#8891b8',marginTop:4}}>{pct}% complete</div>
-                </>}
-                {logs.length>0&&<div style={{fontSize:11,color:'#8891b8',marginTop:8}}>{logs.length} log {logs.length===1?'entry':'entries'}</div>}
-              </div>
-            );
-          })}
-        </div>
-      }
-      <Modal open={goalOpen} onClose={()=>setGoalOpen(false)} title="New Goal">
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Goal Name</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Hit $10k this month"/></div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Target</label><input type="number" value={form.target} onChange={e=>setForm({...form,target:e.target.value})}/></div>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Unit</label><input value={form.unit} onChange={e=>setForm({...form,unit:e.target.value})} placeholder="$, calls, deals"/></div>
-          </div>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Notes</label><textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2}/></div>
-          <button className="btn btn-primary" style={{width:'100%',padding:10}} onClick={addGoal}>Create Goal</button>
-        </div>
-      </Modal>
-      <Modal open={progOpen} onClose={()=>setProgOpen(false)} title="Log Progress">
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Amount</label><input type="number" value={pF.value} onChange={e=>setPF({...pF,value:e.target.value})}/></div>
-            <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Note</label><input value={pF.note} onChange={e=>setPF({...pF,note:e.target.value})} placeholder="Optional"/></div>
-          </div>
-          <button className="btn btn-primary" style={{width:'100%',padding:10}} onClick={logProg}>Log Progress</button>
-        </div>
-      </Modal>
-    </div>
-  );
+  wrap.innerHTML=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" class="chart-svg">
+    <defs>
+      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2563eb" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="#2563eb" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    ${yTicks.map(t=>`
+      <line x1="${pad.l}" y1="${t.y}" x2="${W-pad.r}" y2="${t.y}" stroke="#1e2540" stroke-width="1"/>
+      <text x="${pad.l-6}" y="${t.y+4}" text-anchor="end" fill="rgba(136,145,184,.7)" font-size="10">$${Number(t.v).toLocaleString('en-US',{maximumFractionDigits:0})}</text>
+    `).join('')}
+    ${xLabels.map(p=>{const i=pts.indexOf(p);return`<text x="${px(i)}" y="${H-6}" text-anchor="middle" fill="rgba(136,145,184,.7)" font-size="10">${p.d}</text>`}).join('')}
+    <path d="${areaPath}" class="chart-area"/>
+    <polyline points="${points}" class="chart-line"/>
+    ${pts.length<30?pts.map((p,i)=>`<circle cx="${px(i)}" cy="${py(p.y)}" r="3" class="chart-dot"/>`).join(''):''}
+  </svg>`;
 }
 
-/* ── Settings ── */
-function Settings({user,setUser}){
-  const [name,setName]=useState(user?.name||'');
-  const [role,setRole]=useState(user?.role||'Closer');
-  const save=()=>{
-    const u={...user,name:name.trim()||user?.name,role};
-    setUser(u);db.set('user',u);toast('Settings saved');
-  };
-  return(
-    <div>
-      <h1 style={{fontSize:18,fontWeight:700,marginBottom:20}}>Settings</h1>
-      <div style={{background:'#0d1120',border:'1px solid #1e2540',borderRadius:12,padding:20,maxWidth:400}}>
-        <div style={{fontSize:11,color:'#8891b8',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:16}}>Profile</div>
-        <div style={{display:'flex',flexDirection:'column',gap:12}}>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Display Name</label><input value={name} onChange={e=>setName(e.target.value)}/></div>
-          <div><label style={{fontSize:11,color:'#8891b8',display:'block',marginBottom:4}}>Role</label>
-            <select value={role} onChange={e=>setRole(e.target.value)}>
-              <option>Setter</option><option>Closer</option><option>Admin</option>
-            </select>
-          </div>
-          <button className="btn btn-primary" style={{padding:10}} onClick={save}>Save Changes</button>
+function saveTarget(){
+  const v=parseFloat(document.getElementById('target-val').value)||0;
+  localStorage.setItem('nl_target',String(v));
+  closeModal('modal-target');renderRevenue();toast('Target saved');
+}
+
+// ── GOALS ─────────────────────────────────────────────────────
+function renderGoals(){
+  const grid=document.getElementById('goals-grid');
+  if(!goals.length){grid.innerHTML='<div class="card" style="grid-column:1/-1;text-align:center;color:#8891b8;padding:32px;font-size:13px">No goals yet. Create your first!</div>';return;}
+  grid.innerHTML=goals.map(g=>{
+    const logs=goalLogs.filter(l=>l.goal_id===g.id);
+    const prog=logs.reduce((s,l)=>s+parseFloat(l.value||0),0);
+    const pct=g.target?Math.min(100,Math.round(prog/g.target*100)):0;
+    return `<div class="card" style="opacity:${g.done?.5:1}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;margin-bottom:2px">${esc(g.name)}${g.done?'<span class="badge bg" style="margin-left:6px">Done</span>':''}</div>
+          ${g.notes?`<div style="font-size:11px;color:#8891b8">${esc(g.notes)}</div>`:''}
+        </div>
+        <div style="display:flex;gap:4px;margin-left:8px;flex-shrink:0">
+          ${!g.done?`<button class="btn btn-secondary btn-sm" onclick="openGoalProg('${g.id}')">+Log</button>`:''}
+          <button class="btn btn-secondary btn-sm" onclick="markGoalDone('${g.id}',${!g.done})">${g.done?'Reopen':'Done'}</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteGoal('${g.id}')" style="font-size:15px">×</button>
         </div>
       </div>
-    </div>
-  );
+      ${g.target?`
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#8891b8;margin-bottom:4px">
+          <span>${prog.toLocaleString()} ${esc(g.unit||'')}</span>
+          <span>/ ${parseFloat(g.target).toLocaleString()} ${esc(g.unit||'')}</span>
+        </div>
+        <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <div style="font-size:11px;color:#8891b8;margin-top:4px">${pct}% complete</div>
+      `:''}
+      ${logs.length?`<div style="font-size:11px;color:#8891b8;margin-top:8px">${logs.length} log ${logs.length===1?'entry':'entries'}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
-/* ── App Root ── */
-function App(){
-  const [user,setUser]=useState(null);
-  const [page,setPage]=useState('home');
-  const [mobOpen,setMobOpen]=useState(false);
-  const [calls,setCalls]=useState(()=>db.get('calls'));
-  const [installments,setInstallments]=useState(()=>db.get('installments'));
-  const [companies,setCompanies]=useState(()=>db.get('companies'));
-  const [goals,setGoals]=useState(()=>db.get('goals'));
-  const [goalLogs,setGoalLogs]=useState(()=>db.get('goalLogs'));
-
-  useEffect(()=>{
-    // Hide loading screen
-    const el=document.getElementById('app-loading');
-    if(el)el.style.display='none';
-    // Restore user session
-    const u=db.get('user',null);
-    if(u&&u.name)setUser(u);
-  },[]);
-
-  const signOut=()=>{db.set('user',null);setUser(null);};
-
-  const pages={
-    home:<Home calls={calls} installments={installments} goals={goals} goalLogs={goalLogs} setPage={setPage} user={user}/>,
-    dashboard:<Dashboard calls={calls} setCalls={setCalls} installments={installments} setInstallments={setInstallments} companies={companies} setCompanies={setCompanies}/>,
-    revenue:<Revenue calls={calls}/>,
-    goals:<Goals goals={goals} setGoals={setGoals} goalLogs={goalLogs} setGoalLogs={setGoalLogs}/>,
-    settings:<Settings user={user} setUser={setUser}/>,
-  };
-
-  if(!user) return <><ToastHost/><Login onLogin={setUser}/></>;
-
-  return(
-    <>
-      <ToastHost/>
-      <Sidebar page={page} setPage={setPage} user={user} onSignOut={signOut} mobileOpen={mobOpen} setMobileOpen={setMobOpen}/>
-      <button className="mobile-menu-btn" onClick={()=>setMobOpen(true)} style={{position:'fixed',top:12,left:12,zIndex:35,background:'#0d1120',border:'1px solid #1e2540',borderRadius:8,padding:'6px 8px',cursor:'pointer',display:'none',alignItems:'center',color:'#8891b8'}}>
-        <Ic d={I.menu} size={18}/>
-      </button>
-      <main className="main-content" style={{minHeight:'100vh',padding:'20px 16px'}}>
-        {pages[page]||pages.home}
-      </main>
-    </>
-  );
+function addGoal(){
+  const name=document.getElementById('goal-name').value.trim();
+  if(!name){toast('Enter goal name','err');return;}
+  goals.push({id:db.uid(),name,target:parseFloat(document.getElementById('goal-target').value)||null,
+    unit:document.getElementById('goal-unit').value.trim(),notes:document.getElementById('goal-notes').value.trim(),done:false,created_date:db.now()});
+  db.set('goals',goals);
+  ['goal-name','goal-target','goal-unit','goal-notes'].forEach(id=>document.getElementById(id).value='');
+  closeModal('modal-goal');renderGoals();renderHome();toast('Goal created');
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+function openGoalProg(id){
+  document.getElementById('gp-id').value=id;
+  document.getElementById('gp-val').value='';document.getElementById('gp-note').value='';
+  openModal('modal-gprog');
+}
+
+function saveGoalProg(){
+  const val=parseFloat(document.getElementById('gp-val').value)||0;
+  if(!val){toast('Enter value','err');return;}
+  goalLogs.push({id:db.uid(),goal_id:document.getElementById('gp-id').value,value:val,note:document.getElementById('gp-note').value.trim(),created_date:db.now()});
+  db.set('goalLogs',goalLogs);
+  closeModal('modal-gprog');renderGoals();renderHome();toast('Progress logged');
+}
+
+function markGoalDone(id,done){
+  goals=goals.map(g=>g.id===id?{...g,done}:g);
+  db.set('goals',goals);renderGoals();renderHome();toast(done?'Goal complete!':'Goal reopened');
+}
+
+function deleteGoal(id){
+  if(!confirm('Delete this goal?'))return;
+  goals=goals.filter(g=>g.id!==id);db.set('goals',goals);renderGoals();renderHome();toast('Deleted');
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────
+function renderSettings(){
+  document.getElementById('set-name').value=user.name||'';
+  document.getElementById('set-role').value=user.role||'Closer';
+}
+function saveSettings(){
+  user.name=document.getElementById('set-name').value.trim()||user.name;
+  user.role=document.getElementById('set-role').value;
+  db.set('user',user);
+  document.getElementById('sb-uname').textContent=user.name;
+  document.getElementById('sb-urole').textContent=user.role;
+  document.getElementById('sb-avatar').textContent=user.name.charAt(0).toUpperCase();
+  toast('Settings saved');
+}
+
+// ── BOOT ──────────────────────────────────────────────────────
+(function(){
+  const saved=db.get('user',null);
+  if(saved&&saved.name){user=saved;initApp();}
+  else{
+    document.getElementById('login-name').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  }
+})();
 </script>
 </body>
 </html>
