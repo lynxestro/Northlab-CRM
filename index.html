@@ -364,6 +364,12 @@ tr:hover td{background:#1e254018}
       <div class="fgroup"><label>Plan</label><input id="cl-plan" type="text"/></div>
     </div>
     <div class="frow f2">
+      <div class="fgroup"><label>Date</label><input id="cl-date" type="date"/></div>
+      <div class="fgroup"><label>Status</label>
+        <select id="cl-status"><option>Showed</option><option>No Show</option><option>Rescheduled</option><option>Cancelled</option><option>Offered</option></select>
+      </div>
+    </div>
+    <div class="frow f2">
       <div class="fgroup"><label>Amount ($)</label><input id="cl-amount" type="number" min="0"/></div>
       <div class="fgroup"><label>Type</label>
         <select id="cl-type" onchange="onCloseType()"><option>PIF</option><option>Installment</option></select>
@@ -641,13 +647,13 @@ function renderStatBar(fc,fi){
   const pifC=fc.filter(c=>c.type==='PIF');
   const closed=fc.filter(c=>['PIF','Installment'].includes(c.type));
   const cc=pifC.reduce((s,c)=>s+parseFloat(c.amount||0),0)+fi.reduce((s,i)=>s+parseFloat(i.collected||0),0);
-  const pending=fi.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
   const showed=fc.filter(c=>c.status==='Showed').length;
   const tot=fc.filter(c=>['Showed','No Show','Rescheduled','Cancelled'].includes(c.status)).length;
   const cust=[...new Set(fc.filter(c=>c.prospect&&c.amount).map(c=>c.prospect))].length;
+  const pifPct=closed.length>0?Math.round(pifC.length/closed.length*100):0;
+  const showRate=tot>0?Math.round(showed/tot*100):0;
   document.getElementById('stat-bar').innerHTML=[
-    ['CC',fmt$(cc)],['Closed',closed.length],['Pending',fmt$(pending)],
-    ['Show%',tot>0?Math.round(showed/tot*100)+'%':'0%'],['Customers',cust]
+    ['Total CC',fmt$(cc)],['PIF Rate',pifPct+'%'],['Customers',cust],['Show Rate',showRate+'%']
   ].map(([l,v])=>`<div class="stat-item"><div class="sl">${l}</div><div class="sv">${v}</div></div>`).join('');
 }
 
@@ -726,6 +732,27 @@ function addOutcome(){
   const status=document.getElementById('out-status').value;
   const notes=document.getElementById('out-notes').value.trim();
   if(!name){toast('Enter prospect name','err');return;}
+  const nameLower=name.toLowerCase();
+  // Check if a close already exists for this prospect — if so, just update its status
+  const closeRec=calls.find(c=>c.prospect.toLowerCase()===nameLower&&c.company_id===activeComp&&['PIF','Installment'].includes(c.type));
+  if(closeRec){
+    closeRec.status=status;
+    if(notes)closeRec.notes=notes;
+    db.set('calls',calls);
+    document.getElementById('out-name').value='';document.getElementById('out-notes').value='';
+    closeModal('modal-outcome');renderDash();renderHome();toast('Updated existing close status');return;
+  }
+  // Check if a non-close outcome already exists for this prospect — update instead of duplicate
+  const existing=calls.find(c=>c.prospect.toLowerCase()===nameLower&&c.company_id===activeComp&&!['PIF','Installment'].includes(c.type));
+  if(existing){
+    existing.status=status;
+    if(notes)existing.notes=notes;
+    existing.created_date=db.now();
+    db.set('calls',calls);
+    document.getElementById('out-name').value='';document.getElementById('out-notes').value='';
+    closeModal('modal-outcome');renderDash();renderHome();toast('Outcome updated');return;
+  }
+  // No existing record — add new
   calls.push({id:db.uid(),company_id:activeComp,prospect:name,status,notes,created_date:db.now()});
   db.set('calls',calls);
   document.getElementById('out-name').value='';document.getElementById('out-notes').value='';
@@ -741,20 +768,27 @@ function addClose(){
   const prospect=document.getElementById('cl-prospect').value.trim();
   if(!prospect){toast('Enter prospect name','err');return;}
   const type=document.getElementById('cl-type').value;
+  const status=document.getElementById('cl-status').value;
   const amount=parseFloat(document.getElementById('cl-amount').value)||0;
   const plan=document.getElementById('cl-plan').value.trim();
   const comm=parseFloat(document.getElementById('cl-comm').value)||0;
   const notes=document.getElementById('cl-notes').value.trim();
-  calls.push({id:db.uid(),company_id:activeComp,prospect,status:type,type,amount,plan,commission:comm,notes,created_date:db.now()});
+  const dateVal=document.getElementById('cl-date').value;
+  const createdDate=dateVal?new Date(dateVal+'T12:00:00').toISOString():db.now();
+  // If an existing outcome for same prospect exists (non-close), update its status to Closed
+  const existing=calls.find(c=>c.prospect.toLowerCase()===prospect.toLowerCase()&&c.company_id===activeComp&&!['PIF','Installment'].includes(c.type));
+  if(existing){existing.status=status;}
+  calls.push({id:db.uid(),company_id:activeComp,prospect,status,type,amount,plan,commission:comm,notes,created_date:createdDate});
   db.set('calls',calls);
   if(type==='Installment'){
     const tv=parseFloat(document.getElementById('cl-total').value)||amount;
     const fp=parseFloat(document.getElementById('cl-first').value)||amount;
-    installments.push({id:db.uid(),company_id:activeComp,prospect,plan,total_value:tv,first_payment:fp,collected:fp,commission:comm,created_date:db.now()});
+    installments.push({id:db.uid(),company_id:activeComp,prospect,plan,total_value:tv,first_payment:fp,collected:fp,commission:comm,created_date:createdDate});
     db.set('installments',installments);
   }
-  ['cl-prospect','cl-plan','cl-amount','cl-total','cl-first','cl-comm','cl-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['cl-prospect','cl-plan','cl-amount','cl-total','cl-first','cl-comm','cl-notes','cl-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('cl-type').value='PIF';
+  document.getElementById('cl-status').value='Showed';
   document.getElementById('inst-extra').style.display='none';
   closeModal('modal-close');renderDash();renderHome();renderRevenue();toast('Close logged');
 }
@@ -889,36 +923,36 @@ function renderRevenue(){
 
 function drawChart(pts){
   const wrap=document.getElementById('rev-chart-wrap');
-  if(!pts.length){wrap.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8891b8;font-size:13px">No data for this period</div>';return;}
-  const W=wrap.clientWidth||600,H=180;
+  if(!pts.length){wrap.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:180px;color:#8891b8;font-size:13px">No data for this period</div>';return;}
+  // Use offsetWidth with multiple fallbacks; if still 0, retry after layout
+  let W=wrap.offsetWidth||wrap.clientWidth||wrap.getBoundingClientRect().width||0;
+  if(W<10){setTimeout(()=>drawChart(pts),80);return;}
+  const H=180;
   const minY=0,maxY=Math.max(...pts.map(p=>p.y),1);
-  const pad={t:10,r:10,b:30,l:60};
+  const pad={t:10,r:10,b:30,l:62};
   const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
   const px=(i)=>pad.l+i*(cw/(pts.length-1||1));
-  const py=(v)=>pad.t+ch-(v-minY)/(maxY-minY)*ch;
-  const points=pts.map((p,i)=>`${px(i)},${py(p.y)}`).join(' ');
+  const py=(v)=>pad.t+ch-(v-minY)/(maxY-minY||1)*ch;
   const areaPath=`M${px(0)},${py(pts[0].y)} `+pts.slice(1).map((p,i)=>`L${px(i+1)},${py(p.y)}`).join(' ')+` L${px(pts.length-1)},${H-pad.b} L${px(0)},${H-pad.b} Z`;
-  // Y axis ticks
+  const linePath=`M${pts.map((p,i)=>`${px(i)},${py(p.y)}`).join(' L')}`;
   const yTicks=[0,.25,.5,.75,1].map(f=>({v:minY+f*(maxY-minY),y:py(minY+f*(maxY-minY))}));
-  // X axis labels (max 6)
   const step=Math.max(1,Math.ceil(pts.length/6));
   const xLabels=pts.filter((_,i)=>i%step===0||i===pts.length-1);
-
-  wrap.innerHTML=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" class="chart-svg">
+  wrap.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">
     <defs>
       <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#2563eb" stop-opacity="0.35"/>
+        <stop offset="0%" stop-color="#2563eb" stop-opacity="0.3"/>
         <stop offset="100%" stop-color="#2563eb" stop-opacity="0.02"/>
       </linearGradient>
     </defs>
     ${yTicks.map(t=>`
-      <line x1="${pad.l}" y1="${t.y}" x2="${W-pad.r}" y2="${t.y}" stroke="#1e2540" stroke-width="1"/>
-      <text x="${pad.l-6}" y="${t.y+4}" text-anchor="end" fill="rgba(136,145,184,.7)" font-size="10">$${Number(t.v).toLocaleString('en-US',{maximumFractionDigits:0})}</text>
+      <line x1="${pad.l}" y1="${t.y.toFixed(1)}" x2="${W-pad.r}" y2="${t.y.toFixed(1)}" stroke="#1e2540" stroke-width="1"/>
+      <text x="${pad.l-6}" y="${(t.y+4).toFixed(1)}" text-anchor="end" fill="rgba(136,145,184,.7)" font-size="10">$${Number(t.v).toLocaleString('en-US',{maximumFractionDigits:0})}</text>
     `).join('')}
-    ${xLabels.map(p=>{const i=pts.indexOf(p);return`<text x="${px(i)}" y="${H-6}" text-anchor="middle" fill="rgba(136,145,184,.7)" font-size="10">${p.d}</text>`}).join('')}
-    <path d="${areaPath}" class="chart-area"/>
-    <polyline points="${points}" class="chart-line"/>
-    ${pts.length<30?pts.map((p,i)=>`<circle cx="${px(i)}" cy="${py(p.y)}" r="3" class="chart-dot"/>`).join(''):''}
+    ${xLabels.map(p=>{const i=pts.indexOf(p);return`<text x="${px(i).toFixed(1)}" y="${H-6}" text-anchor="middle" fill="rgba(136,145,184,.7)" font-size="10">${p.d}</text>`;}).join('')}
+    <path d="${areaPath}" fill="url(#areaGrad)"/>
+    <path d="${linePath}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.length<40?pts.map((p,i)=>`<circle cx="${px(i).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="3" fill="#2563eb"/>`).join(''):''}
   </svg>`;
 }
 
