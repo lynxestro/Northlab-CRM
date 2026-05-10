@@ -256,10 +256,7 @@ tr:hover td{background:#1e254018}
   <div class="page" id="page-dashboard">
     <div class="topbar">
       <div class="page-title">Dashboard <span class="grad">CRM</span></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-secondary" onclick="openModal('modal-outcome')">Log Outcome</button>
-        <button class="btn btn-primary" onclick="openModal('modal-close')">+ Log Close</button>
-      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-close')">+ Log Close</button>
     </div>
     <!-- Company row -->
     <div id="co-row" style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center"></div>
@@ -272,12 +269,10 @@ tr:hover td{background:#1e254018}
       <input type="date" id="f-to" onchange="renderDash()"/>
       <button class="btn btn-secondary btn-sm" onclick="clearFilter()">Clear</button>
     </div>
-    <!-- Stat bar -->
-    <div class="stat-bar" id="stat-bar"></div>
     <!-- Hero KPIs -->
-    <div class="grid gauto" style="margin-bottom:12px" id="hero-kpis"></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px" id="hero-kpis"></div>
     <!-- Sec KPIs -->
-    <div class="grid g6" style="margin-bottom:20px" id="sec-kpis"></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:20px" id="sec-kpis"></div>
     <!-- Installment section -->
     <div id="install-section" style="display:none;margin-bottom:20px">
       <div style="font-size:13px;font-weight:600;margin-bottom:10px">Installment Plans</div>
@@ -289,7 +284,7 @@ tr:hover td{background:#1e254018}
     <!-- Calls -->
     <div style="font-size:13px;font-weight:600;margin-bottom:10px">Recent Calls</div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Prospect</th><th>Date</th><th>Status</th><th>Amount</th><th>Type</th><th>Notes</th><th></th></tr></thead>
+      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Type</th><th>Notes</th><th></th></tr></thead>
       <tbody id="calls-tbody"></tbody>
     </table></div>
   </div>
@@ -344,18 +339,6 @@ tr:hover td{background:#1e254018}
 </div>
 
 <!-- MODALS -->
-<div class="modal-overlay" id="modal-outcome">
-  <div class="modal-box">
-    <div class="modal-hdr"><span class="modal-title">Log Outcome</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-outcome')" style="font-size:17px">×</button></div>
-    <div class="frow"><div class="fgroup"><label>Prospect Name</label><input id="out-name" type="text" placeholder="Full name"/></div></div>
-    <div class="frow"><div class="fgroup"><label>Status</label>
-      <select id="out-status"><option>Showed</option><option>No Show</option><option>Rescheduled</option><option>Cancelled</option><option>Offered</option></select>
-    </div></div>
-    <div class="frow"><div class="fgroup"><label>Notes</label><textarea id="out-notes" rows="3" placeholder="Optional..."></textarea></div></div>
-    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addOutcome()">Save Outcome</button>
-  </div>
-</div>
-
 <div class="modal-overlay" id="modal-close">
   <div class="modal-box">
     <div class="modal-hdr"><span class="modal-title">Log Close</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-close')" style="font-size:17px">×</button></div>
@@ -365,15 +348,13 @@ tr:hover td{background:#1e254018}
     </div>
     <div class="frow f2">
       <div class="fgroup"><label>Date</label><input id="cl-date" type="date"/></div>
-      <div class="fgroup"><label>Status</label>
-        <select id="cl-status"><option>Showed</option><option>No Show</option><option>Rescheduled</option><option>Cancelled</option><option>Offered</option></select>
-      </div>
+      <div class="fgroup"><label>Amount ($)</label><input id="cl-amount" type="number" min="0"/></div>
     </div>
     <div class="frow f2">
-      <div class="fgroup"><label>Amount ($)</label><input id="cl-amount" type="number" min="0"/></div>
       <div class="fgroup"><label>Type</label>
         <select id="cl-type" onchange="onCloseType()"><option>PIF</option><option>Installment</option></select>
       </div>
+      <div class="fgroup"><label>Commission ($)</label><input id="cl-comm" type="number" min="0"/></div>
     </div>
     <div id="inst-extra" style="display:none">
       <div class="frow f2">
@@ -381,10 +362,7 @@ tr:hover td{background:#1e254018}
         <div class="fgroup"><label>First Payment ($)</label><input id="cl-first" type="number" min="0"/></div>
       </div>
     </div>
-    <div class="frow f2">
-      <div class="fgroup"><label>Commission ($)</label><input id="cl-comm" type="number" min="0"/></div>
-      <div class="fgroup"><label>Notes</label><input id="cl-notes" type="text" placeholder="Optional"/></div>
-    </div>
+    <div class="frow"><div class="fgroup"><label>Notes</label><input id="cl-notes" type="text" placeholder="Optional"/></div></div>
     <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addClose()">Save Close</button>
   </div>
 </div>
@@ -605,7 +583,6 @@ function renderDash(){
   renderCoRow();
   renderToggles();
   const fc=getFC(),fi=getFI();
-  renderStatBar(fc,fi);
   renderHeroKPIs(fc,fi);
   renderSecKPIs(fc,fi);
   renderInstallTable(fi);
@@ -643,52 +620,68 @@ function toggleCo(field){
   renderToggles();renderDash();
 }
 
-function renderStatBar(fc,fi){
-  const pifC=fc.filter(c=>c.type==='PIF');
-  const closed=fc.filter(c=>['PIF','Installment'].includes(c.type));
-  const cc=pifC.reduce((s,c)=>s+parseFloat(c.amount||0),0)+fi.reduce((s,i)=>s+parseFloat(i.collected||0),0);
-  const showed=fc.filter(c=>c.status==='Showed').length;
-  const tot=fc.filter(c=>['Showed','No Show','Rescheduled','Cancelled'].includes(c.status)).length;
-  const cust=[...new Set(fc.filter(c=>c.prospect&&c.amount).map(c=>c.prospect))].length;
-  const pifPct=closed.length>0?Math.round(pifC.length/closed.length*100):0;
-  const showRate=tot>0?Math.round(showed/tot*100):0;
-  document.getElementById('stat-bar').innerHTML=[
-    ['Total CC',fmt$(cc)],['PIF Rate',pifPct+'%'],['Customers',cust],['Show Rate',showRate+'%']
-  ].map(([l,v])=>`<div class="stat-item"><div class="sl">${l}</div><div class="sv">${v}</div></div>`).join('');
-}
-
 function calcKPIs(fc,fi){
   const pifC=fc.filter(c=>c.type==='PIF');
   const closed=fc.filter(c=>['PIF','Installment'].includes(c.type));
-  const cc=pifC.reduce((s,c)=>s+parseFloat(c.amount||0),0)+fi.reduce((s,i)=>s+parseFloat(i.collected||0),0);
+  // CC = PIF amounts + installment collected amounts (not double-count initial close)
+  const pifCC=pifC.reduce((s,c)=>s+parseFloat(c.amount||0),0);
+  const instCC=fi.reduce((s,i)=>s+parseFloat(i.collected||0),0);
+  const cc=pifCC+instCC;
   const pending=fi.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
-  const showed=fc.filter(c=>c.status==='Showed').length;
-  const noshow=fc.filter(c=>c.status==='No Show').length;
-  const resched=fc.filter(c=>c.status==='Rescheduled').length;
-  const tot=fc.filter(c=>['Showed','No Show','Rescheduled','Cancelled'].includes(c.status)).length;
-  const cust=[...new Set(fc.filter(c=>c.prospect&&c.amount).map(c=>c.prospect))].length;
-  return{cc,pending,closed:closed.length,booked:fc.length,
-    ccpc:closed.length>0?cc/closed.length:0,
-    showPct:tot>0?Math.round(showed/tot*100):0,
-    noshowPct:tot>0?Math.round(noshow/tot*100):0,
-    reschedPct:tot>0?Math.round(resched/tot*100):0,
+  const cust=[...new Set(fc.filter(c=>c.prospect&&(c.amount||['PIF','Installment'].includes(c.type))).map(c=>c.prospect))].length;
+  return{cc,pending,closed:closed.length,
     pifPct:closed.length>0?Math.round(pifC.length/closed.length*100):0,
     customers:cust};
+}
+
+// Sparkline helper — last 30 days daily CC
+function mkSparkline(metric,fc,fi){
+  const days=[];const now=new Date();
+  for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);days.push(d);}
+  const vals=days.map(d=>{
+    const ds=d.toISOString().slice(0,10);
+    if(metric==='cc'){
+      const pif=fc.filter(c=>c.type==='PIF'&&c.created_date&&c.created_date.slice(0,10)===ds).reduce((s,c)=>s+parseFloat(c.amount||0),0);
+      const inst=fi.filter(i=>i.created_date&&i.created_date.slice(0,10)===ds).reduce((s,i)=>s+parseFloat(i.first_payment||0),0);
+      return pif+inst;
+    }
+    if(metric==='closed') return fc.filter(c=>['PIF','Installment'].includes(c.type)&&c.created_date&&c.created_date.slice(0,10)===ds).length;
+    if(metric==='pending') return fi.filter(i=>i.created_date&&i.created_date.slice(0,10)===ds).reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
+    return 0;
+  });
+  const max=Math.max(...vals,1);
+  const W=120,H=36,pad=3;
+  const cw=W-pad*2,ch=H-pad*2;
+  const pts=vals.map((v,i)=>`${pad+i*(cw/(vals.length-1))},${pad+ch-(v/max)*ch}`).join(' ');
+  const area=`M${pad+0},${H-pad} `+vals.map((v,i)=>`L${pad+i*(cw/(vals.length-1))},${pad+ch-(v/max)*ch}`).join(' ')+` L${pad+(vals.length-1)*(cw/(vals.length-1))},${H-pad} Z`;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;margin-top:10px">
+    <defs><linearGradient id="sg${metric}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#sg${metric})"/>
+    <polyline points="${pts}" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
 }
 
 function renderHeroKPIs(fc,fi){
   const k=calcKPIs(fc,fi);
   document.getElementById('hero-kpis').innerHTML=[
-    ['Cash Collected',fmt$(k.cc)],['Closed Deals',k.closed],
-    ['Pending',fmt$(k.pending)],['Booked Calls',k.booked]
-  ].map(([l,v])=>`<div class="kpi-hero"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div></div>`).join('');
+    ['Cash Collected',fmt$(k.cc),'cc'],
+    ['Closed Deals',k.closed,'closed'],
+    ['Pending',fmt$(k.pending),'pending'],
+  ].map(([l,v,m])=>`
+    <div class="kpi-hero">
+      <div class="kpi-label">${l}</div>
+      <div class="kpi-val">${v}</div>
+      ${mkSparkline(m,fc,fi)}
+    </div>`).join('');
 }
 
 function renderSecKPIs(fc,fi){
   const k=calcKPIs(fc,fi);
   document.getElementById('sec-kpis').innerHTML=[
-    ['CCPC',fmt$(k.ccpc)],['Show%',k.showPct+'%'],['No Show%',k.noshowPct+'%'],
-    ['Resched%',k.reschedPct+'%'],['PIF Rate',k.pifPct+'%'],['Customers',k.customers]
+    ['PIF Rate',k.pifPct+'%'],['Customers',k.customers]
   ].map(([l,v])=>`<div class="kpi-sec"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div></div>`).join('');
 }
 
@@ -714,49 +707,15 @@ function renderInstallTable(fi){
 
 function renderCallsTable(fc){
   const tbody=document.getElementById('calls-tbody');
-  if(!fc.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8891b8;padding:20px">No calls logged yet.</td></tr>';return;}
+  if(!fc.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#8891b8;padding:20px">No calls logged yet.</td></tr>';return;}
   tbody.innerHTML=[...fc].reverse().map(c=>`<tr>
     <td style="font-weight:500">${esc(c.prospect)||'—'}</td>
     <td style="color:#8891b8;font-size:11px">${fmtD(c.created_date)}</td>
-    <td>${statusBadge(c.status)}</td>
     <td>${c.amount?fmt$(c.amount):'—'}</td>
     <td>${c.type?`<span class="badge ${c.type==='PIF'?'bc':'bb'}">${esc(c.type)}</span>`:'—'}</td>
     <td><button class="btn btn-secondary btn-sm" onclick="openNotesModal('${c.id}','${esc(c.prospect||'Call')}')">Notes</button></td>
     <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteCall('${c.id}')" style="font-size:15px">×</button></td>
   </tr>`).join('');
-}
-
-// ── CRUD: Calls ───────────────────────────────────────────────
-function addOutcome(){
-  const name=document.getElementById('out-name').value.trim();
-  const status=document.getElementById('out-status').value;
-  const notes=document.getElementById('out-notes').value.trim();
-  if(!name){toast('Enter prospect name','err');return;}
-  const nameLower=name.toLowerCase();
-  // Check if a close already exists for this prospect — if so, just update its status
-  const closeRec=calls.find(c=>c.prospect.toLowerCase()===nameLower&&c.company_id===activeComp&&['PIF','Installment'].includes(c.type));
-  if(closeRec){
-    closeRec.status=status;
-    if(notes)closeRec.notes=notes;
-    db.set('calls',calls);
-    document.getElementById('out-name').value='';document.getElementById('out-notes').value='';
-    closeModal('modal-outcome');renderDash();renderHome();toast('Updated existing close status');return;
-  }
-  // Check if a non-close outcome already exists for this prospect — update instead of duplicate
-  const existing=calls.find(c=>c.prospect.toLowerCase()===nameLower&&c.company_id===activeComp&&!['PIF','Installment'].includes(c.type));
-  if(existing){
-    existing.status=status;
-    if(notes)existing.notes=notes;
-    existing.created_date=db.now();
-    db.set('calls',calls);
-    document.getElementById('out-name').value='';document.getElementById('out-notes').value='';
-    closeModal('modal-outcome');renderDash();renderHome();toast('Outcome updated');return;
-  }
-  // No existing record — add new
-  calls.push({id:db.uid(),company_id:activeComp,prospect:name,status,notes,created_date:db.now()});
-  db.set('calls',calls);
-  document.getElementById('out-name').value='';document.getElementById('out-notes').value='';
-  closeModal('modal-outcome');renderDash();renderHome();toast('Outcome logged');
 }
 
 function onCloseType(){
@@ -768,27 +727,24 @@ function addClose(){
   const prospect=document.getElementById('cl-prospect').value.trim();
   if(!prospect){toast('Enter prospect name','err');return;}
   const type=document.getElementById('cl-type').value;
-  const status=document.getElementById('cl-status').value;
   const amount=parseFloat(document.getElementById('cl-amount').value)||0;
   const plan=document.getElementById('cl-plan').value.trim();
   const comm=parseFloat(document.getElementById('cl-comm').value)||0;
   const notes=document.getElementById('cl-notes').value.trim();
   const dateVal=document.getElementById('cl-date').value;
   const createdDate=dateVal?new Date(dateVal+'T12:00:00').toISOString():db.now();
-  // If an existing outcome for same prospect exists (non-close), update its status to Closed
-  const existing=calls.find(c=>c.prospect.toLowerCase()===prospect.toLowerCase()&&c.company_id===activeComp&&!['PIF','Installment'].includes(c.type));
-  if(existing){existing.status=status;}
-  calls.push({id:db.uid(),company_id:activeComp,prospect,status,type,amount,plan,commission:comm,notes,created_date:createdDate});
+  // For installment: call amount = first_payment (what's actually collected), not total
+  const tv=parseFloat(document.getElementById('cl-total').value)||amount;
+  const fp=parseFloat(document.getElementById('cl-first').value)||amount;
+  const callAmount=type==='Installment'?fp:amount;
+  calls.push({id:db.uid(),company_id:activeComp,prospect,status:'Closed',type,amount:callAmount,plan,commission:comm,notes,created_date:createdDate});
   db.set('calls',calls);
   if(type==='Installment'){
-    const tv=parseFloat(document.getElementById('cl-total').value)||amount;
-    const fp=parseFloat(document.getElementById('cl-first').value)||amount;
     installments.push({id:db.uid(),company_id:activeComp,prospect,plan,total_value:tv,first_payment:fp,collected:fp,commission:comm,created_date:createdDate});
     db.set('installments',installments);
   }
   ['cl-prospect','cl-plan','cl-amount','cl-total','cl-first','cl-comm','cl-notes','cl-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('cl-type').value='PIF';
-  document.getElementById('cl-status').value='Showed';
   document.getElementById('inst-extra').style.display='none';
   closeModal('modal-close');renderDash();renderHome();renderRevenue();toast('Close logged');
 }
@@ -885,7 +841,7 @@ function setRevPeriod(p,el){
 }
 
 function renderRevenue(){
-  // Build period chips if needed
+  // Build period chips once
   const chipsEl=document.getElementById('period-chips');
   if(!chipsEl.children.length){
     chipsEl.innerHTML=[['all','Total'],['today','Today'],['3d','3 Days'],['7d','7 Days'],['month','This Month'],['year','This Year']]
@@ -893,27 +849,43 @@ function renderRevenue(){
   }
 
   const from=getRevFrom(revPeriod);
-  const filtered=from?calls.filter(c=>new Date(c.created_date)>=from):calls;
-  const cc=filtered.filter(c=>c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-  const closed=filtered.filter(c=>['PIF','Installment'].includes(c.type)).length;
-  const comm=filtered.reduce((s,c)=>s+parseFloat(c.commission||0),0);
-  const ccpc=closed>0?cc/closed:0;
+  const filteredCalls=from?calls.filter(c=>new Date(c.created_date)>=from):calls;
+  const filteredInst=from?installments.filter(i=>new Date(i.created_date)>=from):installments;
+
+  // CC = PIF call amounts + installment collected (payments tracked on installment records)
+  const pifCC=filteredCalls.filter(c=>c.type==='PIF'&&c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0);
+  const instCC=filteredInst.reduce((s,i)=>s+parseFloat(i.collected||0),0);
+  const cc=pifCC+instCC;
+
+  const closed=filteredCalls.filter(c=>['PIF','Installment'].includes(c.type)).length;
+  const comm=filteredCalls.reduce((s,c)=>s+parseFloat(c.commission||0),0)
+            +filteredInst.reduce((s,i)=>s+parseFloat(i.commission||0),0);
 
   document.getElementById('rev-cc').textContent=fmt$(cc);
   document.getElementById('rev-stats').innerHTML=[
-    ['Closed Deals',closed],['CCPC',fmt$(ccpc)],['Commission',fmt$(comm)]
+    ['Closed Deals',closed],['Commission',fmt$(comm)]
   ].map(([l,v])=>`<div class="card"><div class="kpi-label">${l}</div><div style="font-size:16px;font-weight:700">${v}</div></div>`).join('');
 
-  // Chart
-  const sorted=[...filtered].filter(c=>c.amount).sort((a,b)=>new Date(a.created_date)-new Date(b.created_date));
+  // Chart: cumulative PIF amounts + installment payments by date
+  // Build combined events sorted by date
+  const events=[];
+  filteredCalls.filter(c=>c.type==='PIF'&&c.amount).forEach(c=>events.push({d:c.created_date,v:parseFloat(c.amount||0)}));
+  // For installments, use first_payment on creation date, then additional payments from payment calls
+  filteredInst.forEach(i=>events.push({d:i.created_date,v:parseFloat(i.first_payment||0)}));
+  // Payment calls (type=Installment logged after initial) — skip if already counted via installment record
+  filteredCalls.filter(c=>c.type==='Installment'&&c.amount&&!filteredInst.find(i=>i.created_date===c.created_date&&i.prospect===c.prospect))
+    .forEach(c=>events.push({d:c.created_date,v:parseFloat(c.amount||0)}));
+  events.sort((a,b)=>new Date(a.d)-new Date(b.d));
   let cum=0;
-  const pts=sorted.map(c=>{cum+=parseFloat(c.amount||0);return{d:fmtD(c.created_date),y:cum};});
+  const pts=events.map(e=>{cum+=e.v;return{d:fmtD(e.d),y:+cum.toFixed(2)};});
   drawChart(pts);
 
   // Monthly target
   const tgt=parseFloat(localStorage.getItem('nl_target')||'0');
   const now=new Date();
-  const monthCC=calls.filter(c=>c.amount&&new Date(c.created_date).getMonth()===now.getMonth()&&new Date(c.created_date).getFullYear()===now.getFullYear()).reduce((s,c)=>s+parseFloat(c.amount||0),0);
+  const mPIF=calls.filter(c=>c.type==='PIF'&&c.amount&&new Date(c.created_date).getMonth()===now.getMonth()&&new Date(c.created_date).getFullYear()===now.getFullYear()).reduce((s,c)=>s+parseFloat(c.amount||0),0);
+  const mInst=installments.filter(i=>new Date(i.created_date).getMonth()===now.getMonth()&&new Date(i.created_date).getFullYear()===now.getFullYear()).reduce((s,i)=>s+parseFloat(i.collected||0),0);
+  const monthCC=mPIF+mInst;
   const pct=tgt>0?Math.min(100,Math.round(monthCC/tgt*100)):0;
   document.getElementById('tgt-collected').textContent=fmt$(monthCC)+' collected this month';
   document.getElementById('tgt-label').textContent='Target: '+fmt$(tgt);
