@@ -939,6 +939,12 @@ function renderRevenue(){
   events.sort((a,b)=>new Date(a.d)-new Date(b.d));
   let cum=0;
   const pts=events.map(e=>{cum+=e.v;return{d:fmtD(e.d),y:+cum.toFixed(2)};});
+  // Always add a 0-value anchor one day before the first event so the rise is visible
+  if(pts.length>0){
+    const first=new Date(events[0].d);
+    first.setDate(first.getDate()-1);
+    pts.unshift({d:fmtD(first.toISOString()),y:0});
+  }
   drawChart(pts);
 
   // Monthly target
