@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <meta name="theme-color" content="#080b14"/>
 <title>NorthLab CRM</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ── Reset & Base ── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -539,7 +540,11 @@ function closeMob(){
   document.getElementById('mob-overlay').style.display='none';
 }
 
-// ── Auth ──────────────────────────────────────────────────────
+// ── Supabase Auth ─────────────────────────────────────────────
+const SUPA_URL='https://xbrijaiyadvvqyrntdin.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhicmlqYWl5YWR2dnF5cm50ZGluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDUzNzAsImV4cCI6MjA4OTkyMTM3MH0.tBMLfBrHHjFDl9NFQFH9Ki35qPqol7cOUZ2hMRo_Al4';
+const supa=supabase.createClient(SUPA_URL,SUPA_KEY);
+
 function switchAuthTab(tab){
   document.getElementById('form-in').style.display=tab==='in'?'block':'none';
   document.getElementById('form-up').style.display=tab==='up'?'block':'none';
@@ -551,31 +556,64 @@ function showAuthMsg(msg,type){
   const el=document.getElementById('auth-msg');
   el.textContent=msg;el.className='auth-msg '+(type||'');
 }
-function doSignIn(){
+function setAuthLoading(btn,loading){
+  btn.disabled=loading;btn.textContent=loading?'Please wait…':btn.dataset.label;
+}
+
+async function doSignIn(){
   const email=document.getElementById('li-email').value.trim().toLowerCase();
   const pw=document.getElementById('li-pw').value;
   if(!email||!pw){showAuthMsg('Fill in all fields','err');return;}
-  const users=db.get('users',[]);
-  const u=users.find(x=>x.email===email&&x.pw===pw);
-  if(!u){showAuthMsg('Incorrect email or password','err');return;}
-  user={id:u.id,name:u.name,email:u.email,role:u.role};
-  db.set('user',user);initApp();
+  const btn=document.querySelector('#form-in .btn-primary');
+  btn.dataset.label='Sign In';setAuthLoading(btn,true);
+  const {data,error}=await supa.auth.signInWithPassword({email,password:pw});
+  setAuthLoading(btn,false);
+  if(error){showAuthMsg(error.message,'err');return;}
+  applySession(data.session);
 }
-function doSignUp(){
+
+async function doSignUp(){
   const name=document.getElementById('su-name').value.trim();
   const email=document.getElementById('su-email').value.trim().toLowerCase();
   const pw=document.getElementById('su-pw').value;
   const role=document.getElementById('su-role').value;
   if(!name||!email||!pw){showAuthMsg('Fill in all fields','err');return;}
   if(pw.length<6){showAuthMsg('Password must be at least 6 characters','err');return;}
-  const users=db.get('users',[]);
-  if(users.find(x=>x.email===email)){showAuthMsg('Email already registered','err');return;}
-  const u={id:db.uid(),name,email,pw,role};
-  users.push(u);db.set('users',users);
-  user={id:u.id,name,email,role};
-  db.set('user',user);initApp();
+  const btn=document.querySelector('#form-up .btn-primary');
+  btn.dataset.label='Create Account';setAuthLoading(btn,true);
+  const {data,error}=await supa.auth.signUp({
+    email,password:pw,
+    options:{data:{name,role}}
+  });
+  setAuthLoading(btn,false);
+  if(error){showAuthMsg(error.message,'err');return;}
+  // If email confirmation required
+  if(data.user&&!data.session){
+    showAuthMsg('Check your email to confirm your account, then sign in.','ok');
+    switchAuthTab('in');return;
+  }
+  applySession(data.session);
 }
-function doSignOut(){db.set('user',null);user=null;location.reload();}
+
+async function doSignOut(){
+  await supa.auth.signOut();
+  user=null;
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+function applySession(session){
+  if(!session){return;}
+  const u=session.user;
+  const meta=u.user_metadata||{};
+  user={
+    id:u.id,
+    email:u.email,
+    name:meta.name||u.email.split('@')[0],
+    role:meta.role||'Closer'
+  };
+  initApp();
+}
 
 // ── Init ──────────────────────────────────────────────────────
 function initApp(){
@@ -1110,10 +1148,11 @@ function renderSettings(){
   document.getElementById('set-name').value=user.name||'';
   document.getElementById('set-role').value=user.role||'Closer';
 }
-function saveSettings(){
+async function saveSettings(){
   user.name=document.getElementById('set-name').value.trim()||user.name;
   user.role=document.getElementById('set-role').value;
-  db.set('user',user);
+  // Sync to Supabase user metadata
+  await supa.auth.updateUser({data:{name:user.name,role:user.role}});
   document.getElementById('sb-uname').textContent=user.name;
   document.getElementById('sb-urole').textContent=user.role;
   document.getElementById('sb-avatar').textContent=user.name.charAt(0).toUpperCase();
@@ -1121,12 +1160,16 @@ function saveSettings(){
 }
 
 // ── BOOT ──────────────────────────────────────────────────────
-(function(){
-  const saved=db.get('user',null);
-  if(saved&&saved.name){user=saved;initApp();}
-  else{
-    document.getElementById('login-name').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+(async function(){
+  // Check for existing Supabase session (works across devices)
+  const {data:{session}}=await supa.auth.getSession();
+  if(session){
+    applySession(session);
   }
+  // Listen for auth state changes (e.g. tab focus restores session)
+  supa.auth.onAuthStateChange((_event,session)=>{
+    if(session&&!user){applySession(session);}
+  });
 })();
 </script>
 </body>
