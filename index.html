@@ -729,40 +729,41 @@ function calcKPIs(fc,fi){
     customers:cust};
 }
 
-// Sparkline helper — last 30 days daily totals
-function mkSparkline(metric,fc,fi){
+// Sparkline — cumulative last 30 days (so even 1-2 data points show a visible rise)
+function mkSparkline(metric,allCalls,allInsts){
   const days=[];const now=new Date();
-  for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);days.push(d);}
-  const vals=days.map(d=>{
-    const ds=d.toISOString().slice(0,10);
+  for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);days.push(d.toISOString().slice(0,10));}
+  let running=0;
+  const vals=days.map(ds=>{
     if(metric==='cc'){
-      const pif=fc.filter(c=>c.type==='PIF'&&c.created_date&&c.created_date.slice(0,10)===ds).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-      const inst=fi.filter(i=>i.created_date&&i.created_date.slice(0,10)===ds).reduce((s,i)=>s+parseFloat(i.first_payment||0),0);
-      return pif+inst;
+      const pif=allCalls.filter(c=>c.type==='PIF'&&c.created_date?.slice(0,10)===ds).reduce((s,c)=>s+parseFloat(c.amount||0),0);
+      const inst=allInsts.filter(i=>i.created_date?.slice(0,10)===ds).reduce((s,i)=>s+parseFloat(i.first_payment||0),0);
+      running+=pif+inst;
+    } else if(metric==='closed'){
+      running+=allCalls.filter(c=>['PIF','Installment'].includes(c.type)&&c.created_date?.slice(0,10)===ds).length;
+    } else if(metric==='pending'){
+      // pending = current snapshot, not cumulative
+      running=allInsts.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
     }
-    if(metric==='closed') return fc.filter(c=>['PIF','Installment'].includes(c.type)&&c.created_date&&c.created_date.slice(0,10)===ds).length;
-    if(metric==='pending') return fi.filter(i=>i.created_date&&i.created_date.slice(0,10)===ds).reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
-    return 0;
+    return running;
   });
   const max=Math.max(...vals,0);
-  // No data at all — show subtle flat baseline
   if(max===0){
     return `<div style="margin-top:14px;height:2px;background:rgba(59,130,246,.15);border-radius:99px"></div>`;
   }
-  // Always baseline from 0 so spikes are visible
-  const W=300,H=48,padY=4,padX=2;
-  const cw=W-padX*2,ch=H-padY*2;
-  const xs=vals.map((_,i)=>padX+i*(cw/(vals.length-1)));
-  const ys=vals.map(v=>padY+ch-(v/max)*ch);
+  const W=300,H=50,pY=4,pX=0;
+  const cw=W-pX*2,ch=H-pY*2;
+  const xs=vals.map((_,i)=>pX+i*(cw/(vals.length-1)));
+  const ys=vals.map(v=>pY+ch-(v/max)*ch);
   let line=`M${xs[0]},${ys[0]}`;
   for(let i=1;i<vals.length;i++){
     const cpx=(xs[i-1]+xs[i])/2;
     line+=` C${cpx},${ys[i-1]} ${cpx},${ys[i]} ${xs[i]},${ys[i]}`;
   }
-  const area=line+` L${xs[vals.length-1]},${H-padY} L${xs[0]},${H-padY} Z`;
-  return `<svg width="100%" height="48" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;margin-top:12px">
+  const area=line+` L${xs[vals.length-1]},${H} L${xs[0]},${H} Z`;
+  return `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;margin-top:14px">
     <defs><linearGradient id="sg${metric}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35"/>
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
       <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
     </linearGradient></defs>
     <path d="${area}" fill="url(#sg${metric})"/>
@@ -772,6 +773,9 @@ function mkSparkline(metric,fc,fi){
 
 function renderHeroKPIs(fc,fi){
   const k=calcKPIs(fc,fi);
+  // Sparklines always use company-wide data (unaffected by date filter)
+  const aCalls=activeComp?calls.filter(c=>c.company_id===activeComp):calls;
+  const aInsts=activeComp?installments.filter(i=>i.company_id===activeComp):installments;
   document.getElementById('hero-kpis').innerHTML=[
     ['Cash Collected',fmt$(k.cc),'cc'],
     ['Closed Deals',k.closed,'closed'],
@@ -780,7 +784,7 @@ function renderHeroKPIs(fc,fi){
     <div class="kpi-hero">
       <div class="kpi-label">${l}</div>
       <div class="kpi-val">${v}</div>
-      ${mkSparkline(m,fc,fi)}
+      ${mkSparkline(m,aCalls,aInsts)}
     </div>`).join('');
 }
 
