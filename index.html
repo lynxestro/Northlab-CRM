@@ -465,12 +465,47 @@ tr:hover td{background:#1e254018}
 
 <script>
 // ── DB ──────────────────────────────────────────────────────────
+const DATA_KEYS=['calls','installments','companies','goals','goalLogs'];
+let _syncTimer=null;
 const db={
   get:(k,d=[])=>{try{const v=localStorage.getItem('nl_'+k);return v!=null?JSON.parse(v):d;}catch{return d;}},
-  set:(k,v)=>{try{localStorage.setItem('nl_'+k,JSON.stringify(v));}catch{}},
+  set:(k,v)=>{
+    try{localStorage.setItem('nl_'+k,JSON.stringify(v));}catch{}
+    // Auto-sync to Supabase cloud whenever real data changes (debounced 800ms)
+    if(DATA_KEYS.includes(k)){clearTimeout(_syncTimer);_syncTimer=setTimeout(syncToCloud,800);}
+  },
   uid:()=>Math.random().toString(36).slice(2)+Date.now().toString(36),
   now:()=>new Date().toISOString(),
 };
+
+// ── Cloud Sync (Supabase) ──────────────────────────────────────
+async function syncToCloud(){
+  if(!user)return;
+  try{
+    await supa.from('user_data').upsert({
+      user_id:user.id,
+      data:{calls,installments,companies,goals,goalLogs},
+      updated_at:new Date().toISOString()
+    },{onConflict:'user_id'});
+  }catch(e){console.warn('Sync failed:',e);}
+}
+
+async function loadFromCloud(){
+  if(!user)return false;
+  try{
+    const {data:row,error}=await supa.from('user_data').select('data').eq('user_id',user.id).single();
+    if(error||!row)return false;
+    const d=row.data||{};
+    calls=d.calls||[];
+    installments=d.installments||[];
+    companies=d.companies||[];
+    goals=d.goals||[];
+    goalLogs=d.goalLogs||[];
+    // Cache locally so app works offline
+    DATA_KEYS.forEach(k=>db.get(k)&&localStorage.setItem('nl_'+k,JSON.stringify(eval(k))));
+    return true;
+  }catch(e){console.warn('Load failed:',e);return false;}
+}
 
 // ── State ──────────────────────────────────────────────────────
 let user=null,calls=[],installments=[],companies=[],goals=[],goalLogs=[];
@@ -616,14 +651,23 @@ function applySession(session){
 }
 
 // ── Init ──────────────────────────────────────────────────────
-function initApp(){
+async function initApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  calls=db.get('calls');
-  installments=db.get('installments');
-  companies=db.get('companies');
-  goals=db.get('goals');
-  goalLogs=db.get('goalLogs');
+  // Show subtle loading state while fetching from cloud
+  const main=document.getElementById('main');
+  main.style.opacity='0.4';main.style.pointerEvents='none';
+  // Try Supabase cloud first (works cross-device)
+  const fromCloud=await loadFromCloud();
+  if(!fromCloud){
+    // Fall back to localStorage (offline / first time)
+    calls=db.get('calls');
+    installments=db.get('installments');
+    companies=db.get('companies');
+    goals=db.get('goals');
+    goalLogs=db.get('goalLogs');
+  }
+  main.style.opacity='1';main.style.pointerEvents='';
   activeComp=companies[0]?.id||null;
   document.getElementById('sb-uname').textContent=user.name;
   document.getElementById('sb-urole').textContent=user.role;
@@ -700,27 +744,16 @@ function switchCo(id){activeComp=id;renderDash();}
 function renderToggles(){
   const co=getCo();
   const row=document.getElementById('toggle-row');
-  // If no active company, fall back to device-level global toggles
-  const settings=co||{
-    installment_tracking:db.get('g_install',false),
-    commission_tracking:db.get('g_comm',false)
-  };
+  if(!co){row.innerHTML='';return;}
   row.innerHTML=[['installment_tracking','Installment Tracking'],['commission_tracking','Commission Tracking']].map(([f,l])=>`
     <label class="tgl-wrap">
-      <button class="tgl ${settings[f]?'on':''}" onclick="toggleCo('${f}')"></button>${l}
+      <button class="tgl ${co[f]?'on':''}" onclick="toggleCo('${f}')"></button>${l}
     </label>`).join('');
-  document.getElementById('install-section').style.display=settings.installment_tracking?'block':'none';
+  document.getElementById('install-section').style.display=co.installment_tracking?'block':'none';
 }
 
 function toggleCo(field){
-  const co=getCo();
-  if(!co){
-    // No company on device — use global toggle stored in localStorage
-    const key=field==='installment_tracking'?'g_install':'g_comm';
-    db.set(key,!db.get(key,false));
-    renderToggles();renderDash();
-    return;
-  }
+  const co=getCo();if(!co)return;
   const u=companies.map(c=>c.id===activeComp?{...c,[field]:!c[field]}:c);
   companies=u;db.set('companies',u);
   renderToggles();renderDash();
