@@ -637,7 +637,7 @@ function renderHome(){
   const h=new Date().getHours();
   document.getElementById('home-greet').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+user.name;
   document.getElementById('home-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const cc=calls.filter(c=>c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0)+installments.reduce((s,i)=>s+parseFloat(i.collected||0),0);
+  const cc=calls.filter(c=>c.type==='PIF'&&c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0)+installments.reduce((s,i)=>s+parseFloat(i.collected||0),0);
   document.getElementById('home-cc').textContent=fmt$(cc);
   const active=goals.filter(g=>!g.done);
   document.getElementById('home-goals-count').textContent=active.length;
@@ -700,16 +700,27 @@ function switchCo(id){activeComp=id;renderDash();}
 function renderToggles(){
   const co=getCo();
   const row=document.getElementById('toggle-row');
-  if(!co){row.innerHTML='';return;}
+  // If no active company, fall back to device-level global toggles
+  const settings=co||{
+    installment_tracking:db.get('g_install',false),
+    commission_tracking:db.get('g_comm',false)
+  };
   row.innerHTML=[['installment_tracking','Installment Tracking'],['commission_tracking','Commission Tracking']].map(([f,l])=>`
     <label class="tgl-wrap">
-      <button class="tgl ${co[f]?'on':''}" onclick="toggleCo('${f}')"></button>${l}
+      <button class="tgl ${settings[f]?'on':''}" onclick="toggleCo('${f}')"></button>${l}
     </label>`).join('');
-  document.getElementById('install-section').style.display=co.installment_tracking?'block':'none';
+  document.getElementById('install-section').style.display=settings.installment_tracking?'block':'none';
 }
 
 function toggleCo(field){
-  const co=getCo();if(!co)return;
+  const co=getCo();
+  if(!co){
+    // No company on device — use global toggle stored in localStorage
+    const key=field==='installment_tracking'?'g_install':'g_comm';
+    db.set(key,!db.get(key,false));
+    renderToggles();renderDash();
+    return;
+  }
   const u=companies.map(c=>c.id===activeComp?{...c,[field]:!c[field]}:c);
   companies=u;db.set('companies',u);
   renderToggles();renderDash();
