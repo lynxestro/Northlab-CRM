@@ -800,7 +800,13 @@ function mkSparkline(metric,allCalls,allInsts){
     } else if(metric==='closed'){
       running+=allCalls.filter(c=>['PIF','Installment'].includes(c.type)&&c.created_date?.slice(0,10)===ds).length;
     } else if(metric==='pending'){
-      running=allInsts.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
+      // Add pending opened by new installments created today
+      const newInsts=allInsts.filter(i=>i.created_date?.slice(0,10)===ds);
+      running+=newInsts.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.first_payment||0)),0);
+      // Subtract payments made today (installment calls that aren't the initial creation call)
+      const payCalls=allCalls.filter(c=>c.type==='Installment'&&c.created_date?.slice(0,10)===ds
+        &&!newInsts.find(i=>i.prospect===c.prospect&&i.created_date?.slice(0,10)===ds));
+      running=Math.max(0,running-payCalls.reduce((s,c)=>s+parseFloat(c.amount||0),0));
     }
     return running;
   });
@@ -1036,11 +1042,21 @@ function renderRevenue(){
   filteredCalls.filter(c=>c.type==='Installment'&&c.amount&&!filteredInst.find(i=>i.created_date===c.created_date&&i.prospect===c.prospect))
     .forEach(c=>events.push({d:c.created_date,v:parseFloat(c.amount||0)}));
   events.sort((a,b)=>new Date(a.d)-new Date(b.d));
+  // Group by calendar date so multiple closes on same day = one point
+  const byDate={};
+  events.forEach(e=>{
+    const day=e.d.slice(0,10);
+    byDate[day]=(byDate[day]||0)+e.v;
+  });
+  const sortedDays=Object.keys(byDate).sort();
   let cum=0;
-  const pts=events.map(e=>{cum+=e.v;return{d:fmtD(e.d),y:+cum.toFixed(2)};});
-  // Always add a 0-value anchor one day before the first event so the rise is visible
+  const pts=sortedDays.map(day=>{
+    cum+=byDate[day];
+    return{d:fmtD(day+'T12:00:00'),y:+cum.toFixed(2)};
+  });
+  // Zero anchor one day before first event
   if(pts.length>0){
-    const first=new Date(events[0].d);
+    const first=new Date(sortedDays[0]+'T12:00:00');
     first.setDate(first.getDate()-1);
     pts.unshift({d:fmtD(first.toISOString()),y:0});
   }
