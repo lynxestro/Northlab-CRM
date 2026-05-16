@@ -1078,27 +1078,25 @@ function renderRevenue(){
 function drawChart(pts){
   const wrap=document.getElementById('rev-chart-wrap');
   if(!pts.length){
-    wrap.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:220px;color:#8891b8;font-size:13px">No data for this period</div>';
+    wrap.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:260px;color:#8891b8;font-size:13px">No data for this period</div>';
     return;
   }
   let W=wrap.offsetWidth||wrap.clientWidth||wrap.getBoundingClientRect().width||0;
   if(W<10){setTimeout(()=>drawChart(pts),100);return;}
-  const H=220;
-  const pad={t:16,r:16,b:36,l:70};
+  const H=260; // taller so spike labels don't clip
+  const pad={t:36,r:16,b:36,l:70}; // extra top padding for labels
   const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
 
-  // Y range: start slightly below min, end slightly above max
   const rawMin=Math.min(...pts.map(p=>p.y));
   const rawMax=Math.max(...pts.map(p=>p.y));
   const range=rawMax-rawMin||rawMax||1;
   const minY=Math.max(0, rawMin - range*0.15);
-  const maxY=rawMax + range*0.1;
+  const maxY=rawMax + range*0.12;
   const ySpan=maxY-minY||1;
 
   const px=i=>pad.l + i*(cw/(pts.length-1||1));
   const py=v=>pad.t + ch - (v-minY)/ySpan*ch;
 
-  // Smooth bezier path
   function smoothLine(points){
     if(points.length===1) return `M${px(0)},${py(points[0].y)}`;
     let d=`M${px(0)},${py(points[0].y)}`;
@@ -1112,7 +1110,6 @@ function drawChart(pts){
   const linePath=smoothLine(pts);
   const areaPath=linePath+` L${px(pts.length-1)},${H-pad.b} L${px(0)},${H-pad.b} Z`;
 
-  // Y axis: 5 nice ticks
   const tickCount=5;
   const rawStep=(maxY-minY)/(tickCount-1);
   const magnitude=Math.pow(10,Math.floor(Math.log10(rawStep||1)));
@@ -1122,10 +1119,22 @@ function drawChart(pts){
   while(t<=maxY&&yTicks.length<6){yTicks.push(t);t+=niceStep;}
   if(!yTicks.length)yTicks.push(rawMin,rawMax);
 
-  // X axis: max 7 labels, well spread
   const maxLabels=Math.min(7,pts.length);
   const xStep=Math.max(1,Math.ceil(pts.length/maxLabels));
   const xLabels=pts.map((p,i)=>({...p,i})).filter((_,i)=>i%xStep===0||i===pts.length-1);
+
+  // Real data points = all except the $0 anchor (index 0, y=0)
+  const realPts=pts.map((p,i)=>({...p,i})).filter(p=>p.y>0);
+
+  // Smart label anchor: flip to below if dot is near top
+  function labelY(dotY){
+    return dotY<pad.t+20 ? dotY+20 : dotY-14;
+  }
+  function labelAnchor(i){
+    if(i===0) return 'start';
+    if(i===pts.length-1) return 'end';
+    return 'middle';
+  }
 
   wrap.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">
     <defs>
@@ -1140,10 +1149,18 @@ function drawChart(pts){
       return `<line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" stroke="#1e2540" stroke-width="1"/>
         <text x="${pad.l-8}" y="${(parseFloat(y)+4).toFixed(1)}" text-anchor="end" fill="#5a6080" font-size="11" font-family="system-ui,sans-serif">${label}</text>`;
     }).join('')}
-    ${xLabels.map(p=>`<text x="${px(p.i).toFixed(1)}" y="${H-8}" text-anchor="middle" fill="#5a6080" font-size="11" font-family="system-ui,sans-serif">${p.d}</text>`).join('')}
+    ${xLabels.map(p=>`<text x="${px(p.i).toFixed(1)}" y="${H-8}" text-anchor="${labelAnchor(p.i)}" fill="#5a6080" font-size="11" font-family="system-ui,sans-serif">${p.d}</text>`).join('')}
     <path d="${areaPath}" fill="url(#cg)"/>
     <path d="${linePath}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    ${pts.map((p,i)=>`<circle cx="${px(i).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="5" fill="#3b82f6" stroke="#080b14" stroke-width="2"/>`).join('')}
+    ${realPts.map(p=>{
+      const cx=px(p.i).toFixed(1);
+      const cy=py(p.y).toFixed(1);
+      const lbl='$'+Number(p.y).toLocaleString('en-US',{maximumFractionDigits:0});
+      const ly=labelY(parseFloat(cy)).toFixed(1);
+      const anchor=labelAnchor(p.i);
+      return `<circle cx="${cx}" cy="${cy}" r="5" fill="#3b82f6" stroke="#080b14" stroke-width="2"/>
+        <text x="${cx}" y="${ly}" text-anchor="${anchor}" fill="#93c5fd" font-size="11" font-weight="600" font-family="system-ui,sans-serif">${lbl}</text>`;
+    }).join('')}
   </svg>`;
 }
 
