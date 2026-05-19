@@ -773,55 +773,52 @@ function calcKPIs(fc,fi){
     customers:cust};
 }
 
-// Sparkline — cumulative from oldest record to today (no fixed 30-day cutoff)
+// Sparkline — event-based equal spacing (no empty day gaps squishing the chart)
 function mkSparkline(metric,allCalls,allInsts){
-  // Collect relevant record dates to find the earliest
-  const srcDates=[];
-  if(metric==='cc'||metric==='closed') allCalls.forEach(c=>c.created_date&&srcDates.push(c.created_date));
-  if(metric==='cc'||metric==='pending') allInsts.forEach(i=>i.created_date&&srcDates.push(i.created_date));
-  if(!srcDates.length){
-    return `<div style="margin-top:14px;height:2px;background:rgba(59,130,246,.15);border-radius:99px"></div>`;
+  const events=[];
+  if(metric==='cc'){
+    allCalls.filter(c=>c.type==='PIF'&&c.amount).forEach(c=>events.push({v:parseFloat(c.amount||0)}));
+    allInsts.forEach(i=>events.push({v:parseFloat(i.first_payment||0)}));
+    // Sort by date
+    allCalls.filter(c=>c.type==='PIF'&&c.amount).forEach(c=>c._d=c.created_date);
+  } else if(metric==='closed'){
+    allCalls.filter(c=>['PIF','Installment'].includes(c.type)).forEach(c=>events.push({v:1,d:c.created_date}));
+  } else if(metric==='pending'){
+    allInsts.forEach(i=>events.push({v:Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.first_payment||0)),d:i.created_date}));
+    // Subtract payments
+    allCalls.filter(c=>c.type==='Installment'&&c.amount&&!allInsts.find(i=>i.prospect===c.prospect&&i.created_date?.slice(0,10)===c.created_date?.slice(0,10)))
+      .forEach(c=>events.push({v:-parseFloat(c.amount||0),d:c.created_date}));
   }
-  // Build day array from oldest record → today
-  const oldest=new Date(Math.min(...srcDates.map(d=>new Date(d).getTime())));
-  oldest.setHours(0,0,0,0);
-  const today=new Date();today.setHours(23,59,59,999);
-  const days=[];
-  for(const d=new Date(oldest);d<=today;d.setDate(d.getDate()+1)){
-    days.push(new Date(d).toISOString().slice(0,10));
+  if(metric==='cc'){
+    // Re-build with dates for sorting
+    const ev2=[];
+    allCalls.filter(c=>c.type==='PIF'&&c.amount).forEach(c=>ev2.push({v:parseFloat(c.amount||0),d:c.created_date}));
+    allInsts.forEach(i=>ev2.push({v:parseFloat(i.first_payment||0),d:i.created_date}));
+    ev2.sort((a,b)=>new Date(a.d)-new Date(b.d));
+    let run=0;
+    const pts=[0,...ev2.map(e=>{run+=e.v;return run;})];
+    return drawSparkSVG(metric,pts);
   }
-  // Build cumulative values
-  let running=0;
-  const vals=days.map(ds=>{
-    if(metric==='cc'){
-      const pif=allCalls.filter(c=>c.type==='PIF'&&c.created_date?.slice(0,10)===ds).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-      const inst=allInsts.filter(i=>i.created_date?.slice(0,10)===ds).reduce((s,i)=>s+parseFloat(i.first_payment||0),0);
-      running+=pif+inst;
-    } else if(metric==='closed'){
-      running+=allCalls.filter(c=>['PIF','Installment'].includes(c.type)&&c.created_date?.slice(0,10)===ds).length;
-    } else if(metric==='pending'){
-      // Add pending opened by new installments created today
-      const newInsts=allInsts.filter(i=>i.created_date?.slice(0,10)===ds);
-      running+=newInsts.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.first_payment||0)),0);
-      // Subtract payments made today (installment calls that aren't the initial creation call)
-      const payCalls=allCalls.filter(c=>c.type==='Installment'&&c.created_date?.slice(0,10)===ds
-        &&!newInsts.find(i=>i.prospect===c.prospect&&i.created_date?.slice(0,10)===ds));
-      running=Math.max(0,running-payCalls.reduce((s,c)=>s+parseFloat(c.amount||0),0));
-    }
-    return running;
-  });
-  const max=Math.max(...vals,0);
+  events.sort((a,b)=>new Date(a.d)-new Date(b.d));
+  let run=0;
+  const pts=[0,...events.map(e=>{run=Math.max(0,run+e.v);return run;})];
+  return drawSparkSVG(metric,pts);
+}
+
+function drawSparkSVG(metric,pts){
+  const max=Math.max(...pts,0);
   if(max===0) return `<div style="margin-top:14px;height:2px;background:rgba(59,130,246,.15);border-radius:99px"></div>`;
   const W=300,H=50,pY=4,pX=0;
   const cw=W-pX*2,ch=H-pY*2;
-  const xs=vals.map((_,i)=>pX+i*(cw/(vals.length-1||1)));
-  const ys=vals.map(v=>pY+ch-(v/max)*ch);
+  // Equal horizontal spacing — not date-based
+  const xs=pts.map((_,i)=>pX+i*(cw/(pts.length-1||1)));
+  const ys=pts.map(v=>pY+ch-(v/max)*ch);
   let line=`M${xs[0]},${ys[0]}`;
-  for(let i=1;i<vals.length;i++){
+  for(let i=1;i<pts.length;i++){
     const cpx=(xs[i-1]+xs[i])/2;
     line+=` C${cpx},${ys[i-1]} ${cpx},${ys[i]} ${xs[i]},${ys[i]}`;
   }
-  const area=line+` L${xs[vals.length-1]},${H} L${xs[0]},${H} Z`;
+  const area=line+` L${xs[pts.length-1]},${H} L${xs[0]},${H} Z`;
   return `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;margin-top:14px">
     <defs><linearGradient id="sg${metric}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
