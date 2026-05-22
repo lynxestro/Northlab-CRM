@@ -1021,12 +1021,12 @@ function renderRevenue(){
   const cc=pifCC+instCC;
 
   const closed=filteredCalls.filter(c=>['PIF','Installment'].includes(c.type)).length;
-  const comm=filteredCalls.reduce((s,c)=>s+parseFloat(c.commission||0),0)
-            +filteredCalls.filter(c=>c.type==='Installment').reduce((s,c)=>s+parseFloat(c.commission||0),0);
+  const comm=filteredCalls.reduce((s,c)=>s+parseFloat(c.commission||0),0);
+  const pending=installments.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
 
   document.getElementById('rev-cc').textContent=fmt$(cc);
   document.getElementById('rev-stats').innerHTML=[
-    ['Closed Deals',closed],['Commission',fmt$(comm)]
+    ['Closed Deals',closed],['Commission',fmt$(comm)],['Pending Collections',fmt$(pending)]
   ].map(([l,v])=>`<div class="card"><div class="kpi-label">${l}</div><div style="font-size:16px;font-weight:700">${v}</div></div>`).join('');
 
   // Chart: cumulative PIF amounts + installment payments by date
