@@ -1017,12 +1017,12 @@ function renderRevenue(){
 
   // CC = PIF call amounts + installment collected (payments tracked on installment records)
   const pifCC=filteredCalls.filter(c=>c.type==='PIF'&&c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-  const instCC=filteredInst.reduce((s,i)=>s+parseFloat(i.collected||0),0);
+  const instCC=filteredCalls.filter(c=>c.type==='Installment'&&c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0);
   const cc=pifCC+instCC;
 
   const closed=filteredCalls.filter(c=>['PIF','Installment'].includes(c.type)).length;
   const comm=filteredCalls.reduce((s,c)=>s+parseFloat(c.commission||0),0)
-            +filteredInst.reduce((s,i)=>s+parseFloat(i.commission||0),0);
+            +filteredCalls.filter(c=>c.type==='Installment').reduce((s,c)=>s+parseFloat(c.commission||0),0);
 
   document.getElementById('rev-cc').textContent=fmt$(cc);
   document.getElementById('rev-stats').innerHTML=[
