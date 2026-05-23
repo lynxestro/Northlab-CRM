@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <meta name="theme-color" content="#080b14"/>
 <title>NorthLab CRM</title>
+<!-- PWA: Install as app on mobile -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"NorthLab CRM","short_name":"NorthLab","description":"Sales CRM for NorthLab","start_url":"/","display":"standalone","orientation":"portrait","background_color":"#080b14","theme_color":"#080b14","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 96 96%27%3E%3Crect width=%2796%22 height=%2296%22 rx=%2218%22 fill=%22%230d1120%22/%3E%3Crect width=%2296%22 height=%2296%22 rx=%2218%22 fill=%22url(%23g)%22/%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%25%22 stop-color=%22%232563eb%22/%3E%3Cstop offset=%22100%25%22 stop-color=%22%2306b6d4%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x=%2248%22 y=%2268%22 text-anchor=%22middle%22 font-family=%22system-ui,sans-serif%22 font-weight=%22800%22 font-size=%2256%22 fill=%22white%22%3EN%3C/text%3E%3C/svg%3E","sizes":"any","type":"image/svg+xml"}]}'>
+<!-- iOS full-screen support -->
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="NorthLab"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='18' fill='%230d1120'/%3E%3Crect width='96' height='96' rx='18' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%232563eb'/%3E%3Cstop offset='100%25' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='48' y='68' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='800' font-size='56' fill='white'%3EN%3C/text%3E%3C/svg%3E"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ── Reset & Base ── */
@@ -471,8 +478,8 @@ const db={
   get:(k,d=[])=>{try{const v=localStorage.getItem('nl_'+k);return v!=null?JSON.parse(v):d;}catch{return d;}},
   set:(k,v)=>{
     try{localStorage.setItem('nl_'+k,JSON.stringify(v));}catch{}
-    // Auto-sync to Supabase cloud whenever real data changes (debounced 800ms)
-    if(DATA_KEYS.includes(k)){clearTimeout(_syncTimer);_syncTimer=setTimeout(syncToCloud,800);}
+    // Auto-sync to Supabase cloud whenever real data changes (debounced 150ms)
+    if(DATA_KEYS.includes(k)){clearTimeout(_syncTimer);_syncTimer=setTimeout(syncToCloud,150);}
   },
   uid:()=>Math.random().toString(36).slice(2)+Date.now().toString(36),
   now:()=>new Date().toISOString(),
@@ -492,9 +499,11 @@ async function syncToCloud(){
 async function loadFromCloud(){
   if(!user)return false;
   try{
-    const {data:{user:authUser},error}=await supa.auth.getUser();
-    if(error||!authUser)return false;
-    const d=authUser.user_metadata?.crm_data;
+    // refreshSession() forces a round-trip to Supabase so we always get the
+    // latest user_metadata — avoids needing multiple reloads to see new data
+    const {data,error}=await supa.auth.refreshSession();
+    if(error||!data?.session)return false;
+    const d=data.session.user?.user_metadata?.crm_data;
     if(!d)return false;
     calls=d.calls||[];
     installments=d.installments||[];
