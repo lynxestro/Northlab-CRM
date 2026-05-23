@@ -355,13 +355,21 @@ tr:hover td{background:#1e254018}
   <!-- SETTINGS -->
   <div class="page" id="page-settings">
     <div class="topbar"><div class="page-title">Settings</div></div>
-    <div class="card" style="max-width:400px">
+    <div class="card" style="max-width:400px;margin-bottom:12px">
       <div style="font-size:11px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px">Profile</div>
       <div class="fgroup" style="margin-bottom:10px"><label>Display Name</label><input id="set-name" type="text"/></div>
       <div class="fgroup" style="margin-bottom:18px"><label>Role</label>
         <select id="set-role"><option>Setter</option><option>Closer</option><option>Admin</option></select>
       </div>
       <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+    </div>
+    <div class="card" style="max-width:400px">
+      <div style="font-size:11px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Cloud Sync</div>
+      <div style="font-size:12px;color:#8891b8;margin-bottom:14px">If your data isn't showing on another device, push it to the cloud manually.</div>
+      <button class="btn btn-secondary" id="sync-btn" onclick="manualSync()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        Sync Data to Cloud
+      </button>
     </div>
   </div>
 
@@ -666,6 +674,10 @@ async function initApp(){
     companies=db.get('companies');
     goals=db.get('goals');
     goalLogs=db.get('goalLogs');
+    // Push local data up to cloud so other devices (mobile) can access it
+    if(calls.length||installments.length||goals.length||companies.length){
+      syncToCloud();
+    }
   }
   main.style.opacity='1';main.style.pointerEvents='';
   activeComp=companies[0]?.id||null;
@@ -1242,12 +1254,27 @@ function renderSettings(){
 async function saveSettings(){
   user.name=document.getElementById('set-name').value.trim()||user.name;
   user.role=document.getElementById('set-role').value;
-  // Sync to Supabase user metadata
   await supa.auth.updateUser({data:{name:user.name,role:user.role}});
   document.getElementById('sb-uname').textContent=user.name;
   document.getElementById('sb-urole').textContent=user.role;
   document.getElementById('sb-avatar').textContent=user.name.charAt(0).toUpperCase();
   toast('Settings saved');
+}
+async function manualSync(){
+  const btn=document.getElementById('sync-btn');
+  if(btn){btn.disabled=true;btn.textContent='Syncing…';}
+  try{
+    await supa.from('user_data').upsert({
+      user_id:user.id,
+      data:{calls,installments,companies,goals,goalLogs},
+      updated_at:new Date().toISOString()
+    },{onConflict:'user_id'});
+    toast('Data synced to cloud — open on any device');
+  }catch(e){
+    toast('Sync failed: '+e.message,'err');
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg> Sync Data to Cloud';}
+  }
 }
 
 // ── BOOT ──────────────────────────────────────────────────────
