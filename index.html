@@ -363,30 +363,6 @@ tr:hover td{background:#1e254018}
       </div>
       <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
     </div>
-    <div class="card" style="max-width:420px;margin-bottom:12px">
-      <div style="font-size:11px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Transfer Data Between Devices</div>
-      <div style="font-size:12px;color:#8891b8;margin-bottom:14px">Export your data on this device, then import it on your other device.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-primary" onclick="exportData()">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export Data
-        </button>
-        <label class="btn btn-secondary" style="cursor:pointer">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Import Data
-          <input type="file" accept=".json" onchange="importData(event)" style="display:none"/>
-        </label>
-      </div>
-    </div>
-    <div class="card" style="max-width:420px">
-      <div style="font-size:11px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Cloud Sync</div>
-      <div style="font-size:12px;color:#8891b8;margin-bottom:14px">Force-push your current data to Supabase cloud.</div>
-      <button class="btn btn-secondary" id="sync-btn" onclick="manualSync()">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
-        Sync to Cloud
-      </button>
-      <div id="sync-status" style="font-size:11px;color:#8891b8;margin-top:8px"></div>
-    </div>
   </div>
 
 </main>
@@ -502,31 +478,31 @@ const db={
   now:()=>new Date().toISOString(),
 };
 
-// ── Cloud Sync (Supabase) ──────────────────────────────────────
+// ── Cloud Sync (Supabase user metadata — no custom table needed) ──
 async function syncToCloud(){
   if(!user)return;
   try{
-    await supa.from('user_data').upsert({
-      user_id:user.id,
-      data:{calls,installments,companies,goals,goalLogs},
-      updated_at:new Date().toISOString()
-    },{onConflict:'user_id'});
+    const crm_data={calls,installments,companies,goals,goalLogs};
+    await supa.auth.updateUser({data:{crm_data}});
+    // Also cache locally for offline use
+    DATA_KEYS.forEach(k=>db.set(k,eval(k)));
   }catch(e){console.warn('Sync failed:',e);}
 }
 
 async function loadFromCloud(){
   if(!user)return false;
   try{
-    const {data:row,error}=await supa.from('user_data').select('data').eq('user_id',user.id).single();
-    if(error||!row)return false;
-    const d=row.data||{};
+    const {data:{user:authUser},error}=await supa.auth.getUser();
+    if(error||!authUser)return false;
+    const d=authUser.user_metadata?.crm_data;
+    if(!d)return false;
     calls=d.calls||[];
     installments=d.installments||[];
     companies=d.companies||[];
     goals=d.goals||[];
     goalLogs=d.goalLogs||[];
     // Cache locally so app works offline
-    DATA_KEYS.forEach(k=>db.get(k)&&localStorage.setItem('nl_'+k,JSON.stringify(eval(k))));
+    DATA_KEYS.forEach(k=>db.set(k,eval(k)));
     return true;
   }catch(e){console.warn('Load failed:',e);return false;}
 }
@@ -1275,65 +1251,6 @@ async function saveSettings(){
   document.getElementById('sb-urole').textContent=user.role;
   document.getElementById('sb-avatar').textContent=user.name.charAt(0).toUpperCase();
   toast('Settings saved');
-}
-
-function exportData(){
-  const payload={calls,installments,companies,goals,goalLogs,exported:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='northlab-backup-'+new Date().toISOString().slice(0,10)+'.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('Data exported — import this file on your other device');
-}
-
-function importData(evt){
-  const file=evt.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const d=JSON.parse(e.target.result);
-      if(!d.calls&&!d.installments){toast('Invalid backup file','err');return;}
-      if(!confirm('This will REPLACE all current data on this device. Continue?'))return;
-      calls=d.calls||[];
-      installments=d.installments||[];
-      companies=d.companies||[];
-      goals=d.goals||[];
-      goalLogs=d.goalLogs||[];
-      DATA_KEYS.forEach(k=>db.set(k,eval(k)));
-      activeComp=companies[0]?.id||null;
-      renderHome();
-      toast('Data imported successfully');
-    }catch{toast('Could not read file','err');}
-  };
-  reader.readAsText(file);
-  evt.target.value='';
-}
-
-async function manualSync(){
-  const btn=document.getElementById('sync-btn');
-  const status=document.getElementById('sync-status');
-  if(btn){btn.disabled=true;btn.textContent='Syncing…';}
-  if(status)status.textContent='';
-  try{
-    const {error}=await supa.from('user_data').upsert({
-      user_id:user.id,
-      data:{calls,installments,companies,goals,goalLogs},
-      updated_at:new Date().toISOString()
-    },{onConflict:'user_id'});
-    if(error)throw error;
-    if(status)status.style.color='#10b981';
-    if(status)status.textContent='✓ Synced — open app on other device to see data';
-    toast('Synced to cloud');
-  }catch(e){
-    const msg=e?.message||String(e);
-    if(status)status.style.color='#ef4444';
-    if(status)status.textContent='✕ Sync failed: '+msg+' — use Export/Import instead';
-    toast('Sync failed — use Export/Import','err');
-  }finally{
-    if(btn){btn.disabled=false;btn.textContent='Sync to Cloud';}
-  }
 }
 
 // ── BOOT ──────────────────────────────────────────────────────
