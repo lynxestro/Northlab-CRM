@@ -146,7 +146,7 @@ tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--hov)}
 
 /* ── Co chip ── */
-.co-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 8px 5px 13px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--bdr);background:var(--card);color:var(--tx2);cursor:pointer;transition:all .15s}
+.co-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 8px 5px 13px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--bdr);background:var(--card);color:var(--tx);cursor:pointer;transition:all .15s}
 .co-chip.active{border-color:#2563eb;background:rgba(37,99,235,.15);color:#60a5fa}
 .co-x{background:none;border:none;color:inherit;cursor:pointer;opacity:.45;font-size:17px;line-height:1;padding:0 2px;display:flex;align-items:center}
 .co-x:hover{opacity:1;color:#ef4444}
@@ -933,8 +933,8 @@ function renderCallsTable(fc){
     const i=name?name.charCodeAt(0)%colors.length:0;
     return `<div class="prospect-av" style="background:${colors[i]}">${name?(name[0].toUpperCase()):'?'}</div>`;
   }
-  tbody.innerHTML=[...fc].reverse().map((c,idx)=>`<tr style="${idx%2===0?'':'background:var(--row)'}">
-    <td style="display:flex;align-items:center">${av(c.prospect)}<span style="font-weight:600">${esc(c.prospect)||'—'}</span></td>
+  tbody.innerHTML=[...fc].reverse().map((c)=>`<tr>
+    <td><div style="display:flex;align-items:center">${av(c.prospect)}<span style="font-weight:600">${esc(c.prospect)||'—'}</span></div></td>
     <td style="color:var(--tx2);font-size:11px;white-space:nowrap">${fmtD(c.created_date)}</td>
     <td><span style="font-weight:700;color:var(--tx)">${c.amount?fmt$(c.amount):'—'}</span></td>
     <td>${c.type?`<span class="badge ${c.type==='PIF'?'bc':'bb'}">${esc(c.type)}</span>`:'—'}</td>
@@ -1209,10 +1209,13 @@ function drawChart(pts){
     ${yTicks.map(v=>{
       const y=py(v).toFixed(1);
       const label='$'+Number(v).toLocaleString('en-US',{maximumFractionDigits:0});
-      return `<line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" stroke="#1e2540" stroke-width="1"/>
-        <text x="${pad.l-8}" y="${(parseFloat(y)+4).toFixed(1)}" text-anchor="end" fill="#5a6080" font-size="11" font-family="system-ui,sans-serif">${label}</text>`;
+      const isLight=document.body.getAttribute('data-theme')==='light';
+      const gridClr=isLight?'#dde8f5':'#1e2540';
+      const axisClr=isLight?'#334155':'#8891b8';
+      return `<line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" stroke="${gridClr}" stroke-width="1"/>
+        <text x="${pad.l-8}" y="${(parseFloat(y)+4).toFixed(1)}" text-anchor="end" fill="${axisClr}" font-size="11" font-family="system-ui,sans-serif">${label}</text>`;
     }).join('')}
-    ${xLabels.map(p=>`<text x="${px(p.i).toFixed(1)}" y="${H-8}" text-anchor="${labelAnchor(p.i)}" fill="#5a6080" font-size="11" font-family="system-ui,sans-serif">${p.d.replace(/,\s*\d{4}$/,'')}</text>`).join('')}
+    ${(()=>{const isLight=document.body.getAttribute('data-theme')==='light';const axisClr=isLight?'#334155':'#8891b8';return xLabels.map(p=>`<text x="${px(p.i).toFixed(1)}" y="${H-8}" text-anchor="${labelAnchor(p.i)}" fill="${axisClr}" font-size="11" font-family="system-ui,sans-serif">${p.d.replace(/,\s*\d{4}$/,'')}</text>`).join('');})()}
     <path d="${areaPath}" fill="url(#cg)"/>
     <path d="${linePath}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
     ${realPts.map(p=>{
@@ -1221,8 +1224,11 @@ function drawChart(pts){
       const lbl='$'+Number(p.y).toLocaleString('en-US',{maximumFractionDigits:0});
       const ly=labelY(parseFloat(cy)).toFixed(1);
       const anchor=labelAnchor(p.i);
-      return `<circle cx="${cx}" cy="${cy}" r="5" fill="#3b82f6" stroke="#080b14" stroke-width="2"/>
-        <text x="${cx}" y="${ly}" text-anchor="${anchor}" fill="#93c5fd" font-size="11" font-weight="600" font-family="system-ui,sans-serif">${lbl}</text>`;
+      const isLight=document.body.getAttribute('data-theme')==='light';
+      const dotBorder=isLight?'#ffffff':'#080b14';
+      const valClr=isLight?'#1e40af':'#93c5fd';
+      return `<circle cx="${cx}" cy="${cy}" r="5" fill="#3b82f6" stroke="${dotBorder}" stroke-width="2"/>
+        <text x="${cx}" y="${ly}" text-anchor="${anchor}" fill="${valClr}" font-size="11" font-weight="700" font-family="system-ui,sans-serif">${lbl}</text>`;
     }).join('')}
   </svg>`;
 }
