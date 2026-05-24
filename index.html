@@ -22,10 +22,10 @@
   --th-bg:#080b14;--note-bg:#080b14;
 }
 body[data-theme="light"]{
-  --bg:#f0f4ff;--card:#ffffff;--inp:#f8faff;--bdr:#dde3f0;
-  --tx:#0f172a;--tx2:#64748b;--row:#eef2ff88;--hov:rgba(37,99,235,.05);
-  --shadow:rgba(15,23,42,.12);--nav-active:rgba(37,99,235,.1);--nav-ic:rgba(37,99,235,.08);
-  --th-bg:#f8faff;--note-bg:#f0f4ff;
+  --bg:#e8edf8;--card:#ffffff;--inp:#f4f6fd;--bdr:#c8d0e8;
+  --tx:#0d1525;--tx2:#4f5f7a;--row:#edf0fa;--hov:rgba(37,99,235,.07);
+  --shadow:rgba(13,21,37,.14);--nav-active:rgba(37,99,235,.12);--nav-ic:rgba(37,99,235,.1);
+  --th-bg:#f4f6fd;--note-bg:#e8edf8;
 }
 
 /* ── Reset & Base ── */
@@ -281,7 +281,9 @@ td.td-prospect{display:flex;align-items:center}
       <div><div class="sb-uname" id="sb-uname">User</div><div class="sb-urole" id="sb-urole">Closer</div></div>
     </div>
     <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">
-      <span id="theme-ic" style="font-size:15px">☀️</span>
+      <span id="theme-ic">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </span>
       <span id="theme-lbl">Light Mode</span>
     </button>
     <button class="signout" onclick="doSignOut()">
@@ -357,7 +359,7 @@ td.td-prospect{display:flex;align-items:center}
   <div class="page" id="page-revenue">
     <div class="topbar">
       <div class="page-title">Revenue <span class="grad">Overview</span></div>
-      <select id="rev-period-sel" onchange="setRevPeriodSel(this.value)" style="padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;background:#0d1120;color:#eef0ff;border:1px solid #1e2540;cursor:pointer;outline:none">
+      <select id="rev-period-sel" onchange="setRevPeriodSel(this.value)" style="padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;background:var(--card);color:var(--tx);border:1px solid var(--bdr);cursor:pointer;outline:none;transition:background .25s,color .25s,border-color .25s">
         <option value="all">Total</option>
         <option value="today">Today</option>
         <option value="3d">3 Days</option>
@@ -1243,12 +1245,11 @@ function renderGoals(){
   if(statsEl){
     statsEl.innerHTML=[
       ['Active',active.length,'#3b82f6'],
-      ['Completed',done.length,'#10b981'],
-      ['Total Logs',goalLogs.length,'#8891b8']
+      ['Completed',done.length,'#10b981']
     ].map(([l,v,c])=>`<div class="card" style="padding:12px 16px;display:flex;align-items:center;gap:10px;min-width:110px">
       <div style="width:8px;height:8px;border-radius:50%;background:${c};flex-shrink:0"></div>
-      <div><div style="font-size:10px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em">${l}</div>
-      <div style="font-size:18px;font-weight:700">${v}</div></div>
+      <div><div style="font-size:10px;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">${l}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--tx)">${v}</div></div>
     </div>`).join('');
   }
 
@@ -1392,12 +1393,14 @@ if('serviceWorker' in navigator){
 })();
 
 // ── THEME ──────────────────────────────────────────────────────
+const SVG_SUN=`<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+const SVG_MOON=`<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
 function applyTheme(t){
   document.body.setAttribute('data-theme',t);
   localStorage.setItem('nl_theme',t);
   const ic=document.getElementById('theme-ic');
   const lbl=document.getElementById('theme-lbl');
-  if(ic) ic.textContent=t==='light'?'🌙':'☀️';
+  if(ic) ic.innerHTML=t==='light'?SVG_MOON:SVG_SUN;
   if(lbl) lbl.textContent=t==='light'?'Dark Mode':'Light Mode';
 }
 function toggleTheme(){
