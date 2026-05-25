@@ -114,12 +114,6 @@ input[type=date]{width:auto}
 .bb{background:rgba(37,99,235,.15);color:#60a5fa}
 .bc{background:rgba(6,182,212,.12);color:#06b6d4}
 .bgr{background:rgba(136,145,184,.1);color:var(--tx2)}
-body[data-theme="light"] .bg{background:rgba(16,185,129,.18);color:#059669}
-body[data-theme="light"] .br{background:rgba(239,68,68,.15);color:#dc2626}
-body[data-theme="light"] .by{background:rgba(245,158,11,.18);color:#b45309}
-body[data-theme="light"] .bb{background:rgba(37,99,235,.18);color:#1d4ed8}
-body[data-theme="light"] .bc{background:rgba(6,182,212,.18);color:#0891b2}
-body[data-theme="light"] .bgr{background:rgba(37,99,235,.1);color:var(--tx2)}
 
 /* ── Topbar ── */
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
@@ -365,20 +359,14 @@ td.td-prospect{display:flex;align-items:center}
   <div class="page" id="page-revenue">
     <div class="topbar">
       <div class="page-title">Revenue <span class="grad">Overview</span></div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-company')" style="gap:5px">
-          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Company
-        </button>
-        <select id="rev-period-sel" onchange="setRevPeriodSel(this.value)" style="padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;background:var(--card);color:var(--tx);border:1px solid var(--bdr);cursor:pointer;outline:none;transition:background .25s,color .25s,border-color .25s">
-          <option value="all">Total</option>
-          <option value="today">Today</option>
-          <option value="3d">3 Days</option>
-          <option value="7d">7 Days</option>
-          <option value="month">This Month</option>
-          <option value="year">This Year</option>
-        </select>
-      </div>
+      <select id="rev-period-sel" onchange="setRevPeriodSel(this.value)" style="padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;background:var(--card);color:var(--tx);border:1px solid var(--bdr);cursor:pointer;outline:none;transition:background .25s,color .25s,border-color .25s">
+        <option value="all">Total</option>
+        <option value="today">Today</option>
+        <option value="3d">3 Days</option>
+        <option value="7d">7 Days</option>
+        <option value="month">This Month</option>
+        <option value="year">This Year</option>
+      </select>
     </div>
     <div class="card" style="margin-bottom:14px">
       <div class="kpi-label">Cash Collected</div>
@@ -885,8 +873,8 @@ function drawSparkSVG(metric,pts){
   const area=line+` L${xs[pts.length-1]},${H} L${xs[0]},${H} Z`;
   return `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="display:block;margin-top:14px">
     <defs><linearGradient id="sg${metric}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.04"/>
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
     </linearGradient></defs>
     <path d="${area}" fill="url(#sg${metric})"/>
     <path d="${line}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -925,10 +913,10 @@ function renderInstallTable(fi){
     const pct=tot>0?Math.min(100,Math.round(col/tot*100)):0;
     return `<tr>
       <td style="font-weight:500">${esc(i.prospect)||'—'}</td>
-      <td style="color:var(--tx2)">${esc(i.plan)||'—'}</td>
-      <td style="color:#10b981;font-weight:600">${fmt$(col)}</td>
-      <td style="color:#f59e0b;font-weight:600">${fmt$(Math.max(0,tot-col))}</td>
-      <td style="min-width:80px"><div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--tx2)">${pct}%</span></td>
+      <td style="color:#8891b8">${esc(i.plan)||'—'}</td>
+      <td style="color:#10b981">${fmt$(col)}</td>
+      <td style="color:#f59e0b">${fmt$(Math.max(0,tot-col))}</td>
+      <td style="min-width:80px"><div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:#8891b8">${pct}%</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-secondary btn-sm" onclick="openPayModal('${i.id}')" style="margin-right:4px">+Pay</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteInstall('${i.id}')" style="font-size:15px">×</button>
