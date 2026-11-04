@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<meta name="theme-color" content="#0f0f10"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#141415"/>
 <title>NorthLab CRM</title>
 <!-- Design pass with unslop by Damir Sokolovsky (@heydamir), CC BY 4.0 -->
 <!-- PWA: Install as app on mobile -->
@@ -394,7 +394,20 @@ body[data-theme="light"] .paycard{box-shadow:0 14px 28px rgba(0,0,0,.18),inset 0
 @media(max-width:520px){.cards-obj{width:132px;height:84px;right:16px}.paycard .chip{top:28px;width:22px;height:16px}.paycard .pc-num{font-size:9px;bottom:10px}}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-@media(max-width:767px){#main{margin-left:0;padding:64px 16px 32px}.rev-big{font-size:36px}.page-title{font-size:20px}}
+html{background:#141415}
+.src-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.src-chip{font:500 11px 'Geist Mono',ui-monospace,monospace;padding:5px 10px;border-radius:999px;border:1px solid var(--bdr2);background:transparent;color:var(--tx2);cursor:pointer}
+.src-chip:hover,.src-chip.on{color:var(--tx);border-color:var(--tx2);background:var(--inp)}
+.parts-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2);margin:2px 0 12px;cursor:pointer;user-select:none}
+.parts-toggle input{width:15px;height:15px;accent-color:var(--acc);margin:0}
+.row-acts{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
+.src-tag{font:500 11px 'Geist Mono',ui-monospace,monospace;color:var(--tx);padding:3px 8px;border:1px solid var(--bdr2);border-radius:999px;white-space:nowrap}
+.src-tag.muted{color:var(--tx2);border-style:dashed}
+/* iOS app: keep a solid strip under the status bar so content never shows through */
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:90;pointer-events:none;transition:background-color .18s}
+#sidebar{padding-top:env(safe-area-inset-top,0px)}
+.modal-overlay{padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+@media(max-width:767px){#main{margin-left:0;padding:calc(64px + env(safe-area-inset-top,0px)) 16px calc(32px + env(safe-area-inset-bottom,0px))}#hamburger{top:calc(12px + env(safe-area-inset-top,0px))}.rev-big{font-size:36px}.page-title{font-size:20px}}
 </style>
 </head>
 <body>
@@ -530,7 +543,7 @@ body[data-theme="light"] .paycard{box-shadow:0 14px 28px rgba(0,0,0,.18),inset 0
     <div id="sec-kpis" hidden></div>
     <!-- Installment section -->
     <div id="install-section" style="display:none;margin-bottom:20px">
-      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Installment plans</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Payment plans</div>
       <div class="tbl-wrap"><table>
         <thead><tr><th>Prospect</th><th>Plan</th><th>Collected</th><th>Pending</th><th>Progress</th><th>Actions</th></tr></thead>
         <tbody id="install-tbody"></tbody>
@@ -539,7 +552,7 @@ body[data-theme="light"] .paycard{box-shadow:0 14px 28px rgba(0,0,0,.18),inset 0
     <!-- Calls -->
     <div style="font-size:13px;font-weight:600;margin-bottom:10px">Recent calls</div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Type</th><th>Notes</th><th></th></tr></thead>
+      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Source</th><th>Notes</th><th></th></tr></thead>
       <tbody id="calls-tbody"></tbody>
     </table></div>
   </div>
@@ -599,7 +612,7 @@ body[data-theme="light"] .paycard{box-shadow:0 14px 28px rgba(0,0,0,.18),inset 0
       <tbody id="team-tbody"></tbody>
     </table></div>
     <div style="margin-bottom:20px"></div>
-    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Team installment plans</div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Team payment plans</div>
     <div class="tbl-wrap" style="margin-bottom:20px"><table>
       <thead><tr><th>Prospect</th><th>Plan</th><th>Setter / closer</th><th>Collected</th><th>Pending</th><th>Progress</th><th>Actions</th></tr></thead>
       <tbody id="team-install-tbody"></tbody>
@@ -609,7 +622,7 @@ body[data-theme="light"] .paycard{box-shadow:0 14px 28px rgba(0,0,0,.18),inset 0
       <button class="btn btn-secondary btn-sm" onclick="exportCSV('team')">Export CSV</button>
     </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Type</th><th>Setter / closer</th><th>Notes</th><th></th></tr></thead>
+      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Source</th><th>Setter / closer</th><th>Notes</th><th></th></tr></thead>
       <tbody id="team-calls-tbody"></tbody>
     </table></div>
   </div>
@@ -658,26 +671,28 @@ body[data-theme="light"] .paycard{box-shadow:0 14px 28px rgba(0,0,0,.18),inset 0
     </div>
     <div class="frow f2">
       <div class="fgroup"><label>Date</label><input id="cl-date" type="date"/></div>
-      <div class="fgroup"><label>Amount ($)</label><input id="cl-amount" type="number" min="0"/></div>
+      <div class="fgroup"><label id="cl-amount-lbl">Amount ($)</label><input id="cl-amount" type="number" min="0"/></div>
     </div>
-    <div class="frow f2">
-      <div class="fgroup"><label>Type</label>
-        <select id="cl-type" onchange="onCloseType()"><option>PIF</option><option>Installment</option></select>
+    <div class="frow">
+      <div class="fgroup"><label>Lead source</label>
+        <input id="cl-source" type="text" list="src-list" placeholder="Discord, IG, Skool…" autocomplete="off" autocapitalize="words"/>
+        <datalist id="src-list"></datalist>
+        <div class="src-chips" id="src-chips"></div>
       </div>
+    </div>
+    <div class="frow f2" id="cl-comm-row">
       <div class="fgroup" id="cl-comm-wrap"><label>Your Commission ($)</label><input id="cl-comm" type="number" min="0"/></div>
     </div>
     <div class="frow f2" id="cl-team-row">
       <div class="fgroup"><label>Setter</label><select id="cl-setter"></select></div>
       <div class="fgroup"><label>Closer</label><select id="cl-closer"></select></div>
     </div>
+    <label class="parts-toggle" id="cl-parts-wrap"><input type="checkbox" id="cl-parts" onchange="onCloseType()"/> Paying in parts</label>
     <div id="inst-extra" style="display:none">
-      <div class="frow f2">
-        <div class="fgroup"><label>Total Plan Value ($)</label><input id="cl-total" type="number" min="0"/></div>
-        <div class="fgroup"><label>First Payment ($)</label><input id="cl-first" type="number" min="0"/></div>
-      </div>
+      <div class="frow"><div class="fgroup"><label>Full deal value ($)</label><input id="cl-total" type="number" min="0" placeholder="Total they'll pay"/></div></div>
     </div>
     <div class="frow"><div class="fgroup"><label>Notes</label><input id="cl-notes" type="text" placeholder="Optional"/></div></div>
-    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addClose()">Save close</button>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addClose()" id="cl-save">Save close</button>
   </div>
 </div>
 
@@ -1163,7 +1178,7 @@ function renderToggles(){
   const co=getCo();
   const row=document.getElementById('toggle-row');
   if(!co){row.innerHTML='';return;}
-  row.innerHTML=[['installment_tracking','Installment tracking'],['commission_tracking','Commission tracking']].map(([f,l])=>`
+  row.innerHTML=[['installment_tracking','Payment plans'],['commission_tracking','Commission tracking']].map(([f,l])=>`
     <label class="tgl-wrap">
       <button class="tgl ${co[f]?'on':''}" onclick="toggleCo('${f}')"></button>${l}
     </label>`).join('');
@@ -1179,12 +1194,13 @@ function toggleCo(field){
 
 function calcKPIs(fc,fi){
   const deals=fc.filter(isDeal);
-  const pifDeals=deals.filter(c=>c.type==='PIF');
+  const bySrc={};deals.forEach(c=>{const k=(c.source||'').trim();if(k)bySrc[k]=(bySrc[k]||0)+1;});
+  const topSrc=Object.entries(bySrc).sort((a,b)=>b[1]-a[1])[0];
   const cc=cashOf(fc);
   const pending=fi.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
   const cust=[...new Set(deals.filter(c=>c.prospect).map(c=>c.prospect.trim().toLowerCase()))].length;
   return{cc,pending,closed:deals.length,
-    pifPct:deals.length>0?Math.round(pifDeals.length/deals.length*100):0,
+    topSrc:topSrc?topSrc[0]:'',topSrcN:topSrc?topSrc[1]:0,
     customers:cust,avg:deals.length?cc/deals.length:0};
 }
 
@@ -1193,7 +1209,7 @@ function renderHeroKPIs(fc,fi){
   const plans=fi.filter(i=>parseFloat(i.total_value||0)>parseFloat(i.collected||0)).length;
   document.getElementById('hero-kpis').innerHTML=[
     ['Cash collected',`<span class="settled">${fmt$(k.cc)}</span>`,`${fc.filter(isCash).length} payments`,true],
-    ['Closed deals',k.closed,`${k.pifPct}% paid in full`],
+    ['Closed deals',k.closed,k.topSrc?`Most from ${esc(k.topSrc)}`:'Add a lead source'],
     ['Avg cash per deal',fmt$(k.avg),`${k.customers} customers`],
     ['Pending',fmt$(k.pending),plans?`${plans} open plan${plans===1?'':'s'}`:'Nothing outstanding'],
   ].map(([l,v,sub,hero])=>`
@@ -1207,14 +1223,14 @@ function renderHeroKPIs(fc,fi){
 function renderSecKPIs(fc,fi){
   const k=calcKPIs(fc,fi);
   document.getElementById('sec-kpis').innerHTML=[
-    ['PIF rate',k.pifPct+'%'],['Customers',k.customers],['Avg cash per deal',fmt$(k.avg)]
+    ['Top source',k.topSrc||'—'],['Customers',k.customers],['Avg cash per deal',fmt$(k.avg)]
   ].map(([l,v])=>`<div class="kpi-sec"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div></div>`).join('');
 }
 
 function renderInstallTable(fi,tbodyId='install-tbody',showReps=false){
   const tbody=document.getElementById(tbodyId);
   const cols=showReps?7:6;
-  if(!fi.length){tbody.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;color:var(--tx2);padding:20px">No plans yet. Log a close with type "Installment".</td></tr>`;return;}
+  if(!fi.length){tbody.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;color:var(--tx2);padding:20px">No plans yet. Tick "Paying in parts" when you log a close.</td></tr>`;return;}
   tbody.innerHTML=fi.map(i=>{
     const col=parseFloat(i.collected||0),tot=parseFloat(i.total_value||0);
     const pct=tot>0?Math.min(100,Math.round(col/tot*100)):0;
@@ -1242,7 +1258,6 @@ function renderCallsTable(fc,tbodyId='calls-tbody',showReps=false){
   const tbody=document.getElementById(tbodyId);
   const cols=showReps?7:6;
   if(!fc.length){tbody.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;color:var(--tx2);padding:28px;font-size:13px">${showReps?'No team deals yet. Click <b>Log team close</b>.':'No calls logged yet.'}</td></tr>`;return;}
-  const nCount=id=>notes.filter(n=>n.call_id===id).length;
   function av(name){
     return `<div class="prospect-av">${name?esc(name.trim()[0].toUpperCase()):'?'}</div>`;
   }
@@ -1251,76 +1266,169 @@ function renderCallsTable(fc,tbodyId='calls-tbody',showReps=false){
     <td><div style="display:flex;align-items:center">${av(c.prospect)}<span style="font-weight:600">${esc(c.prospect)||'—'}</span></div></td>
     <td style="color:var(--tx2);font-size:11px;white-space:nowrap">${fmtD(c.created_date)}</td>
     <td class="tbl-amount">${c.amount?fmt$(c.amount):'—'}</td>
-    <td>${c.type?`<span class="badge ${c.type==='PIF'?'bc':'bb'}">${c.status==='Installment'?'Payment':esc(c.type)}</span>`:'—'}</td>
+    <td>${srcTag(c)}</td>
     ${showReps?`<td>${repCell(c)}</td>`:''}
     <td>
-      <button class="btn btn-secondary btn-sm" onclick="openNotesModal('${jsq(c.id)}','${jsq(c.prospect||'Call')}')" style="gap:4px">
+      <button class="btn btn-secondary btn-sm" onclick="openNotesModal('${jsq(c.id)}','${jsq(c.prospect||'Call')}')" style="gap:4px;white-space:nowrap">
         <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        Notes${nCount(c.id)?` (${nCount(c.id)})`:''}
+        Notes
       </button>
     </td>
-    <td>
+    <td><div class="row-acts">
+      <button class="btn btn-secondary btn-sm" onclick="openEditDeal('${jsq(c.id)}')">Edit</button>
       <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCall('${jsq(c.id)}')">
         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
       </button>
-    </td>
+    </div></td>
   </tr>`).join('');
 }
 
+const SOURCES=['Discord','Instagram','Skool','Facebook','TikTok','LinkedIn','Referral'];
+const srcOf=c=>{
+  if(c.source)return c.source;
+  if(c.is_payment||c.status==='Installment'){const i=instOf(c);return i?.source||'';}
+  return '';
+};
+function srcTag(c){
+  const pay=c.is_payment||c.status==='Installment';
+  const s=srcOf(c);
+  if(pay)return `<span class="src-tag muted">${s?esc(s)+' · ':''}payment</span>`;
+  return s?`<span class="src-tag">${esc(s)}</span>`:'<span style="color:var(--tx2)">—</span>';
+}
+// The payment plan a deal (or a later payment) belongs to
+function instOf(c){
+  if(!c)return null;
+  if(c.inst_id){const i=installments.find(i=>i.id===c.inst_id);if(i)return i;}
+  if(c.is_payment||c.status==='Installment')
+    return installments.find(i=>i.prospect===c.prospect&&!!i.team===!!c.team&&(i.plan||'')===(c.plan||''))||null;
+  if(c.type==='Installment')
+    return installments.find(i=>i.prospect===c.prospect&&i.created_date===c.created_date&&!!i.team===!!c.team)||null;
+  return null;
+}
+function renderSourcePicker(){
+  const used=[...new Set(calls.map(c=>(c.source||'').trim()).filter(Boolean))];
+  const all=[...new Set([...SOURCES,...used])];
+  document.getElementById('src-list').innerHTML=all.map(x=>`<option value="${esc(x)}"></option>`).join('');
+  const cur=(document.getElementById('cl-source').value||'').trim().toLowerCase();
+  const chips=[...new Set([...SOURCES.slice(0,4),...used.slice(-3),'Referral'])];
+  document.getElementById('src-chips').innerHTML=chips.map(x=>`<button type="button" class="src-chip${x.toLowerCase()===cur?' on':''}" onclick="pickSource('${jsq(x)}')">${esc(x)}</button>`).join('');
+}
+function pickSource(x){document.getElementById('cl-source').value=x;renderSourcePicker();}
+
 function onCloseType(){
-  document.getElementById('inst-extra').style.display=
-    document.getElementById('cl-type').value==='Installment'?'block':'none';
+  const parts=document.getElementById('cl-parts').checked;
+  document.getElementById('inst-extra').style.display=parts?'block':'none';
+  document.getElementById('cl-amount-lbl').textContent=parts?'Paid today ($)':'Amount ($)';
+}
+
+let editId=null;
+function resetCloseForm(){
+  ['cl-prospect','cl-plan','cl-amount','cl-total','cl-comm','cl-notes','cl-date','cl-setter','cl-closer','cl-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('cl-parts').checked=false;
+  onCloseType();
 }
 
 function addClose(){
   const prospect=document.getElementById('cl-prospect').value.trim();
   if(!prospect){toast('Enter prospect name','err');return;}
-  const type=document.getElementById('cl-type').value;
+  const parts=document.getElementById('cl-parts').checked;
   const amount=parseFloat(document.getElementById('cl-amount').value)||0;
   const plan=document.getElementById('cl-plan').value.trim();
+  const source=document.getElementById('cl-source').value.trim();
   const comm=parseFloat(document.getElementById('cl-comm').value)||0;
-  const notes=document.getElementById('cl-notes').value.trim();
+  const noteTxt=document.getElementById('cl-notes').value.trim();
   const dateVal=document.getElementById('cl-date').value;
   const createdDate=dateVal?new Date(dateVal+'T12:00:00').toISOString():db.now();
-  // For installment: call amount = first_payment (what's actually collected), not total
-  const tv=parseFloat(document.getElementById('cl-total').value)||amount;
-  const fp=parseFloat(document.getElementById('cl-first').value)||amount;
-  const callAmount=type==='Installment'?fp:amount;
-  if(!(callAmount>0)){toast('Enter the cash collected','err');return;}
+  if(!(amount>0)){toast('Enter the cash collected','err');return;}
+  const tv=Math.max(parseFloat(document.getElementById('cl-total').value)||amount,amount);
   const team=closeMode==='team';
   const setter_id=team?(document.getElementById('cl-setter').value||null):null;
   const closer_id=team?(document.getElementById('cl-closer').value||null):null;
   if(team&&!setter_id&&!closer_id){toast('Pick the setter or closer for this deal','err');return;}
-  const base={company_id:team?null:activeComp,prospect,plan,commission:team?0:comm,setter_id,closer_id,team};
-  calls.push({id:db.uid(),...base,status:'Closed',type,amount:callAmount,notes,created_date:createdDate});
-  db.set('calls',calls);
-  if(type==='Installment'){
-    installments.push({id:db.uid(),...base,total_value:tv,first_payment:fp,collected:fp,created_date:createdDate});
+
+  if(editId){
+    const c=calls.find(x=>x.id===editId);
+    if(!c){editId=null;closeModal('modal-close');return;}
+    const pay=c.is_payment||c.status==='Installment';
+    const inst=instOf(c);
+    const oldAmt=parseFloat(c.amount||0);
+    Object.assign(c,{prospect,plan,source,amount,notes:noteTxt,created_date:createdDate});
+    if(!c.team)c.commission=comm;
+    if(c.team){c.setter_id=setter_id;c.closer_id=closer_id;}
+    if(pay){
+      if(inst){inst.collected=Math.max(0,parseFloat(inst.collected||0)+amount-oldAmt);c.inst_id=inst.id;}
+    }else if(parts){
+      if(inst){
+        inst.collected=Math.max(0,parseFloat(inst.collected||0)+amount-oldAmt);
+        Object.assign(inst,{prospect,plan,source,total_value:tv,first_payment:amount,created_date:createdDate,setter_id:c.setter_id||null,closer_id:c.closer_id||null});
+        c.inst_id=inst.id;
+      }else{
+        const ni={id:db.uid(),company_id:c.company_id??null,team:!!c.team,prospect,plan,source,commission:c.commission||0,setter_id:c.setter_id||null,closer_id:c.closer_id||null,total_value:tv,first_payment:amount,collected:amount,created_date:createdDate};
+        installments.push(ni);c.inst_id=ni.id;
+      }
+      c.type='Installment';
+    }else{
+      if(inst)installments=installments.filter(i=>i.id!==inst.id);
+      delete c.inst_id;c.type='PIF';
+    }
+    // keep later payments pointing at the same plan
+    if(!pay&&c.inst_id)calls.forEach(p=>{if((p.is_payment||p.status==='Installment')&&(p.inst_id===c.inst_id)){p.prospect=prospect;p.plan=plan;if(p.team){p.setter_id=c.setter_id;p.closer_id=c.closer_id;}}});
+    db.set('calls',calls);db.set('installments',installments);
+    editId=null;resetCloseForm();
+    closeModal('modal-close');refreshAll();toast('Deal updated');
+    return;
+  }
+
+  const base={company_id:team?null:activeComp,prospect,plan,source,commission:team?0:comm,setter_id,closer_id,team};
+  const call={id:db.uid(),...base,status:'Closed',type:parts?'Installment':'PIF',amount,notes:noteTxt,created_date:createdDate};
+  if(parts){
+    const inst={id:db.uid(),...base,total_value:tv,first_payment:amount,collected:amount,created_date:createdDate};
+    installments.push(inst);call.inst_id=inst.id;
     db.set('installments',installments);
   }
-  ['cl-prospect','cl-plan','cl-amount','cl-total','cl-first','cl-comm','cl-notes','cl-date','cl-setter','cl-closer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('cl-type').value='PIF';
-  document.getElementById('inst-extra').style.display='none';
+  calls.push(call);
+  db.set('calls',calls);
+  resetCloseForm();
   closeModal('modal-close');refreshAll();toast(team?'Team close logged':'Close logged');
 }
 
 // mode 'me' = your own close (Dashboard). mode 'team' = a sales team close (Sales Team page)
 let closeMode='me';
-function openCloseModal(mode='me'){
+function openCloseModal(mode='me',id=null){
+  const c=id?calls.find(x=>x.id===id):null;
+  if(id&&!c)return;
+  if(c)mode=c.team?'team':'me';
+  if(!c&&editId){editId=null;resetCloseForm();}
+  editId=c?c.id:null;
   closeMode=mode;
   const team=mode==='team';
-  if(team&&!reps.length){toast('Add your reps first','err');openRepModal();return;}
-  document.getElementById('cl-title').textContent=team?'Log Team Close':'Log Close';
-  document.getElementById('cl-team-row').style.display=team?'grid':'none';
-  document.getElementById('cl-comm-wrap').style.display=team?'none':'flex';
+  if(team&&!reps.length&&!c){toast('Add your reps first','err');openRepModal();return;}
+  const pay=c&&(c.is_payment||c.status==='Installment');
+  document.getElementById('cl-title').textContent=c?(pay?'Edit payment':'Edit deal'):(team?'Log Team Close':'Log Close');
+  document.getElementById('cl-save').textContent=c?'Save changes':'Save close';
+  document.getElementById('cl-team-row').style.display=team&&!pay?'grid':'none';
+  document.getElementById('cl-comm-row').style.display=team?'none':'grid';
+  document.getElementById('cl-parts-wrap').style.display=pay?'none':'flex';
   const opts=role=>'<option value="">'+(role==='Closer'?'Me / none':'None')+'</option>'+
-    reps.filter(r=>r.active!==false).sort((a,b)=>(a.role===role?0:1)-(b.role===role?0:1)||a.name.localeCompare(b.name))
+    reps.filter(r=>r.active!==false||(c&&(r.id===c.setter_id||r.id===c.closer_id))).sort((a,b)=>(a.role===role?0:1)-(b.role===role?0:1)||a.name.localeCompare(b.name))
       .map(r=>`<option value="${esc(r.id)}">${esc(r.name)} · ${esc(r.role)}</option>`).join('');
   document.getElementById('cl-setter').innerHTML=opts('Setter');
   document.getElementById('cl-closer').innerHTML=opts('Closer');
+  if(c){
+    const inst=instOf(c);
+    const v=(k,x)=>{document.getElementById(k).value=x??'';};
+    v('cl-prospect',c.prospect);v('cl-plan',c.plan);v('cl-amount',c.amount);v('cl-source',srcOf(c));
+    v('cl-comm',c.commission||'');v('cl-notes',c.notes);v('cl-date',localISODate(new Date(c.created_date)));
+    v('cl-setter',c.setter_id||'');v('cl-closer',c.closer_id||'');
+    document.getElementById('cl-parts').checked=!pay&&(c.type==='Installment'||!!inst);
+    v('cl-total',inst&&!pay?inst.total_value:'');
+    onCloseType();
+  }
   if(!document.getElementById('cl-date').value)document.getElementById('cl-date').value=localISODate(new Date());
+  renderSourcePicker();
   openModal('modal-close');
 }
+function openEditDeal(id){openCloseModal('me',id);}
 const localISODate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
 function deleteCall(id){
@@ -1347,7 +1455,7 @@ function addPayment(){
   inst.commission=parseFloat(inst.commission||0)+comm;
   db.set('installments',installments);
   // Payment belongs to the plan's company and the same setter/closer
-  calls.push({id:db.uid(),company_id:inst.team?null:(inst.company_id??activeComp),team:!!inst.team,prospect:inst.prospect,status:'Installment',type:'Installment',is_payment:true,amount:amt,plan:inst.plan,commission:comm,notes,setter_id:inst.setter_id||null,closer_id:inst.closer_id||null,created_date:db.now()});
+  calls.push({id:db.uid(),inst_id:inst.id,source:inst.source||'',company_id:inst.team?null:(inst.company_id??activeComp),team:!!inst.team,prospect:inst.prospect,status:'Installment',type:'Installment',is_payment:true,amount:amt,plan:inst.plan,commission:comm,notes,setter_id:inst.setter_id||null,closer_id:inst.closer_id||null,created_date:db.now()});
   db.set('calls',calls);
   closeModal('modal-payment');refreshAll();toast('Payment added');
 }
@@ -1787,9 +1895,9 @@ function openRepView(id){
     </div>
     <div style="font-size:12px;font-weight:600;margin:14px 0 6px">Deals &amp; payments (${mine.length})</div>
     <div class="tbl-wrap" style="max-height:220px;overflow-y:auto"><table>
-      <thead><tr><th>Date</th><th>Prospect</th><th>Cash</th><th>Type</th><th>As</th></tr></thead>
+      <thead><tr><th>Date</th><th>Prospect</th><th>Cash</th><th>Source</th><th>As</th></tr></thead>
       <tbody>${mine.length?mine.map(c=>`<tr><td style="white-space:nowrap">${fmtD(c.created_date)}</td><td>${esc(c.prospect)}</td><td class="tbl-amount">${fmt$(c.amount)}</td>
-        <td><span class="badge ${c.type==='PIF'?'bc':'bb'}">${c.status==='Installment'?'Payment':esc(c.type)}</span></td>
+        <td>${srcTag(c)}</td>
         <td style="color:var(--tx2)">${[c.setter_id===id?'Setter':'',c.closer_id===id?'Closer':''].filter(Boolean).join(' + ')}</td></tr>`).join('')
         :'<tr><td colspan="5" style="text-align:center;color:var(--tx2);padding:16px">No deals yet. Pick this rep when you log a team close.</td></tr>'}</tbody>
     </table></div>
@@ -1811,8 +1919,8 @@ function exportCSV(which='me'){
   if(!fc.length){toast('Nothing to export','err');return;}
   const co=id=>companies.find(c=>c.id===id)?.name||'';
   const cell=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
-  const lines=[['Date','Company','Prospect','Type','Cash collected','Plan','Setter','Closer','Your commission','Notes']]
-    .concat(fc.map(c=>[localISODate(new Date(c.created_date)),co(c.company_id),c.prospect,c.status==='Installment'?'Payment':c.type,
+  const lines=[['Date','Company','Prospect','Source','Cash collected','Plan','Setter','Closer','Your commission','Notes']]
+    .concat(fc.map(c=>[localISODate(new Date(c.created_date)),co(c.company_id),c.prospect,(c.is_payment||c.status==='Installment')?((srcOf(c)||'')+' (payment)').trim():srcOf(c),
       parseFloat(c.amount||0).toFixed(2),c.plan,repName(c.setter_id),repName(c.closer_id),parseFloat(c.commission||0).toFixed(2),c.notes]));
   const blob=new Blob([lines.map(r=>r.map(cell).join(',')).join('\n')],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -2002,6 +2110,9 @@ const SVG_MOON=`<svg width="15" height="15" fill="none" stroke="currentColor" st
 function applyTheme(t){
   document.body.setAttribute('data-theme',t);
   localStorage.setItem('nl_theme',t);
+  const bg=t==='light'?'#fafafa':'#141415';
+  document.documentElement.style.background=bg;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content',bg);
   const ic=document.getElementById('theme-ic');
   const lbl=document.getElementById('theme-lbl');
   if(ic) ic.innerHTML=t==='light'?SVG_MOON:SVG_SUN;
