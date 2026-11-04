@@ -307,9 +307,9 @@ td.td-prospect{display:flex;align-items:center}
       <button class="btn btn-primary" onclick="nav('dashboard')">Open CRM</button>
     </div>
     <div class="grid g4" style="margin-bottom:14px">
-      <div class="card"><div class="kpi-label">Company Cash Collected</div><div class="kpi-val" id="home-cc">$0.00</div><div class="kpi-sub">All-time, all companies</div></div>
-      <div class="card"><div class="kpi-label">This Month</div><div class="kpi-val" id="home-month">$0.00</div><div class="kpi-sub" id="home-month-sub"></div></div>
-      <div class="card" style="cursor:pointer" onclick="nav('team')"><div class="kpi-label">Top Rep This Month</div><div class="kpi-val" id="home-top" style="font-size:22px">—</div><div class="kpi-sub" id="home-top-sub"></div></div>
+      <div class="card"><div class="kpi-label">My Cash Collected</div><div class="kpi-val" id="home-cc">$0.00</div><div class="kpi-sub">All-time, your own closes</div></div>
+      <div class="card"><div class="kpi-label">My Cash This Month</div><div class="kpi-val" id="home-month">$0.00</div><div class="kpi-sub" id="home-month-sub"></div></div>
+      <div class="card" style="cursor:pointer" onclick="nav('team')"><div class="kpi-label">Team Cash This Month</div><div class="kpi-val" id="home-top">$0.00</div><div class="kpi-sub" id="home-top-sub"></div></div>
       <div class="card"><div class="kpi-label">Active Goals</div><div class="kpi-val" id="home-goals-count">0</div></div>
     </div>
     <div class="card">
@@ -325,7 +325,7 @@ td.td-prospect{display:flex;align-items:center}
   <div class="page" id="page-dashboard">
     <div class="topbar">
       <div class="page-title">Dashboard <span class="grad">CRM</span></div>
-      <button class="btn btn-primary" onclick="openCloseModal()">+ Log Close</button>
+      <button class="btn btn-primary" onclick="openCloseModal('me')">+ Log Close</button>
     </div>
     <!-- Company row -->
     <div id="co-row" style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center"></div>
@@ -336,9 +336,8 @@ td.td-prospect{display:flex;align-items:center}
       <input type="date" id="f-from" onchange="renderDash()"/>
       <span style="color:#8891b8;font-size:12px">to</span>
       <input type="date" id="f-to" onchange="renderDash()"/>
-      <select id="f-rep" onchange="setRepFilter(this.value)"><option value="">All reps</option></select>
       <button class="btn btn-secondary btn-sm" onclick="clearFilter()">Clear</button>
-      <button class="btn btn-secondary btn-sm" onclick="exportCSV()" style="margin-left:auto">Export CSV</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV('me')" style="margin-left:auto">Export CSV</button>
     </div>
     <!-- Hero KPIs -->
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px" id="hero-kpis"></div>
@@ -355,7 +354,7 @@ td.td-prospect{display:flex;align-items:center}
     <!-- Calls -->
     <div style="font-size:13px;font-weight:600;margin-bottom:10px">Recent Calls</div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Type</th><th>Setter / Closer</th><th>Notes</th><th></th></tr></thead>
+      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Type</th><th>Notes</th><th></th></tr></thead>
       <tbody id="calls-tbody"></tbody>
     </table></div>
   </div>
@@ -378,7 +377,7 @@ td.td-prospect{display:flex;align-items:center}
       <div class="rev-big" id="rev-cc">$0.00</div>
       <div id="rev-chart-wrap" style="width:100%"></div>
     </div>
-    <div class="grid g4" style="margin-bottom:16px" id="rev-stats"></div>
+    <div class="grid g3" style="margin-bottom:16px" id="rev-stats"></div>
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <span style="font-size:13px;font-weight:600">Monthly Target</span>
@@ -398,8 +397,9 @@ td.td-prospect{display:flex;align-items:center}
     <div class="topbar">
       <div class="page-title">Sales <span class="grad">Team</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="openRepModal()">+ Add Rep</button>
         <button class="btn btn-secondary" onclick="openPayoutModal()">Record Payout</button>
-        <button class="btn btn-primary" onclick="openRepModal()">+ Add Rep</button>
+        <button class="btn btn-primary" onclick="openCloseModal('team')">+ Log Team Close</button>
       </div>
     </div>
     <div id="team-periods" style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap"></div>
@@ -414,6 +414,19 @@ td.td-prospect{display:flex;align-items:center}
       <tbody id="team-tbody"></tbody>
     </table></div>
     <div style="font-size:11px;color:var(--tx2);margin-bottom:20px">Cash and deals count for both the setter and the closer on a deal. Commission = cash × the rep's rate. Owed = all-time commission minus payouts. DMs, replies, group chats and EODs come from the Setter EOD form.</div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Team Installment Plans</div>
+    <div class="tbl-wrap" style="margin-bottom:20px"><table>
+      <thead><tr><th>Prospect</th><th>Plan</th><th>Setter / Closer</th><th>Collected</th><th>Pending</th><th>Progress</th><th>Actions</th></tr></thead>
+      <tbody id="team-install-tbody"></tbody>
+    </table></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:600">Team Deals <span style="color:var(--tx2);font-weight:400" id="team-deals-label"></span></span>
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV('team')">Export CSV</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Type</th><th>Setter / Closer</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="team-calls-tbody"></tbody>
+    </table></div>
   </div>
 
   <!-- GOALS -->
@@ -453,7 +466,7 @@ td.td-prospect{display:flex;align-items:center}
 <!-- MODALS -->
 <div class="modal-overlay" id="modal-close">
   <div class="modal-box">
-    <div class="modal-hdr"><span class="modal-title">Log Close</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-close')" style="font-size:17px">×</button></div>
+    <div class="modal-hdr"><span class="modal-title" id="cl-title">Log Close</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-close')" style="font-size:17px">×</button></div>
     <div class="frow f2">
       <div class="fgroup"><label>Prospect</label><input id="cl-prospect" type="text"/></div>
       <div class="fgroup"><label>Plan</label><input id="cl-plan" type="text"/></div>
@@ -466,9 +479,9 @@ td.td-prospect{display:flex;align-items:center}
       <div class="fgroup"><label>Type</label>
         <select id="cl-type" onchange="onCloseType()"><option>PIF</option><option>Installment</option></select>
       </div>
-      <div class="fgroup"><label>Your Commission ($)</label><input id="cl-comm" type="number" min="0"/></div>
+      <div class="fgroup" id="cl-comm-wrap"><label>Your Commission ($)</label><input id="cl-comm" type="number" min="0"/></div>
     </div>
-    <div class="frow f2">
+    <div class="frow f2" id="cl-team-row">
       <div class="fgroup"><label>Setter</label><select id="cl-setter"></select></div>
       <div class="fgroup"><label>Closer</label><select id="cl-closer"></select></div>
     </div>
@@ -661,6 +674,10 @@ function migrateLocalOnly(){
     }catch{}
   });
   if(!prefs.sheetId){prefs.sheetId=DEFAULT_SHEET.id;prefs.sheetGid=DEFAULT_SHEET.gid;changed=true;}
+  // Closes logged with a setter/closer belong to the Sales Team, not your own dashboard
+  [calls,installments].forEach(list=>list.forEach(x=>{
+    if(x.team===undefined&&(x.setter_id||x.closer_id)){x.team=true;changed=true;}
+  }));
   if(changed)scheduleSync();
 }
 
@@ -689,6 +706,9 @@ const isDeal=c=>['PIF','Installment'].includes(c.type)&&c.status!=='Installment'
 const cashOf=list=>list.filter(isCash).reduce((s,c)=>s+parseFloat(c.amount||0),0);
 const inRange=(c,from,to)=>{const d=new Date(c.created_date);return(!from||d>=from)&&(!to||d<=to);};
 const repName=id=>{const r=reps.find(x=>x.id===id);return r?r.name:'';};
+// Your own closes vs your sales team's closes
+const mine=list=>list.filter(x=>!x.team);
+const teamOf=list=>list.filter(x=>x.team);
 const statusBadge=s=>{
   const m={Showed:'bg',Installment:'bb','No Show':'br',Rescheduled:'by',Cancelled:'br',Offered:'bb',PIF:'bc'};
   return `<span class="badge ${m[s]||'bgr'}">${esc(s)||'—'}</span>`;
@@ -866,19 +886,19 @@ function renderHome(){
   const h=new Date().getHours();
   document.getElementById('home-greet').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+user.name;
   document.getElementById('home-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  document.getElementById('home-cc').textContent=fmt$(cashOf(calls));
+  document.getElementById('home-cc').textContent=fmt$(cashOf(mine(calls)));
   const mFrom=getRevFrom('month');
-  const monthCalls=calls.filter(c=>inRange(c,mFrom));
+  const monthCalls=mine(calls).filter(c=>inRange(c,mFrom));
   document.getElementById('home-month').textContent=fmt$(cashOf(monthCalls));
   const tgt=parseFloat(prefs.target||0);
   document.getElementById('home-month-sub').textContent=tgt>0
     ?Math.min(999,Math.round(cashOf(monthCalls)/tgt*100))+'% of '+fmt$(tgt)+' target'
     :'Set a monthly target on the Revenue page';
   // Top rep this month
-  const rows=teamRows(monthCalls,mFrom,null,[]);
-  const top=rows.filter(r=>r.cash>0)[0];
-  document.getElementById('home-top').textContent=top?top.rep.name:'—';
-  document.getElementById('home-top-sub').textContent=top?fmt$(top.cash)+' collected this month':(reps.length?'No team cash logged this month':'Add your reps on the Sales Team page');
+  const teamMonth=teamOf(calls).filter(c=>inRange(c,mFrom));
+  const top=teamRows(teamMonth,mFrom,null,[]).filter(r=>r.cash>0)[0];
+  document.getElementById('home-top').textContent=fmt$(cashOf(teamMonth));
+  document.getElementById('home-top-sub').textContent=top?'Top rep: '+top.rep.name+' · '+fmt$(top.cash):(reps.length?'No team deals logged this month':'Add your reps on the Sales Team page');
   const active=goals.filter(g=>!g.done);
   document.getElementById('home-goals-count').textContent=active.length;
   const el=document.getElementById('home-goals-list');
@@ -898,39 +918,27 @@ function renderHome(){
 
 // ── DASHBOARD ─────────────────────────────────────────────────
 function getFC(){
-  let r=activeComp?calls.filter(c=>c.company_id===activeComp):calls;
+  let r=mine(activeComp?calls.filter(c=>c.company_id===activeComp):calls);
   const fFrom=document.getElementById('f-from')?.value;
   const fTo=document.getElementById('f-to')?.value;
   if(fFrom)r=r.filter(c=>new Date(c.created_date)>=dayStart(fFrom));
   if(fTo)r=r.filter(c=>new Date(c.created_date)<=dayEnd(fTo));
-  if(repFilter)r=r.filter(c=>c.setter_id===repFilter||c.closer_id===repFilter);
   return r;
 }
 function getFI(){
-  let r=activeComp?installments.filter(i=>i.company_id===activeComp):installments;
-  if(repFilter)r=r.filter(i=>i.setter_id===repFilter||i.closer_id===repFilter);
-  return r;
-}
-function setRepFilter(v){repFilter=v;renderDash();}
-function renderRepFilter(){
-  const sel=document.getElementById('f-rep');if(!sel)return;
-  sel.innerHTML='<option value="">All reps</option>'+reps.map(r=>`<option value="${esc(r.id)}">${esc(r.name)} (${esc(r.role)})</option>`).join('');
-  if(repFilter&&!reps.find(r=>r.id===repFilter))repFilter='';
-  sel.value=repFilter;
+  return mine(activeComp?installments.filter(i=>i.company_id===activeComp):installments);
 }
 function getCo(){return companies.find(c=>c.id===activeComp);}
 
 function clearFilter(){
   document.getElementById('f-from').value='';
   document.getElementById('f-to').value='';
-  repFilter='';
   renderDash();
 }
 
 function renderDash(){
   renderCoRow();
   renderToggles();
-  renderRepFilter();
   const fc=getFC(),fi=getFI();
   renderHeroKPIs(fc,fi);
   renderSecKPIs(fc,fi);
@@ -1026,8 +1034,8 @@ function drawSparkSVG(metric,pts){
 function renderHeroKPIs(fc,fi){
   const k=calcKPIs(fc,fi);
   // Sparklines always use company-wide data (unaffected by date filter)
-  const aCalls=activeComp?calls.filter(c=>c.company_id===activeComp):calls;
-  const aInsts=activeComp?installments.filter(i=>i.company_id===activeComp):installments;
+  const aCalls=mine(activeComp?calls.filter(c=>c.company_id===activeComp):calls);
+  const aInsts=mine(activeComp?installments.filter(i=>i.company_id===activeComp):installments);
   document.getElementById('hero-kpis').innerHTML=[
     ['Cash Collected',fmt$(k.cc),'cc'],
     ['Closed Deals',k.closed,'closed'],
@@ -1047,15 +1055,17 @@ function renderSecKPIs(fc,fi){
   ].map(([l,v])=>`<div class="kpi-sec"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div></div>`).join('');
 }
 
-function renderInstallTable(fi){
-  const tbody=document.getElementById('install-tbody');
-  if(!fi.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#8891b8;padding:20px">No plans yet. Log a close with type "Installment".</td></tr>';return;}
+function renderInstallTable(fi,tbodyId='install-tbody',showReps=false){
+  const tbody=document.getElementById(tbodyId);
+  const cols=showReps?7:6;
+  if(!fi.length){tbody.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;color:#8891b8;padding:20px">No plans yet. Log a close with type "Installment".</td></tr>`;return;}
   tbody.innerHTML=fi.map(i=>{
     const col=parseFloat(i.collected||0),tot=parseFloat(i.total_value||0);
     const pct=tot>0?Math.min(100,Math.round(col/tot*100)):0;
     return `<tr>
       <td style="font-weight:500">${esc(i.prospect)||'—'}</td>
       <td style="color:#8891b8">${esc(i.plan)||'—'}</td>
+      ${showReps?`<td>${repCell(i)}</td>`:''}
       <td style="color:#10b981">${fmt$(col)}</td>
       <td style="color:#f59e0b">${fmt$(Math.max(0,tot-col))}</td>
       <td style="min-width:80px"><div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:#8891b8">${pct}%</span></td>
@@ -1067,14 +1077,15 @@ function renderInstallTable(fi){
   }).join('');
 }
 
-function renderCallsTable(fc){
-  const tbody=document.getElementById('calls-tbody');
-  if(!fc.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8891b8;padding:28px;font-size:13px">No calls logged yet.</td></tr>';return;}
-  const repCell=c=>{
-    const s=repName(c.setter_id),cl=repName(c.closer_id);
-    if(!s&&!cl)return '<span style="color:var(--tx2)">—</span>';
-    return `<div style="font-size:11px;line-height:1.5">${s?`<div><span style="color:var(--tx2)">S:</span> ${esc(s)}</div>`:''}${cl?`<div><span style="color:var(--tx2)">C:</span> ${esc(cl)}</div>`:''}</div>`;
-  };
+const repCell=c=>{
+  const s=repName(c.setter_id),cl=repName(c.closer_id);
+  if(!s&&!cl)return '<span style="color:var(--tx2)">—</span>';
+  return `<div style="font-size:11px;line-height:1.5">${s?`<div><span style="color:var(--tx2)">S:</span> ${esc(s)}</div>`:''}${cl?`<div><span style="color:var(--tx2)">C:</span> ${esc(cl)}</div>`:''}</div>`;
+};
+function renderCallsTable(fc,tbodyId='calls-tbody',showReps=false){
+  const tbody=document.getElementById(tbodyId);
+  const cols=showReps?7:6;
+  if(!fc.length){tbody.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;color:#8891b8;padding:28px;font-size:13px">${showReps?'No team deals yet. Click <b>+ Log Team Close</b>.':'No calls logged yet.'}</td></tr>`;return;}
   const nCount=id=>notes.filter(n=>n.call_id===id).length;
   const colors=['#2563eb','#06b6d4','#8b5cf6','#f59e0b','#10b981','#ef4444'];
   function av(name){
@@ -1087,7 +1098,7 @@ function renderCallsTable(fc){
     <td style="color:var(--tx2);font-size:11px;white-space:nowrap">${fmtD(c.created_date)}</td>
     <td><span style="font-weight:700;color:var(--tx)">${c.amount?fmt$(c.amount):'—'}</span></td>
     <td>${c.type?`<span class="badge ${c.type==='PIF'?'bc':'bb'}">${c.status==='Installment'?'Payment':esc(c.type)}</span>`:'—'}</td>
-    <td>${repCell(c)}</td>
+    ${showReps?`<td>${repCell(c)}</td>`:''}
     <td>
       <button class="btn btn-secondary btn-sm" onclick="openNotesModal('${jsq(c.id)}','${jsq(c.prospect||'Call')}')" style="gap:4px">
         <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
@@ -1122,22 +1133,32 @@ function addClose(){
   const fp=parseFloat(document.getElementById('cl-first').value)||amount;
   const callAmount=type==='Installment'?fp:amount;
   if(!(callAmount>0)){toast('Enter the cash collected','err');return;}
-  const setter_id=document.getElementById('cl-setter').value||null;
-  const closer_id=document.getElementById('cl-closer').value||null;
-  calls.push({id:db.uid(),company_id:activeComp,prospect,status:'Closed',type,amount:callAmount,plan,commission:comm,notes,setter_id,closer_id,created_date:createdDate});
+  const team=closeMode==='team';
+  const setter_id=team?(document.getElementById('cl-setter').value||null):null;
+  const closer_id=team?(document.getElementById('cl-closer').value||null):null;
+  if(team&&!setter_id&&!closer_id){toast('Pick the setter or closer for this deal','err');return;}
+  const base={company_id:team?null:activeComp,prospect,plan,commission:team?0:comm,setter_id,closer_id,team};
+  calls.push({id:db.uid(),...base,status:'Closed',type,amount:callAmount,notes,created_date:createdDate});
   db.set('calls',calls);
   if(type==='Installment'){
-    installments.push({id:db.uid(),company_id:activeComp,prospect,plan,total_value:tv,first_payment:fp,collected:fp,commission:comm,setter_id,closer_id,created_date:createdDate});
+    installments.push({id:db.uid(),...base,total_value:tv,first_payment:fp,collected:fp,created_date:createdDate});
     db.set('installments',installments);
   }
   ['cl-prospect','cl-plan','cl-amount','cl-total','cl-first','cl-comm','cl-notes','cl-date','cl-setter','cl-closer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('cl-type').value='PIF';
   document.getElementById('inst-extra').style.display='none';
-  closeModal('modal-close');refreshAll();toast('Close logged');
+  closeModal('modal-close');refreshAll();toast(team?'Team close logged':'Close logged');
 }
 
-// Fill the Setter / Closer pickers in the Log Close modal
-function openCloseModal(){
+// mode 'me' = your own close (Dashboard). mode 'team' = a sales team close (Sales Team page)
+let closeMode='me';
+function openCloseModal(mode='me'){
+  closeMode=mode;
+  const team=mode==='team';
+  if(team&&!reps.length){toast('Add your reps first','err');openRepModal();return;}
+  document.getElementById('cl-title').textContent=team?'Log Team Close':'Log Close';
+  document.getElementById('cl-team-row').style.display=team?'grid':'none';
+  document.getElementById('cl-comm-wrap').style.display=team?'none':'flex';
   const opts=role=>'<option value="">'+(role==='Closer'?'Me / none':'None')+'</option>'+
     reps.filter(r=>r.active!==false).sort((a,b)=>(a.role===role?0:1)-(b.role===role?0:1)||a.name.localeCompare(b.name))
       .map(r=>`<option value="${esc(r.id)}">${esc(r.name)} · ${esc(r.role)}</option>`).join('');
@@ -1172,7 +1193,7 @@ function addPayment(){
   inst.commission=parseFloat(inst.commission||0)+comm;
   db.set('installments',installments);
   // Payment belongs to the plan's company and the same setter/closer
-  calls.push({id:db.uid(),company_id:inst.company_id??activeComp,prospect:inst.prospect,status:'Installment',type:'Installment',is_payment:true,amount:amt,plan:inst.plan,commission:comm,notes,setter_id:inst.setter_id||null,closer_id:inst.closer_id||null,created_date:db.now()});
+  calls.push({id:db.uid(),company_id:inst.team?null:(inst.company_id??activeComp),team:!!inst.team,prospect:inst.prospect,status:'Installment',type:'Installment',is_payment:true,amount:amt,plan:inst.plan,commission:comm,notes,setter_id:inst.setter_id||null,closer_id:inst.closer_id||null,created_date:db.now()});
   db.set('calls',calls);
   closeModal('modal-payment');refreshAll();toast('Payment added');
 }
@@ -1219,7 +1240,7 @@ function saveNote(){
   notes.push({id:db.uid(),call_id:callId,text:txt,date:db.now()});
   db.set('notes',notes);
   document.getElementById('note-txt').value='';
-  renderNotesList(callId);if(isActivePage('dashboard'))renderDash();toast('Note saved');
+  renderNotesList(callId);if(isActivePage('dashboard'))renderDash();if(isActivePage('team'))renderTeam();toast('Note saved');
 }
 
 // ── REVENUE ───────────────────────────────────────────────────
@@ -1244,17 +1265,17 @@ function renderRevenue(){
   if(sel)sel.value=revPeriod;
 
   const from=getRevFrom(revPeriod);
-  const filteredCalls=from?calls.filter(c=>new Date(c.created_date)>=from):calls;
+  const myCalls=mine(calls);
+  const filteredCalls=from?myCalls.filter(c=>new Date(c.created_date)>=from):myCalls;
 
   const cc=cashOf(filteredCalls);
   const closed=filteredCalls.filter(isDeal).length;
   const comm=filteredCalls.reduce((s,c)=>s+parseFloat(c.commission||0),0);
-  const pending=installments.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
-  const teamComm=teamRows(filteredCalls,from,null,[]).reduce((s,r)=>s+r.earned,0);
+  const pending=mine(installments).reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
 
   document.getElementById('rev-cc').textContent=fmt$(cc);
   document.getElementById('rev-stats').innerHTML=[
-    ['Closed Deals',closed],['Your Commission',fmt$(comm)],['Team Commission',fmt$(teamComm)],['Pending Collections',fmt$(pending)]
+    ['Closed Deals',closed],['Your Commission',fmt$(comm)],['Pending Collections',fmt$(pending)]
   ].map(([l,v])=>`<div class="card"><div class="kpi-label">${l}</div><div style="font-size:16px;font-weight:700">${v}</div></div>`).join('');
 
   // Chart: cumulative cash collected, one point per local calendar day
@@ -1279,7 +1300,7 @@ function renderRevenue(){
 
   // Monthly target (synced). Counts every payment collected this month.
   const tgt=parseFloat(prefs.target||0);
-  const monthCC=cashOf(calls.filter(c=>inRange(c,getRevFrom('month'))));
+  const monthCC=cashOf(mine(calls).filter(c=>inRange(c,getRevFrom('month'))));
   const pct=tgt>0?Math.min(100,Math.round(monthCC/tgt*100)):0;
   document.getElementById('tgt-collected').textContent=fmt$(monthCC)+' collected this month';
   document.getElementById('tgt-label').textContent='Target: '+fmt$(tgt);
@@ -1469,20 +1490,23 @@ async function renderTeam(force=false){
   document.getElementById('team-periods').innerHTML=TEAM_PERIODS.map(([v,l])=>
     `<button class="period-chip ${teamPeriod===v?'active':''}" onclick="setTeamPeriod('${v}')">${l}</button>`).join('');
   const from=getRevFrom(teamPeriod);
-  const periodCalls=from?calls.filter(c=>new Date(c.created_date)>=from):calls;
+  const tCalls=teamOf(calls);
+  const periodCalls=from?tCalls.filter(c=>new Date(c.created_date)>=from):tCalls;
+  renderInstallTable(teamOf(installments),'team-install-tbody',true);
+  renderCallsTable(periodCalls,'team-calls-tbody',true);
+  document.getElementById('team-deals-label').textContent='· '+TEAM_PERIODS.find(p=>p[0]===teamPeriod)[1];
   const draw=()=>{
     const eod=eodCache.rows||[];
     const rows=teamRows(periodCalls,from,null,eod);
-    // Count each deal once, even when it has both a setter and a closer
-    const teamCash=cashOf(periodCalls.filter(c=>c.setter_id||c.closer_id));
     const companyCash=cashOf(periodCalls);
+    const dealCount=periodCalls.filter(isDeal).length;
     const owed=rows.reduce((s,r)=>s+r.owed,0);
     const chats=rows.reduce((s,r)=>s+r.chats,0);
     const label=TEAM_PERIODS.find(p=>p[0]===teamPeriod)[1];
     document.getElementById('team-kpis').innerHTML=[
-      ['Company Cash Collected',fmt$(companyCash),label+' · all deals'],
-      ['Team Cash Collected',fmt$(teamCash),'Deals with a rep attached'],
-      ['Deals Closed',periodCalls.filter(isDeal).length,label],
+      ['Company Cash Collected',fmt$(companyCash),label+' · team deals'],
+      ['Deals Closed',dealCount,label],
+      ['Avg Cash / Deal',fmt$(dealCount?companyCash/dealCount:0),label],
       ['Group Chats to Muzz',chats,'From EOD form'],
       ['Commission Owed',fmt$(owed),'All-time, minus payouts'],
       ['Active Reps',reps.filter(r=>r.active!==false).length,reps.length+' total'],
@@ -1599,7 +1623,7 @@ function deletePayout(id,repId){
 function openRepView(id){
   const rep=reps.find(r=>r.id===id);if(!rep)return;
   const from=getRevFrom(teamPeriod);
-  const periodCalls=from?calls.filter(c=>new Date(c.created_date)>=from):calls;
+  const periodCalls=(from?calls.filter(c=>new Date(c.created_date)>=from):calls).filter(c=>c.team);
   const row=teamRows(periodCalls,from,null,eodCache.rows||[]).find(r=>r.rep.id===id);
   const all=teamRows(calls,null,null,eodCache.rows||[]).find(r=>r.rep.id===id);
   const label=TEAM_PERIODS.find(p=>p[0]===teamPeriod)[1];
@@ -1623,7 +1647,7 @@ function openRepView(id){
       <tbody>${mine.length?mine.map(c=>`<tr><td style="white-space:nowrap">${fmtD(c.created_date)}</td><td>${esc(c.prospect)}</td><td class="tbl-amount">${fmt$(c.amount)}</td>
         <td><span class="badge ${c.type==='PIF'?'bc':'bb'}">${c.status==='Installment'?'Payment':esc(c.type)}</span></td>
         <td style="color:var(--tx2)">${[c.setter_id===id?'Setter':'',c.closer_id===id?'Closer':''].filter(Boolean).join(' + ')}</td></tr>`).join('')
-        :'<tr><td colspan="5" style="text-align:center;color:var(--tx2);padding:16px">No deals yet. Pick this rep as Setter or Closer when you log a close.</td></tr>'}</tbody>
+        :'<tr><td colspan="5" style="text-align:center;color:var(--tx2);padding:16px">No deals yet. Pick this rep when you click + Log Team Close.</td></tr>'}</tbody>
     </table></div>
     <div style="font-size:12px;font-weight:600;margin:14px 0 6px">Payouts (${pays.length})</div>
     ${pays.length?pays.map(p=>`<div class="note-item" style="display:flex;justify-content:space-between;align-items:center">
@@ -1638,8 +1662,8 @@ function openRepView(id){
 }
 
 // ── CSV export (what's shown on the Dashboard, with filters applied) ──
-function exportCSV(){
-  const fc=getFC().sort((a,b)=>new Date(a.created_date)-new Date(b.created_date));
+function exportCSV(which='me'){
+  const fc=(which==='team'?teamOf(calls):getFC()).sort((a,b)=>new Date(a.created_date)-new Date(b.created_date));
   if(!fc.length){toast('Nothing to export','err');return;}
   const co=id=>companies.find(c=>c.id===id)?.name||'';
   const cell=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
@@ -1648,7 +1672,7 @@ function exportCSV(){
       parseFloat(c.amount||0).toFixed(2),c.plan,repName(c.setter_id),repName(c.closer_id),parseFloat(c.commission||0).toFixed(2),c.notes]));
   const blob=new Blob([lines.map(r=>r.map(cell).join(',')).join('\n')],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download=`northlab-deals-${localISODate(new Date())}.csv`;document.body.appendChild(a);a.click();
+  a.download=`northlab-${which==='team'?'team-':''}deals-${localISODate(new Date())}.csv`;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
 }
 
