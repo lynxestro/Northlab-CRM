@@ -85,6 +85,11 @@ input[type=date]{width:auto}
 .kpi-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#2563eb,#06b6d4);opacity:.05;pointer-events:none}
 .kpi-label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;font-weight:600}
 .kpi-val{font-size:32px;font-weight:800;background:linear-gradient(to right,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.period-sel{padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;background:var(--card);color:var(--tx);border:1px solid var(--bdr);cursor:pointer}
+.tkpi{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px}
+.tkpi .kpi-label{font-size:10px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tkpi .kpi-val{font-size:22px;font-weight:700;color:var(--tx);-webkit-text-fill-color:unset;background:none;white-space:nowrap}
+.tkpi.hero .kpi-val{background:linear-gradient(to right,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .kpi-sub{font-size:11px;color:var(--tx2);margin-top:8px}
 .kpi-sec{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px}
 .kpi-sec .kpi-label{font-size:11px;margin-bottom:6px}
@@ -402,7 +407,7 @@ td.td-prospect{display:flex;align-items:center}
         <button class="btn btn-primary" onclick="openCloseModal('team')">+ Log Team Close</button>
       </div>
     </div>
-    <div id="team-periods" style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap"></div>
+    <select id="team-period-sel" class="period-sel" onchange="setTeamPeriod(this.value)" style="margin-bottom:14px"></select>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px" id="team-kpis"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
       <span style="font-size:13px;font-weight:600">Leaderboard</span>
@@ -413,7 +418,7 @@ td.td-prospect{display:flex;align-items:center}
       <thead><tr><th>#</th><th>Rep</th><th>Cash Collected</th><th>Deals</th><th>Commission</th><th>Owed</th><th>DMs</th><th>Replies</th><th>Reply %</th><th>Group Chats</th><th>EODs</th><th></th></tr></thead>
       <tbody id="team-tbody"></tbody>
     </table></div>
-    <div style="font-size:11px;color:var(--tx2);margin-bottom:20px">Cash and deals count for both the setter and the closer on a deal. Commission = cash × the rep's rate. Owed = all-time commission minus payouts. DMs, replies, group chats and EODs come from the Setter EOD form.</div>
+    <div style="margin-bottom:20px"></div>
     <div style="font-size:13px;font-weight:600;margin-bottom:10px">Team Installment Plans</div>
     <div class="tbl-wrap" style="margin-bottom:20px"><table>
       <thead><tr><th>Prospect</th><th>Plan</th><th>Setter / Closer</th><th>Collected</th><th>Pending</th><th>Progress</th><th>Actions</th></tr></thead>
@@ -1487,8 +1492,9 @@ function teamRows(periodCalls,from,to,eodRows){
 function setTeamPeriod(p){teamPeriod=p;renderTeam();}
 
 async function renderTeam(force=false){
-  document.getElementById('team-periods').innerHTML=TEAM_PERIODS.map(([v,l])=>
-    `<button class="period-chip ${teamPeriod===v?'active':''}" onclick="setTeamPeriod('${v}')">${l}</button>`).join('');
+  const psel=document.getElementById('team-period-sel');
+  psel.innerHTML=TEAM_PERIODS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  psel.value=teamPeriod;
   const from=getRevFrom(teamPeriod);
   const tCalls=teamOf(calls);
   const periodCalls=from?tCalls.filter(c=>new Date(c.created_date)>=from):tCalls;
@@ -1504,13 +1510,13 @@ async function renderTeam(force=false){
     const chats=rows.reduce((s,r)=>s+r.chats,0);
     const label=TEAM_PERIODS.find(p=>p[0]===teamPeriod)[1];
     document.getElementById('team-kpis').innerHTML=[
-      ['Company Cash Collected',fmt$(companyCash),label+' · team deals'],
-      ['Deals Closed',dealCount,label],
-      ['Avg Cash / Deal',fmt$(dealCount?companyCash/dealCount:0),label],
-      ['Group Chats to Muzz',chats,'From EOD form'],
-      ['Commission Owed',fmt$(owed),'All-time, minus payouts'],
-      ['Active Reps',reps.filter(r=>r.active!==false).length,reps.length+' total'],
-    ].map(([l,v,s])=>`<div class="kpi-sec"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub" style="margin-top:4px">${s}</div></div>`).join('');
+      ['Cash Collected',fmt$(companyCash),'Team deals in '+label,true],
+      ['Deals',dealCount,'Closed deals in '+label],
+      ['Avg Deal',fmt$(dealCount?companyCash/dealCount:0),'Average cash per deal'],
+      ['Group Chats',chats,'Group chats to Muzz, from EOD form'],
+      ['Owed',fmt$(owed),'Commission owed, all-time minus payouts'],
+      ['Reps',reps.filter(r=>r.active!==false).length,'Active reps'],
+    ].map(([l,v,t,hero])=>`<div class="tkpi${hero?' hero':''}" title="${esc(t)}"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div></div>`).join('');
 
     const st=document.getElementById('eod-status');
     const when=eodCache.loadedAt?new Date(eodCache.loadedAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';
