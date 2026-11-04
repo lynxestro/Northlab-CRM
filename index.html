@@ -85,6 +85,7 @@ input[type=date]{width:auto}
 .kpi-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#2563eb,#06b6d4);opacity:.05;pointer-events:none}
 .kpi-label{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;font-weight:600}
 .kpi-val{font-size:32px;font-weight:800;background:linear-gradient(to right,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.kpi-sub{font-size:11px;color:var(--tx2);margin-top:8px}
 .kpi-sec{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px}
 .kpi-sec .kpi-label{font-size:11px;margin-bottom:6px}
 .kpi-sec .kpi-val{font-size:22px;font-weight:700;-webkit-text-fill-color:unset;background:none;color:var(--tx)}
@@ -305,8 +306,10 @@ td.td-prospect{display:flex;align-items:center}
       </div>
       <button class="btn btn-primary" onclick="nav('dashboard')">Open CRM</button>
     </div>
-    <div class="grid g2" style="margin-bottom:14px">
-      <div class="card"><div class="kpi-label">Total Cash Collected</div><div class="kpi-val" id="home-cc">$0.00</div></div>
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="card"><div class="kpi-label">Company Cash Collected</div><div class="kpi-val" id="home-cc">$0.00</div><div class="kpi-sub">All-time, all companies</div></div>
+      <div class="card"><div class="kpi-label">This Month</div><div class="kpi-val" id="home-month">$0.00</div><div class="kpi-sub" id="home-month-sub"></div></div>
+      <div class="card" style="cursor:pointer" onclick="nav('team')"><div class="kpi-label">Top Rep This Month</div><div class="kpi-val" id="home-top" style="font-size:22px">—</div><div class="kpi-sub" id="home-top-sub"></div></div>
       <div class="card"><div class="kpi-label">Active Goals</div><div class="kpi-val" id="home-goals-count">0</div></div>
     </div>
     <div class="card">
@@ -322,7 +325,7 @@ td.td-prospect{display:flex;align-items:center}
   <div class="page" id="page-dashboard">
     <div class="topbar">
       <div class="page-title">Dashboard <span class="grad">CRM</span></div>
-      <button class="btn btn-primary" onclick="openModal('modal-close')">+ Log Close</button>
+      <button class="btn btn-primary" onclick="openCloseModal()">+ Log Close</button>
     </div>
     <!-- Company row -->
     <div id="co-row" style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;align-items:center"></div>
@@ -333,7 +336,9 @@ td.td-prospect{display:flex;align-items:center}
       <input type="date" id="f-from" onchange="renderDash()"/>
       <span style="color:#8891b8;font-size:12px">to</span>
       <input type="date" id="f-to" onchange="renderDash()"/>
+      <select id="f-rep" onchange="setRepFilter(this.value)"><option value="">All reps</option></select>
       <button class="btn btn-secondary btn-sm" onclick="clearFilter()">Clear</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportCSV()" style="margin-left:auto">Export CSV</button>
     </div>
     <!-- Hero KPIs -->
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px" id="hero-kpis"></div>
@@ -350,7 +355,7 @@ td.td-prospect{display:flex;align-items:center}
     <!-- Calls -->
     <div style="font-size:13px;font-weight:600;margin-bottom:10px">Recent Calls</div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Type</th><th>Notes</th><th></th></tr></thead>
+      <thead><tr><th>Prospect</th><th>Date</th><th>Amount</th><th>Type</th><th>Setter / Closer</th><th>Notes</th><th></th></tr></thead>
       <tbody id="calls-tbody"></tbody>
     </table></div>
   </div>
@@ -373,11 +378,11 @@ td.td-prospect{display:flex;align-items:center}
       <div class="rev-big" id="rev-cc">$0.00</div>
       <div id="rev-chart-wrap" style="width:100%"></div>
     </div>
-    <div class="grid g3" style="margin-bottom:16px" id="rev-stats"></div>
+    <div class="grid g4" style="margin-bottom:16px" id="rev-stats"></div>
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <span style="font-size:13px;font-weight:600">Monthly Target</span>
-        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-target')">Edit</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('target-val').value=prefs.target||'';openModal('modal-target')">Edit</button>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px">
         <span id="tgt-collected">$0.00 collected</span>
@@ -386,6 +391,29 @@ td.td-prospect{display:flex;align-items:center}
       <div class="prog-track"><div class="prog-fill" id="tgt-bar" style="width:0%"></div></div>
       <div style="font-size:11px;color:#8891b8;margin-top:5px" id="tgt-pct">0% of target</div>
     </div>
+  </div>
+
+  <!-- SALES TEAM -->
+  <div class="page" id="page-team">
+    <div class="topbar">
+      <div class="page-title">Sales <span class="grad">Team</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="openPayoutModal()">Record Payout</button>
+        <button class="btn btn-primary" onclick="openRepModal()">+ Add Rep</button>
+      </div>
+    </div>
+    <div id="team-periods" style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap"></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px" id="team-kpis"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <span style="font-size:13px;font-weight:600">Leaderboard</span>
+      <span style="font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:8px" id="eod-status">
+      </span>
+    </div>
+    <div class="tbl-wrap" style="margin-bottom:8px"><table>
+      <thead><tr><th>#</th><th>Rep</th><th>Cash Collected</th><th>Deals</th><th>Commission</th><th>Owed</th><th>DMs</th><th>Replies</th><th>Reply %</th><th>Group Chats</th><th>EODs</th><th></th></tr></thead>
+      <tbody id="team-tbody"></tbody>
+    </table></div>
+    <div style="font-size:11px;color:var(--tx2);margin-bottom:20px">Cash and deals count for both the setter and the closer on a deal. Commission = cash × the rep's rate. Owed = all-time commission minus payouts. DMs, replies, group chats and EODs come from the Setter EOD form.</div>
   </div>
 
   <!-- GOALS -->
@@ -405,9 +433,17 @@ td.td-prospect{display:flex;align-items:center}
       <div style="font-size:11px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px">Profile</div>
       <div class="fgroup" style="margin-bottom:10px"><label>Display Name</label><input id="set-name" type="text"/></div>
       <div class="fgroup" style="margin-bottom:18px"><label>Role</label>
-        <select id="set-role"><option>Setter</option><option>Closer</option><option>Admin</option></select>
+        <select id="set-role"><option>Setter</option><option>Closer</option><option>Sales Manager</option><option>Admin</option></select>
       </div>
       <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+    </div>
+    <div class="card" style="max-width:420px;margin-bottom:12px">
+      <div style="font-size:11px;color:#8891b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Setter EOD Sheet</div>
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:14px">The Sales Team page reads DMs, replies and group chats from your EOD form's response sheet. The sheet must be shared as "Anyone with the link → Viewer".</div>
+      <div class="fgroup" style="margin-bottom:10px"><label>Sheet ID (from the sheet's link)</label><input id="set-sheet" type="text"/></div>
+      <div class="fgroup" style="margin-bottom:18px"><label>Tab gid (the number after gid=)</label><input id="set-gid" type="text"/></div>
+      <button class="btn btn-primary" onclick="saveSheetSettings()">Save &amp; Test</button>
+      <span style="font-size:12px;margin-left:10px" id="set-sheet-msg"></span>
     </div>
   </div>
 
@@ -430,7 +466,11 @@ td.td-prospect{display:flex;align-items:center}
       <div class="fgroup"><label>Type</label>
         <select id="cl-type" onchange="onCloseType()"><option>PIF</option><option>Installment</option></select>
       </div>
-      <div class="fgroup"><label>Commission ($)</label><input id="cl-comm" type="number" min="0"/></div>
+      <div class="fgroup"><label>Your Commission ($)</label><input id="cl-comm" type="number" min="0"/></div>
+    </div>
+    <div class="frow f2">
+      <div class="fgroup"><label>Setter</label><select id="cl-setter"></select></div>
+      <div class="fgroup"><label>Closer</label><select id="cl-closer"></select></div>
     </div>
     <div id="inst-extra" style="display:none">
       <div class="frow f2">
@@ -507,32 +547,86 @@ td.td-prospect{display:flex;align-items:center}
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-rep">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-title" id="rep-modal-title">Add Rep</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-rep')" style="font-size:17px">×</button></div>
+    <input type="hidden" id="rep-id"/>
+    <div class="frow f2">
+      <div class="fgroup"><label>Name</label><input id="rep-name" type="text" placeholder="e.g. Aftab"/></div>
+      <div class="fgroup"><label>Role</label><select id="rep-role"><option>Setter</option><option>Closer</option></select></div>
+    </div>
+    <div class="frow f2">
+      <div class="fgroup"><label>Commission (% of cash collected)</label><input id="rep-rate" type="number" min="0" max="100" step="0.5" placeholder="10"/></div>
+      <div class="fgroup"><label>Name on EOD form (if different)</label><input id="rep-eod" type="text" placeholder="e.g. syncx"/></div>
+    </div>
+    <div class="frow f2">
+      <div class="fgroup"><label>Discord / IG handle</label><input id="rep-handle" type="text" placeholder="Optional"/></div>
+      <div class="fgroup"><label>Status</label><select id="rep-active"><option value="1">Active</option><option value="0">Inactive</option></select></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="saveRep()">Save Rep</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-payout">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-title">Record Payout</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-payout')" style="font-size:17px">×</button></div>
+    <div class="frow"><div class="fgroup"><label>Rep</label><select id="po-rep" onchange="updatePayoutHint()"></select></div></div>
+    <div style="font-size:11px;color:var(--tx2);margin:-4px 0 10px" id="po-hint"></div>
+    <div class="frow f2">
+      <div class="fgroup"><label>Amount paid ($)</label><input id="po-amount" type="number" min="0"/></div>
+      <div class="fgroup"><label>Date</label><input id="po-date" type="date"/></div>
+    </div>
+    <div class="frow"><div class="fgroup"><label>Note</label><input id="po-note" type="text" placeholder="e.g. Wise transfer, Nov week 1"/></div></div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="savePayout()">Save Payout</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-repview">
+  <div class="modal-box" style="max-width:620px">
+    <div class="modal-hdr"><span class="modal-title" id="rv-title">Rep</span><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-repview')" style="font-size:17px">×</button></div>
+    <div id="rv-body"></div>
+  </div>
+</div>
+
 <div id="toast-host"></div>
 
 <script>
 // ── DB ──────────────────────────────────────────────────────────
-const DATA_KEYS=['calls','installments','companies','goals','goalLogs'];
+// Everything in DATA_KEYS syncs to the cloud. prefs is an object, the rest are arrays.
+const DATA_KEYS=['calls','installments','companies','goals','goalLogs','reps','payouts','notes','prefs'];
 let _syncTimer=null;
 const db={
   get:(k,d=[])=>{try{const v=localStorage.getItem('nl_'+k);return v!=null?JSON.parse(v):d;}catch{return d;}},
   set:(k,v)=>{
     try{localStorage.setItem('nl_'+k,JSON.stringify(v));}catch{}
-    // Auto-sync to Supabase cloud whenever real data changes (debounced 150ms)
-    if(DATA_KEYS.includes(k)){clearTimeout(_syncTimer);_syncTimer=setTimeout(syncToCloud,150);}
+    // Auto-sync to Supabase cloud whenever real data changes (debounced)
+    if(DATA_KEYS.includes(k))scheduleSync();
   },
   uid:()=>Math.random().toString(36).slice(2)+Date.now().toString(36),
   now:()=>new Date().toISOString(),
 };
+function scheduleSync(){clearTimeout(_syncTimer);_syncTimer=setTimeout(syncToCloud,400);}
+function getState(){return{calls,installments,companies,goals,goalLogs,reps,payouts,notes,prefs};}
+function setState(d){
+  calls=d.calls||[];installments=d.installments||[];companies=d.companies||[];
+  goals=d.goals||[];goalLogs=d.goalLogs||[];reps=d.reps||[];payouts=d.payouts||[];
+  notes=d.notes||[];prefs=(d.prefs&&typeof d.prefs==='object'&&!Array.isArray(d.prefs))?d.prefs:{};
+}
+// Write the local offline cache WITHOUT scheduling another cloud sync
+// (the old version called db.set here, which re-triggered sync forever).
+function cacheLocal(){
+  const s=getState();
+  DATA_KEYS.forEach(k=>{try{localStorage.setItem('nl_'+k,JSON.stringify(s[k]));}catch{}});
+}
 
 // ── Cloud Sync (Supabase user metadata — no custom table needed) ──
 async function syncToCloud(){
   if(!user)return;
   try{
-    const crm_data={calls,installments,companies,goals,goalLogs};
-    await supa.auth.updateUser({data:{crm_data}});
-    // Also cache locally for offline use
-    DATA_KEYS.forEach(k=>db.set(k,eval(k)));
-  }catch(e){console.warn('Sync failed:',e);}
+    const {error}=await supa.auth.updateUser({data:{crm_data:getState()}});
+    if(error)throw error;
+    cacheLocal();
+  }catch(e){console.warn('Sync failed:',e);toast('Cloud sync failed. Saved on this device only.','err');}
 }
 
 async function loadFromCloud(){
@@ -544,25 +638,57 @@ async function loadFromCloud(){
     if(error||!data?.session)return false;
     const d=data.session.user?.user_metadata?.crm_data;
     if(!d)return false;
-    calls=d.calls||[];
-    installments=d.installments||[];
-    companies=d.companies||[];
-    goals=d.goals||[];
-    goalLogs=d.goalLogs||[];
-    // Cache locally so app works offline
-    DATA_KEYS.forEach(k=>db.set(k,eval(k)));
+    setState(d);
+    cacheLocal();
     return true;
   }catch(e){console.warn('Load failed:',e);return false;}
 }
 
+// One-time move of data that older versions kept only on this device
+function migrateLocalOnly(){
+  let changed=false;
+  if(prefs.target==null){
+    const t=parseFloat(localStorage.getItem('nl_target')||'');
+    if(t>0){prefs.target=t;changed=true;}
+  }
+  const known=new Set(notes.map(n=>n.id));
+  Object.keys(localStorage).filter(k=>k.startsWith('nl_notes_')).forEach(k=>{
+    const callId=k.slice('nl_notes_'.length);
+    try{
+      JSON.parse(localStorage.getItem(k)||'[]').forEach(n=>{
+        if(!known.has(n.id)){notes.push({id:n.id||db.uid(),call_id:callId,text:n.text,date:n.date});changed=true;}
+      });
+    }catch{}
+  });
+  if(!prefs.sheetId){prefs.sheetId=DEFAULT_SHEET.id;prefs.sheetGid=DEFAULT_SHEET.gid;changed=true;}
+  if(changed)scheduleSync();
+}
+
 // ── State ──────────────────────────────────────────────────────
 let user=null,calls=[],installments=[],companies=[],goals=[],goalLogs=[];
-let activeComp=null,revPeriod='all';
+let reps=[],payouts=[],notes=[],prefs={};
+let activeComp=null,revPeriod='all',teamPeriod='month',repFilter='';
+// EOD responses sheet (Google Form). Must be shared "Anyone with the link → Viewer".
+const DEFAULT_SHEET={id:'1sDT7SLabYtgeuOM_ALO3M90tNeqyzCLJlf7MnkU0FNs',gid:'1227492611'};
 
 // ── Utils ─────────────────────────────────────────────────────
 const fmt$=n=>'$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtD=s=>s?new Date(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// For values placed inside onclick="fn('...')": escape for JS first, then HTML
+const jsq=s=>esc(String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"));
+// Local-time day boundaries (fixes off-by-one for UTC+8)
+const dayStart=s=>new Date(s+'T00:00:00');
+const dayEnd=s=>new Date(s+'T23:59:59.999');
+
+// ── Money: ONE definition of cash collected used everywhere ──
+// Every PIF close, every installment first payment and every later payment
+// is stored as a call with an amount, so cash = sum of those calls.
+const isCash=c=>['PIF','Installment'].includes(c.type)&&parseFloat(c.amount||0)>0;
+const isDeal=c=>['PIF','Installment'].includes(c.type)&&c.status!=='Installment'&&!c.is_payment;
+const cashOf=list=>list.filter(isCash).reduce((s,c)=>s+parseFloat(c.amount||0),0);
+const inRange=(c,from,to)=>{const d=new Date(c.created_date);return(!from||d>=from)&&(!to||d<=to);};
+const repName=id=>{const r=reps.find(x=>x.id===id);return r?r.name:'';};
 const statusBadge=s=>{
   const m={Showed:'bg',Installment:'bb','No Show':'br',Rescheduled:'by',Cancelled:'br',Offered:'bb',PIF:'bc'};
   return `<span class="badge ${m[s]||'bgr'}">${esc(s)||'—'}</span>`;
@@ -589,6 +715,7 @@ const navItems=[
   {id:'home',label:'Home',svg:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
   {id:'dashboard',label:'Dashboard',svg:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>'},
   {id:'revenue',label:'Revenue',svg:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>'},
+  {id:'team',label:'Sales Team',svg:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>'},
   {id:'goals',label:'Goals',svg:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>'},
   {id:'settings',label:'Settings',svg:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>'},
 ];
@@ -610,8 +737,15 @@ function nav(page){
   if(page==='home')renderHome();
   if(page==='dashboard')renderDash();
   if(page==='revenue')renderRevenue();
+  if(page==='team')renderTeam();
   if(page==='goals')renderGoals();
   if(page==='settings')renderSettings();
+}
+const isActivePage=p=>document.getElementById('page-'+p)?.classList.contains('active');
+// Re-render whatever page is open (plus Home, which other pages link to)
+function refreshAll(){
+  renderHome();
+  ['dashboard','revenue','team','goals'].forEach(p=>{if(isActivePage(p))nav(p);});
 }
 
 function toggleMob(){
@@ -709,16 +843,15 @@ async function initApp(){
   const fromCloud=await loadFromCloud();
   if(!fromCloud){
     // Fall back to localStorage (offline / first time)
-    calls=db.get('calls');
-    installments=db.get('installments');
-    companies=db.get('companies');
-    goals=db.get('goals');
-    goalLogs=db.get('goalLogs');
+    const local={};
+    DATA_KEYS.forEach(k=>local[k]=db.get(k,k==='prefs'?{}:[]));
+    setState(local);
     // Push local data to cloud silently so other devices can pick it up
-    if(calls.length||installments.length||goals.length||companies.length){
+    if(calls.length||installments.length||goals.length||companies.length||reps.length){
       syncToCloud();
     }
   }
+  migrateLocalOnly();
   main.style.opacity='1';main.style.pointerEvents='';
   activeComp=companies[0]?.id||null;
   document.getElementById('sb-uname').textContent=user.name;
@@ -733,8 +866,19 @@ function renderHome(){
   const h=new Date().getHours();
   document.getElementById('home-greet').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+user.name;
   document.getElementById('home-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const cc=calls.filter(c=>c.type==='PIF'&&c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0)+installments.reduce((s,i)=>s+parseFloat(i.collected||0),0);
-  document.getElementById('home-cc').textContent=fmt$(cc);
+  document.getElementById('home-cc').textContent=fmt$(cashOf(calls));
+  const mFrom=getRevFrom('month');
+  const monthCalls=calls.filter(c=>inRange(c,mFrom));
+  document.getElementById('home-month').textContent=fmt$(cashOf(monthCalls));
+  const tgt=parseFloat(prefs.target||0);
+  document.getElementById('home-month-sub').textContent=tgt>0
+    ?Math.min(999,Math.round(cashOf(monthCalls)/tgt*100))+'% of '+fmt$(tgt)+' target'
+    :'Set a monthly target on the Revenue page';
+  // Top rep this month
+  const rows=teamRows(monthCalls,mFrom,null,[]);
+  const top=rows.filter(r=>r.cash>0)[0];
+  document.getElementById('home-top').textContent=top?top.rep.name:'—';
+  document.getElementById('home-top-sub').textContent=top?fmt$(top.cash)+' collected this month':(reps.length?'No team cash logged this month':'Add your reps on the Sales Team page');
   const active=goals.filter(g=>!g.done);
   document.getElementById('home-goals-count').textContent=active.length;
   const el=document.getElementById('home-goals-list');
@@ -757,22 +901,36 @@ function getFC(){
   let r=activeComp?calls.filter(c=>c.company_id===activeComp):calls;
   const fFrom=document.getElementById('f-from')?.value;
   const fTo=document.getElementById('f-to')?.value;
-  if(fFrom)r=r.filter(c=>new Date(c.created_date)>=new Date(fFrom));
-  if(fTo)r=r.filter(c=>new Date(c.created_date)<=new Date(fTo+'T23:59:59'));
+  if(fFrom)r=r.filter(c=>new Date(c.created_date)>=dayStart(fFrom));
+  if(fTo)r=r.filter(c=>new Date(c.created_date)<=dayEnd(fTo));
+  if(repFilter)r=r.filter(c=>c.setter_id===repFilter||c.closer_id===repFilter);
   return r;
 }
-function getFI(){return activeComp?installments.filter(i=>i.company_id===activeComp):installments;}
+function getFI(){
+  let r=activeComp?installments.filter(i=>i.company_id===activeComp):installments;
+  if(repFilter)r=r.filter(i=>i.setter_id===repFilter||i.closer_id===repFilter);
+  return r;
+}
+function setRepFilter(v){repFilter=v;renderDash();}
+function renderRepFilter(){
+  const sel=document.getElementById('f-rep');if(!sel)return;
+  sel.innerHTML='<option value="">All reps</option>'+reps.map(r=>`<option value="${esc(r.id)}">${esc(r.name)} (${esc(r.role)})</option>`).join('');
+  if(repFilter&&!reps.find(r=>r.id===repFilter))repFilter='';
+  sel.value=repFilter;
+}
 function getCo(){return companies.find(c=>c.id===activeComp);}
 
 function clearFilter(){
   document.getElementById('f-from').value='';
   document.getElementById('f-to').value='';
+  repFilter='';
   renderDash();
 }
 
 function renderDash(){
   renderCoRow();
   renderToggles();
+  renderRepFilter();
   const fc=getFC(),fi=getFI();
   renderHeroKPIs(fc,fi);
   renderSecKPIs(fc,fi);
@@ -812,44 +970,28 @@ function toggleCo(field){
 }
 
 function calcKPIs(fc,fi){
-  const pifC=fc.filter(c=>c.type==='PIF');
-  const closed=fc.filter(c=>['PIF','Installment'].includes(c.type));
-  // CC = PIF amounts + installment collected amounts (not double-count initial close)
-  const pifCC=pifC.reduce((s,c)=>s+parseFloat(c.amount||0),0);
-  const instCC=fi.reduce((s,i)=>s+parseFloat(i.collected||0),0);
-  const cc=pifCC+instCC;
+  const deals=fc.filter(isDeal);
+  const pifDeals=deals.filter(c=>c.type==='PIF');
+  const cc=cashOf(fc);
   const pending=fi.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
-  const cust=[...new Set(fc.filter(c=>c.prospect&&(c.amount||['PIF','Installment'].includes(c.type))).map(c=>c.prospect))].length;
-  return{cc,pending,closed:closed.length,
-    pifPct:closed.length>0?Math.round(pifC.length/closed.length*100):0,
-    customers:cust};
+  const cust=[...new Set(deals.filter(c=>c.prospect).map(c=>c.prospect.trim().toLowerCase()))].length;
+  return{cc,pending,closed:deals.length,
+    pifPct:deals.length>0?Math.round(pifDeals.length/deals.length*100):0,
+    customers:cust,avg:deals.length?cc/deals.length:0};
 }
 
 // Sparkline — event-based equal spacing (no empty day gaps squishing the chart)
 function mkSparkline(metric,allCalls,allInsts){
   const events=[];
   if(metric==='cc'){
-    allCalls.filter(c=>c.type==='PIF'&&c.amount).forEach(c=>events.push({v:parseFloat(c.amount||0)}));
-    allInsts.forEach(i=>events.push({v:parseFloat(i.first_payment||0)}));
-    // Sort by date
-    allCalls.filter(c=>c.type==='PIF'&&c.amount).forEach(c=>c._d=c.created_date);
+    allCalls.filter(isCash).forEach(c=>events.push({v:parseFloat(c.amount||0),d:c.created_date}));
   } else if(metric==='closed'){
-    allCalls.filter(c=>['PIF','Installment'].includes(c.type)).forEach(c=>events.push({v:1,d:c.created_date}));
+    allCalls.filter(isDeal).forEach(c=>events.push({v:1,d:c.created_date}));
   } else if(metric==='pending'){
     allInsts.forEach(i=>events.push({v:Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.first_payment||0)),d:i.created_date}));
-    // Subtract payments
-    allCalls.filter(c=>c.type==='Installment'&&c.amount&&!allInsts.find(i=>i.prospect===c.prospect&&i.created_date?.slice(0,10)===c.created_date?.slice(0,10)))
+    // Subtract later payments (payment calls, not the first payment)
+    allCalls.filter(c=>c.type==='Installment'&&c.status==='Installment'&&c.amount)
       .forEach(c=>events.push({v:-parseFloat(c.amount||0),d:c.created_date}));
-  }
-  if(metric==='cc'){
-    // Re-build with dates for sorting
-    const ev2=[];
-    allCalls.filter(c=>c.type==='PIF'&&c.amount).forEach(c=>ev2.push({v:parseFloat(c.amount||0),d:c.created_date}));
-    allInsts.forEach(i=>ev2.push({v:parseFloat(i.first_payment||0),d:i.created_date}));
-    ev2.sort((a,b)=>new Date(a.d)-new Date(b.d));
-    let run=0;
-    const pts=[0,...ev2.map(e=>{run+=e.v;return run;})];
-    return drawSparkSVG(metric,pts);
   }
   events.sort((a,b)=>new Date(a.d)-new Date(b.d));
   let run=0;
@@ -901,7 +1043,7 @@ function renderHeroKPIs(fc,fi){
 function renderSecKPIs(fc,fi){
   const k=calcKPIs(fc,fi);
   document.getElementById('sec-kpis').innerHTML=[
-    ['PIF Rate',k.pifPct+'%'],['Customers',k.customers]
+    ['PIF Rate',k.pifPct+'%'],['Customers',k.customers],['Avg Cash / Deal',fmt$(k.avg)]
   ].map(([l,v])=>`<div class="kpi-sec"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div></div>`).join('');
 }
 
@@ -927,25 +1069,33 @@ function renderInstallTable(fi){
 
 function renderCallsTable(fc){
   const tbody=document.getElementById('calls-tbody');
-  if(!fc.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#8891b8;padding:28px;font-size:13px">No calls logged yet.</td></tr>';return;}
+  if(!fc.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8891b8;padding:28px;font-size:13px">No calls logged yet.</td></tr>';return;}
+  const repCell=c=>{
+    const s=repName(c.setter_id),cl=repName(c.closer_id);
+    if(!s&&!cl)return '<span style="color:var(--tx2)">—</span>';
+    return `<div style="font-size:11px;line-height:1.5">${s?`<div><span style="color:var(--tx2)">S:</span> ${esc(s)}</div>`:''}${cl?`<div><span style="color:var(--tx2)">C:</span> ${esc(cl)}</div>`:''}</div>`;
+  };
+  const nCount=id=>notes.filter(n=>n.call_id===id).length;
   const colors=['#2563eb','#06b6d4','#8b5cf6','#f59e0b','#10b981','#ef4444'];
   function av(name){
     const i=name?name.charCodeAt(0)%colors.length:0;
     return `<div class="prospect-av" style="background:${colors[i]}">${name?(name[0].toUpperCase()):'?'}</div>`;
   }
-  tbody.innerHTML=[...fc].reverse().map((c)=>`<tr>
+  const sorted=[...fc].sort((a,b)=>new Date(b.created_date)-new Date(a.created_date));
+  tbody.innerHTML=sorted.map((c)=>`<tr>
     <td><div style="display:flex;align-items:center">${av(c.prospect)}<span style="font-weight:600">${esc(c.prospect)||'—'}</span></div></td>
     <td style="color:var(--tx2);font-size:11px;white-space:nowrap">${fmtD(c.created_date)}</td>
     <td><span style="font-weight:700;color:var(--tx)">${c.amount?fmt$(c.amount):'—'}</span></td>
-    <td>${c.type?`<span class="badge ${c.type==='PIF'?'bc':'bb'}">${esc(c.type)}</span>`:'—'}</td>
+    <td>${c.type?`<span class="badge ${c.type==='PIF'?'bc':'bb'}">${c.status==='Installment'?'Payment':esc(c.type)}</span>`:'—'}</td>
+    <td>${repCell(c)}</td>
     <td>
-      <button class="btn btn-secondary btn-sm" onclick="openNotesModal('${c.id}','${esc(c.prospect||'Call')}')" style="gap:4px">
+      <button class="btn btn-secondary btn-sm" onclick="openNotesModal('${jsq(c.id)}','${jsq(c.prospect||'Call')}')" style="gap:4px">
         <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        Notes
+        Notes${nCount(c.id)?` (${nCount(c.id)})`:''}
       </button>
     </td>
     <td>
-      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCall('${c.id}')">
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCall('${jsq(c.id)}')">
         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
       </button>
     </td>
@@ -971,21 +1121,38 @@ function addClose(){
   const tv=parseFloat(document.getElementById('cl-total').value)||amount;
   const fp=parseFloat(document.getElementById('cl-first').value)||amount;
   const callAmount=type==='Installment'?fp:amount;
-  calls.push({id:db.uid(),company_id:activeComp,prospect,status:'Closed',type,amount:callAmount,plan,commission:comm,notes,created_date:createdDate});
+  if(!(callAmount>0)){toast('Enter the cash collected','err');return;}
+  const setter_id=document.getElementById('cl-setter').value||null;
+  const closer_id=document.getElementById('cl-closer').value||null;
+  calls.push({id:db.uid(),company_id:activeComp,prospect,status:'Closed',type,amount:callAmount,plan,commission:comm,notes,setter_id,closer_id,created_date:createdDate});
   db.set('calls',calls);
   if(type==='Installment'){
-    installments.push({id:db.uid(),company_id:activeComp,prospect,plan,total_value:tv,first_payment:fp,collected:fp,commission:comm,created_date:createdDate});
+    installments.push({id:db.uid(),company_id:activeComp,prospect,plan,total_value:tv,first_payment:fp,collected:fp,commission:comm,setter_id,closer_id,created_date:createdDate});
     db.set('installments',installments);
   }
-  ['cl-prospect','cl-plan','cl-amount','cl-total','cl-first','cl-comm','cl-notes','cl-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['cl-prospect','cl-plan','cl-amount','cl-total','cl-first','cl-comm','cl-notes','cl-date','cl-setter','cl-closer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('cl-type').value='PIF';
   document.getElementById('inst-extra').style.display='none';
-  closeModal('modal-close');renderDash();renderHome();renderRevenue();toast('Close logged');
+  closeModal('modal-close');refreshAll();toast('Close logged');
 }
+
+// Fill the Setter / Closer pickers in the Log Close modal
+function openCloseModal(){
+  const opts=role=>'<option value="">'+(role==='Closer'?'Me / none':'None')+'</option>'+
+    reps.filter(r=>r.active!==false).sort((a,b)=>(a.role===role?0:1)-(b.role===role?0:1)||a.name.localeCompare(b.name))
+      .map(r=>`<option value="${esc(r.id)}">${esc(r.name)} · ${esc(r.role)}</option>`).join('');
+  document.getElementById('cl-setter').innerHTML=opts('Setter');
+  document.getElementById('cl-closer').innerHTML=opts('Closer');
+  if(!document.getElementById('cl-date').value)document.getElementById('cl-date').value=localISODate(new Date());
+  openModal('modal-close');
+}
+const localISODate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
 function deleteCall(id){
   if(!confirm('Delete this call?'))return;
-  calls=calls.filter(c=>c.id!==id);db.set('calls',calls);renderDash();renderHome();toast('Deleted');
+  calls=calls.filter(c=>c.id!==id);db.set('calls',calls);
+  notes=notes.filter(n=>n.call_id!==id);db.set('notes',notes);
+  refreshAll();toast('Deleted');
 }
 
 // ── CRUD: Installments ────────────────────────────────────────
@@ -1004,13 +1171,14 @@ function addPayment(){
   inst.collected=parseFloat(inst.collected||0)+amt;
   inst.commission=parseFloat(inst.commission||0)+comm;
   db.set('installments',installments);
-  calls.push({id:db.uid(),company_id:activeComp,prospect:inst.prospect,status:'Installment',type:'Installment',amount:amt,plan:inst.plan,commission:comm,notes,created_date:db.now()});
+  // Payment belongs to the plan's company and the same setter/closer
+  calls.push({id:db.uid(),company_id:inst.company_id??activeComp,prospect:inst.prospect,status:'Installment',type:'Installment',is_payment:true,amount:amt,plan:inst.plan,commission:comm,notes,setter_id:inst.setter_id||null,closer_id:inst.closer_id||null,created_date:db.now()});
   db.set('calls',calls);
-  closeModal('modal-payment');renderDash();renderRevenue();toast('Payment added');
+  closeModal('modal-payment');refreshAll();toast('Payment added');
 }
 function deleteInstall(id){
-  if(!confirm('Delete this plan?'))return;
-  installments=installments.filter(i=>i.id!==id);db.set('installments',installments);renderDash();toast('Deleted');
+  if(!confirm('Delete this plan? Payments already collected stay in your cash totals.'))return;
+  installments=installments.filter(i=>i.id!==id);db.set('installments',installments);refreshAll();toast('Deleted');
 }
 
 // ── CRUD: Companies ───────────────────────────────────────────
@@ -1037,23 +1205,21 @@ function openNotesModal(callId,name){
   renderNotesList(callId);
   openModal('modal-notes');
 }
+// Notes now sync to the cloud with the rest of your data
 function renderNotesList(callId){
-  const key='nl_notes_'+callId;
-  const notes=JSON.parse(localStorage.getItem(key)||'[]');
-  document.getElementById('notes-list').innerHTML=notes.length
-    ?notes.map(n=>`<div class="note-item"><div class="note-text">${esc(n.text)}</div><div class="note-meta">${fmtD(n.date)}</div></div>`).join('')
+  const list=notes.filter(n=>n.call_id===callId);
+  document.getElementById('notes-list').innerHTML=list.length
+    ?list.map(n=>`<div class="note-item"><div class="note-text">${esc(n.text)}</div><div class="note-meta">${fmtD(n.date)}</div></div>`).join('')
     :'<div style="color:#8891b8;font-size:12px;text-align:center;padding:12px 0">No notes yet.</div>';
 }
 function saveNote(){
   const callId=document.getElementById('notes-cid').value;
   const txt=document.getElementById('note-txt').value.trim();
   if(!txt){toast('Enter a note','err');return;}
-  const key='nl_notes_'+callId;
-  const notes=JSON.parse(localStorage.getItem(key)||'[]');
-  notes.push({id:db.uid(),text:txt,date:db.now()});
-  localStorage.setItem(key,JSON.stringify(notes));
+  notes.push({id:db.uid(),call_id:callId,text:txt,date:db.now()});
+  db.set('notes',notes);
   document.getElementById('note-txt').value='';
-  renderNotesList(callId);toast('Note saved');
+  renderNotesList(callId);if(isActivePage('dashboard'))renderDash();toast('Note saved');
 }
 
 // ── REVENUE ───────────────────────────────────────────────────
@@ -1079,37 +1245,23 @@ function renderRevenue(){
 
   const from=getRevFrom(revPeriod);
   const filteredCalls=from?calls.filter(c=>new Date(c.created_date)>=from):calls;
-  const filteredInst=from?installments.filter(i=>new Date(i.created_date)>=from):installments;
 
-  // CC = PIF call amounts + installment collected (payments tracked on installment records)
-  const pifCC=filteredCalls.filter(c=>c.type==='PIF'&&c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-  const instCC=filteredCalls.filter(c=>c.type==='Installment'&&c.amount).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-  const cc=pifCC+instCC;
-
-  const closed=filteredCalls.filter(c=>['PIF','Installment'].includes(c.type)).length;
+  const cc=cashOf(filteredCalls);
+  const closed=filteredCalls.filter(isDeal).length;
   const comm=filteredCalls.reduce((s,c)=>s+parseFloat(c.commission||0),0);
   const pending=installments.reduce((s,i)=>s+Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0)),0);
+  const teamComm=teamRows(filteredCalls,from,null,[]).reduce((s,r)=>s+r.earned,0);
 
   document.getElementById('rev-cc').textContent=fmt$(cc);
   document.getElementById('rev-stats').innerHTML=[
-    ['Closed Deals',closed],['Commission',fmt$(comm)],['Pending Collections',fmt$(pending)]
+    ['Closed Deals',closed],['Your Commission',fmt$(comm)],['Team Commission',fmt$(teamComm)],['Pending Collections',fmt$(pending)]
   ].map(([l,v])=>`<div class="card"><div class="kpi-label">${l}</div><div style="font-size:16px;font-weight:700">${v}</div></div>`).join('');
 
-  // Chart: cumulative PIF amounts + installment payments by date
-  // Build combined events sorted by date
-  const events=[];
-  filteredCalls.filter(c=>c.type==='PIF'&&c.amount).forEach(c=>events.push({d:c.created_date,v:parseFloat(c.amount||0)}));
-  // For installments, use first_payment on creation date, then additional payments from payment calls
-  filteredInst.forEach(i=>events.push({d:i.created_date,v:parseFloat(i.first_payment||0)}));
-  // Payment calls (type=Installment logged after initial) — skip if already counted via installment record
-  filteredCalls.filter(c=>c.type==='Installment'&&c.amount&&!filteredInst.find(i=>i.created_date===c.created_date&&i.prospect===c.prospect))
-    .forEach(c=>events.push({d:c.created_date,v:parseFloat(c.amount||0)}));
-  events.sort((a,b)=>new Date(a.d)-new Date(b.d));
-  // Group by calendar date so multiple closes on same day = one point
+  // Chart: cumulative cash collected, one point per local calendar day
   const byDate={};
-  events.forEach(e=>{
-    const day=e.d.slice(0,10);
-    byDate[day]=(byDate[day]||0)+e.v;
+  filteredCalls.filter(isCash).forEach(c=>{
+    const day=localISODate(new Date(c.created_date));
+    byDate[day]=(byDate[day]||0)+parseFloat(c.amount||0);
   });
   const sortedDays=Object.keys(byDate).sort();
   let cum=0;
@@ -1125,12 +1277,9 @@ function renderRevenue(){
   }
   drawChart(pts);
 
-  // Monthly target
-  const tgt=parseFloat(localStorage.getItem('nl_target')||'0');
-  const now=new Date();
-  const mPIF=calls.filter(c=>c.type==='PIF'&&c.amount&&new Date(c.created_date).getMonth()===now.getMonth()&&new Date(c.created_date).getFullYear()===now.getFullYear()).reduce((s,c)=>s+parseFloat(c.amount||0),0);
-  const mInst=installments.filter(i=>new Date(i.created_date).getMonth()===now.getMonth()&&new Date(i.created_date).getFullYear()===now.getFullYear()).reduce((s,i)=>s+parseFloat(i.collected||0),0);
-  const monthCC=mPIF+mInst;
+  // Monthly target (synced). Counts every payment collected this month.
+  const tgt=parseFloat(prefs.target||0);
+  const monthCC=cashOf(calls.filter(c=>inRange(c,getRevFrom('month'))));
   const pct=tgt>0?Math.min(100,Math.round(monthCC/tgt*100)):0;
   document.getElementById('tgt-collected').textContent=fmt$(monthCC)+' collected this month';
   document.getElementById('tgt-label').textContent='Target: '+fmt$(tgt);
@@ -1145,7 +1294,8 @@ function drawChart(pts){
     return;
   }
   let W=wrap.offsetWidth||wrap.clientWidth||wrap.getBoundingClientRect().width||0;
-  if(W<10){setTimeout(()=>drawChart(pts),100);return;}
+  // Only retry while the Revenue page is open; it redraws when you open it anyway
+  if(W<10){if(isActivePage('revenue'))setTimeout(()=>drawChart(pts),100);return;}
   const H=260; // taller so spike labels don't clip
   const pad={t:36,r:16,b:36,l:70}; // extra top padding for labels
   const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
@@ -1235,8 +1385,271 @@ function drawChart(pts){
 
 function saveTarget(){
   const v=parseFloat(document.getElementById('target-val').value)||0;
-  localStorage.setItem('nl_target',String(v));
-  closeModal('modal-target');renderRevenue();toast('Target saved');
+  prefs.target=v;db.set('prefs',prefs);
+  closeModal('modal-target');renderRevenue();renderHome();toast('Target saved');
+}
+
+// ── SALES TEAM ────────────────────────────────────────────────
+const TEAM_PERIODS=[['today','Today'],['7d','Last 7 Days'],['month','This Month'],['year','This Year'],['all','All-Time']];
+let eodCache={rows:null,error:null,loadedAt:0,loading:null};
+
+function csvParse(text){
+  const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){if(ch==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=ch;}
+    else if(ch==='"')q=true;
+    else if(ch===','){row.push(f);f='';}
+    else if(ch==='\n'){row.push(f);rows.push(row);row=[];f='';}
+    else if(ch!=='\r')f+=ch;
+  }
+  if(f!==''||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+// "11/1/2026" or "11/2/2026 8:44:35" -> local Date at noon
+function usDate(s){
+  const m=String(s||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return m?new Date(+m[3],+m[1]-1,+m[2],12):null;
+}
+
+async function loadEOD(force=false){
+  const id=(prefs.sheetId||'').trim(),gid=(prefs.sheetGid||'').trim();
+  if(!id){eodCache={rows:[],error:'No EOD sheet set. Add it in Settings.',loadedAt:Date.now(),loading:null};return eodCache;}
+  if(!force&&eodCache.rows&&Date.now()-eodCache.loadedAt<60000)return eodCache;
+  if(eodCache.loading)return eodCache.loading;
+  eodCache.loading=(async()=>{
+    try{
+      const url=`https://docs.google.com/spreadsheets/d/${encodeURIComponent(id)}/gviz/tq?tqx=out:csv${gid?'&gid='+encodeURIComponent(gid):''}&_=${Date.now()}`;
+      const res=await fetch(url);
+      const text=await res.text();
+      if(!res.ok||text.trim().startsWith('<'))throw new Error('Can\'t read the EOD sheet. Share it as "Anyone with the link → Viewer".');
+      const rows=csvParse(text);
+      const head=(rows[0]||[]).map(h=>h.toLowerCase().trim());
+      const col=t=>head.findIndex(t);
+      const c={ts:col(h=>h==='timestamp'),name:col(h=>h.includes('your name')||h==='name'),date:col(h=>h==='date'),
+        discord:col(h=>h.includes('discord')),other:col(h=>h.includes('other platforms')),
+        replies:col(h=>h.includes('replied')||h.includes('replies')),chats:col(h=>h.includes('group chat'))};
+      if(c.name<0)throw new Error('The EOD sheet has no "Your name" column.');
+      const n=v=>{const x=parseFloat(String(v||'').replace(/[^0-9.\-]/g,''));return isFinite(x)?x:0;};
+      const g=(r,i)=>i>=0&&i<r.length?r[i]:'';
+      const out=rows.slice(1).filter(r=>g(r,c.name).trim()).map(r=>({
+        name:g(r,c.name).trim(),date:usDate(g(r,c.date))||usDate(g(r,c.ts)),
+        dms:n(g(r,c.discord))+n(g(r,c.other)),replies:n(g(r,c.replies)),chats:n(g(r,c.chats))
+      }));
+      eodCache={rows:out,error:null,loadedAt:Date.now(),loading:null};
+    }catch(e){
+      eodCache={rows:eodCache.rows||[],error:e.message||'Couldn\'t load the EOD sheet.',loadedAt:Date.now(),loading:null};
+    }
+    return eodCache;
+  })();
+  return eodCache.loading;
+}
+
+// Per-rep numbers. periodCalls = calls already filtered to the period.
+function teamRows(periodCalls,from,to,eodRows){
+  const rows=reps.map(rep=>{
+    const mine=periodCalls.filter(c=>c.setter_id===rep.id||c.closer_id===rep.id);
+    const cash=cashOf(mine);
+    const deals=mine.filter(isDeal).length;
+    const rate=parseFloat(rep.rate||0)/100;
+    const earned=cash*rate;
+    const allEarned=cashOf(calls.filter(c=>c.setter_id===rep.id||c.closer_id===rep.id))*rate;
+    const paid=payouts.filter(p=>p.rep_id===rep.id).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+    const eodName=(rep.eod_name||rep.name).trim().toLowerCase();
+    const eods=(eodRows||[]).filter(e=>e.name.toLowerCase()===eodName&&e.date&&(!from||e.date>=from)&&(!to||e.date<=to));
+    const dms=eods.reduce((s,e)=>s+e.dms,0),replies=eods.reduce((s,e)=>s+e.replies,0),chats=eods.reduce((s,e)=>s+e.chats,0);
+    return{rep,cash,deals,earned,owed:Math.max(0,allEarned-paid),paid,dms,replies,chats,eods:eods.length,rate:dms?replies/dms:null};
+  });
+  return rows.sort((a,b)=>b.cash-a.cash||b.chats-a.chats||b.dms-a.dms||a.rep.name.localeCompare(b.rep.name));
+}
+
+function setTeamPeriod(p){teamPeriod=p;renderTeam();}
+
+async function renderTeam(force=false){
+  document.getElementById('team-periods').innerHTML=TEAM_PERIODS.map(([v,l])=>
+    `<button class="period-chip ${teamPeriod===v?'active':''}" onclick="setTeamPeriod('${v}')">${l}</button>`).join('');
+  const from=getRevFrom(teamPeriod);
+  const periodCalls=from?calls.filter(c=>new Date(c.created_date)>=from):calls;
+  const draw=()=>{
+    const eod=eodCache.rows||[];
+    const rows=teamRows(periodCalls,from,null,eod);
+    // Count each deal once, even when it has both a setter and a closer
+    const teamCash=cashOf(periodCalls.filter(c=>c.setter_id||c.closer_id));
+    const companyCash=cashOf(periodCalls);
+    const owed=rows.reduce((s,r)=>s+r.owed,0);
+    const chats=rows.reduce((s,r)=>s+r.chats,0);
+    const label=TEAM_PERIODS.find(p=>p[0]===teamPeriod)[1];
+    document.getElementById('team-kpis').innerHTML=[
+      ['Company Cash Collected',fmt$(companyCash),label+' · all deals'],
+      ['Team Cash Collected',fmt$(teamCash),'Deals with a rep attached'],
+      ['Deals Closed',periodCalls.filter(isDeal).length,label],
+      ['Group Chats to Muzz',chats,'From EOD form'],
+      ['Commission Owed',fmt$(owed),'All-time, minus payouts'],
+      ['Active Reps',reps.filter(r=>r.active!==false).length,reps.length+' total'],
+    ].map(([l,v,s])=>`<div class="kpi-sec"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div><div class="kpi-sub" style="margin-top:4px">${s}</div></div>`).join('');
+
+    const st=document.getElementById('eod-status');
+    const when=eodCache.loadedAt?new Date(eodCache.loadedAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';
+    st.innerHTML=(eodCache.loading?'Loading EOD data…':eodCache.error
+      ?`<span style="color:#ef4444">${esc(eodCache.error)}</span>`
+      :`EOD data: ${eod.length} reports · updated ${when}`)+
+      ` <button class="btn btn-secondary btn-sm" onclick="renderTeam(true)">Refresh</button>`;
+
+    const tbody=document.getElementById('team-tbody');
+    if(!reps.length){
+      tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;color:var(--tx2);padding:32px;font-size:13px">No reps yet. Click <b>+ Add Rep</b> to add your setters and closers.<br><span style="font-size:11px">Use the same name they pick on the EOD form so their DMs and group chats show up.</span></td></tr>`;
+      return;
+    }
+    const medals=['🥇','🥈','🥉'];
+    tbody.innerHTML=rows.map((r,i)=>{
+      const rr=r.rate==null?'—':Math.round(r.rate*100)+'%';
+      const rrCls=r.rate==null?'':r.rate>=0.15?'color:#10b981':r.rate>=0.08?'color:#f59e0b':'color:#ef4444';
+      return `<tr style="${r.rep.active===false?'opacity:.5':''}">
+        <td style="font-weight:700;color:var(--tx2)">${r.cash>0&&i<3?medals[i]:i+1}</td>
+        <td><div style="font-weight:600;cursor:pointer" onclick="openRepView('${jsq(r.rep.id)}')">${esc(r.rep.name)}</div>
+          <div style="font-size:10px;color:var(--tx2)">${esc(r.rep.role)} · ${parseFloat(r.rep.rate||0)}%${r.rep.active===false?' · inactive':''}</div></td>
+        <td class="tbl-amount" style="color:#10b981">${fmt$(r.cash)}</td>
+        <td>${r.deals}</td>
+        <td>${fmt$(r.earned)}</td>
+        <td style="color:${r.owed>0?'#f59e0b':'var(--tx2)'};font-weight:600">${fmt$(r.owed)}</td>
+        <td>${r.dms}</td><td>${r.replies}</td>
+        <td style="${rrCls};font-weight:600">${rr}</td>
+        <td>${r.chats}</td><td>${r.eods}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-secondary btn-sm" onclick="openRepView('${jsq(r.rep.id)}')">View</button>
+          <button class="btn btn-secondary btn-sm" onclick="openRepModal('${jsq(r.rep.id)}')">Edit</button>
+        </td>
+      </tr>`;
+    }).join('');
+  };
+  draw();
+  if(force||!eodCache.rows||Date.now()-eodCache.loadedAt>60000){
+    const p=loadEOD(force);draw();await p;
+    if(isActivePage('team'))draw();
+  }
+}
+
+function openRepModal(id){
+  const r=id?reps.find(x=>x.id===id):null;
+  document.getElementById('rep-modal-title').textContent=r?'Edit Rep':'Add Rep';
+  document.getElementById('rep-id').value=r?r.id:'';
+  document.getElementById('rep-name').value=r?r.name:'';
+  document.getElementById('rep-role').value=r?r.role:'Setter';
+  document.getElementById('rep-rate').value=r?(r.rate??''):'10';
+  document.getElementById('rep-eod').value=r?(r.eod_name||''):'';
+  document.getElementById('rep-handle').value=r?(r.handle||''):'';
+  document.getElementById('rep-active').value=r&&r.active===false?'0':'1';
+  openModal('modal-rep');
+}
+function saveRep(){
+  const name=document.getElementById('rep-name').value.trim();
+  if(!name){toast('Enter a name','err');return;}
+  const id=document.getElementById('rep-id').value;
+  const data={name,role:document.getElementById('rep-role').value,
+    rate:parseFloat(document.getElementById('rep-rate').value)||0,
+    eod_name:document.getElementById('rep-eod').value.trim(),
+    handle:document.getElementById('rep-handle').value.trim(),
+    active:document.getElementById('rep-active').value==='1'};
+  if(reps.some(r=>r.id!==id&&r.name.toLowerCase()===name.toLowerCase())){toast('A rep with that name already exists','err');return;}
+  if(id)reps=reps.map(r=>r.id===id?{...r,...data}:r);
+  else reps.push({id:db.uid(),...data,created_date:db.now()});
+  db.set('reps',reps);
+  closeModal('modal-rep');refreshAll();toast(id?'Rep updated':'Rep added');
+}
+function deleteRep(id){
+  const r=reps.find(x=>x.id===id);if(!r)return;
+  const used=calls.some(c=>c.setter_id===id||c.closer_id===id);
+  if(!confirm(used?`Remove ${r.name}? Their past deals stay in your cash totals but won't show a rep name. Tip: set them to Inactive instead to keep their history.`:`Remove ${r.name}?`))return;
+  reps=reps.filter(x=>x.id!==id);db.set('reps',reps);
+  closeModal('modal-repview');refreshAll();toast('Rep removed');
+}
+
+function openPayoutModal(repId){
+  if(!reps.length){toast('Add a rep first','err');return;}
+  const sel=document.getElementById('po-rep');
+  sel.innerHTML=reps.map(r=>`<option value="${esc(r.id)}">${esc(r.name)} · ${esc(r.role)}</option>`).join('');
+  if(repId)sel.value=repId;
+  document.getElementById('po-amount').value='';
+  document.getElementById('po-note').value='';
+  document.getElementById('po-date').value=localISODate(new Date());
+  updatePayoutHint();
+  closeModal('modal-repview');openModal('modal-payout');
+}
+function updatePayoutHint(){
+  const id=document.getElementById('po-rep').value;
+  const row=teamRows(calls,null,null,[]).find(r=>r.rep.id===id);
+  document.getElementById('po-hint').textContent=row?`Currently owed: ${fmt$(row.owed)}`:'';
+  if(row&&row.owed>0)document.getElementById('po-amount').placeholder=row.owed.toFixed(2);
+}
+function savePayout(){
+  const rep_id=document.getElementById('po-rep').value;
+  const amount=parseFloat(document.getElementById('po-amount').value)||0;
+  if(!amount){toast('Enter the amount paid','err');return;}
+  const d=document.getElementById('po-date').value;
+  payouts.push({id:db.uid(),rep_id,amount,note:document.getElementById('po-note').value.trim(),created_date:d?new Date(d+'T12:00:00').toISOString():db.now()});
+  db.set('payouts',payouts);
+  closeModal('modal-payout');refreshAll();toast('Payout recorded');
+}
+function deletePayout(id,repId){
+  if(!confirm('Delete this payout?'))return;
+  payouts=payouts.filter(p=>p.id!==id);db.set('payouts',payouts);
+  refreshAll();openRepView(repId);toast('Payout deleted');
+}
+
+function openRepView(id){
+  const rep=reps.find(r=>r.id===id);if(!rep)return;
+  const from=getRevFrom(teamPeriod);
+  const periodCalls=from?calls.filter(c=>new Date(c.created_date)>=from):calls;
+  const row=teamRows(periodCalls,from,null,eodCache.rows||[]).find(r=>r.rep.id===id);
+  const all=teamRows(calls,null,null,eodCache.rows||[]).find(r=>r.rep.id===id);
+  const label=TEAM_PERIODS.find(p=>p[0]===teamPeriod)[1];
+  const mine=calls.filter(c=>c.setter_id===id||c.closer_id===id).sort((a,b)=>new Date(b.created_date)-new Date(a.created_date));
+  const pays=payouts.filter(p=>p.rep_id===id).sort((a,b)=>new Date(b.created_date)-new Date(a.created_date));
+  document.getElementById('rv-title').textContent=`${rep.name} · ${rep.role}`;
+  const stat=(l,v)=>`<div class="kpi-sec" style="padding:12px"><div class="kpi-label">${l}</div><div class="kpi-val" style="font-size:17px">${v}</div></div>`;
+  document.getElementById('rv-body').innerHTML=`
+    <div style="font-size:11px;color:var(--tx2);margin-bottom:8px">${esc(label)}${rep.handle?' · '+esc(rep.handle):''} · ${parseFloat(rep.rate||0)}% commission</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">
+      ${stat('Cash Collected',fmt$(row.cash))}${stat('Deals',row.deals)}${stat('Commission',fmt$(row.earned))}
+      ${stat('DMs',row.dms)}${stat('Reply Rate',row.rate==null?'—':Math.round(row.rate*100)+'%')}${stat('Group Chats',row.chats)}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:13px;font-weight:600">All-time: ${fmt$(all.cash)} collected · ${fmt$(all.paid)} paid out · <span style="color:#f59e0b">${fmt$(all.owed)} owed</span></span>
+      <button class="btn btn-primary btn-sm" onclick="openPayoutModal('${jsq(id)}')">Record Payout</button>
+    </div>
+    <div style="font-size:12px;font-weight:600;margin:14px 0 6px">Deals &amp; payments (${mine.length})</div>
+    <div class="tbl-wrap" style="max-height:220px;overflow-y:auto"><table>
+      <thead><tr><th>Date</th><th>Prospect</th><th>Cash</th><th>Type</th><th>As</th></tr></thead>
+      <tbody>${mine.length?mine.map(c=>`<tr><td style="white-space:nowrap">${fmtD(c.created_date)}</td><td>${esc(c.prospect)}</td><td class="tbl-amount">${fmt$(c.amount)}</td>
+        <td><span class="badge ${c.type==='PIF'?'bc':'bb'}">${c.status==='Installment'?'Payment':esc(c.type)}</span></td>
+        <td style="color:var(--tx2)">${[c.setter_id===id?'Setter':'',c.closer_id===id?'Closer':''].filter(Boolean).join(' + ')}</td></tr>`).join('')
+        :'<tr><td colspan="5" style="text-align:center;color:var(--tx2);padding:16px">No deals yet. Pick this rep as Setter or Closer when you log a close.</td></tr>'}</tbody>
+    </table></div>
+    <div style="font-size:12px;font-weight:600;margin:14px 0 6px">Payouts (${pays.length})</div>
+    ${pays.length?pays.map(p=>`<div class="note-item" style="display:flex;justify-content:space-between;align-items:center">
+      <div><div class="note-text" style="font-weight:600">${fmt$(p.amount)}</div><div class="note-meta">${fmtD(p.created_date)}${p.note?' · '+esc(p.note):''}</div></div>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deletePayout('${jsq(p.id)}','${jsq(id)}')">×</button></div>`).join('')
+      :'<div style="font-size:12px;color:var(--tx2)">No payouts recorded.</div>'}
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-repview');openRepModal('${jsq(id)}')">Edit Rep</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteRep('${jsq(id)}')" style="margin-left:auto">Remove Rep</button>
+    </div>`;
+  openModal('modal-repview');
+}
+
+// ── CSV export (what's shown on the Dashboard, with filters applied) ──
+function exportCSV(){
+  const fc=getFC().sort((a,b)=>new Date(a.created_date)-new Date(b.created_date));
+  if(!fc.length){toast('Nothing to export','err');return;}
+  const co=id=>companies.find(c=>c.id===id)?.name||'';
+  const cell=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const lines=[['Date','Company','Prospect','Type','Cash Collected','Plan','Setter','Closer','Your Commission','Notes']]
+    .concat(fc.map(c=>[localISODate(new Date(c.created_date)),co(c.company_id),c.prospect,c.status==='Installment'?'Payment':c.type,
+      parseFloat(c.amount||0).toFixed(2),c.plan,repName(c.setter_id),repName(c.closer_id),parseFloat(c.commission||0).toFixed(2),c.notes]));
+  const blob=new Blob([lines.map(r=>r.map(cell).join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`northlab-deals-${localISODate(new Date())}.csv`;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
 }
 
 // ── GOALS ─────────────────────────────────────────────────────
@@ -1277,7 +1690,7 @@ function renderGoals(){
     const ring=g.target?`
       <div class="goal-ring-wrap">
         <svg width="52" height="52" viewBox="0 0 52 52">
-          <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="#1e2540" stroke-width="4"/>
+          <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="var(--bdr)" stroke-width="4"/>
           <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="url(#rg${g.id})" stroke-width="4"
             stroke-dasharray="${dash} ${gap}" stroke-linecap="round"/>
           <defs><linearGradient id="rg${g.id}" x1="0" y1="0" x2="1" y2="0">
@@ -1313,7 +1726,8 @@ function renderGoals(){
         </div>`
       :`<div style="height:8px"></div>`}
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <button class="btn ${g.done?'btn-secondary':'btn-primary'} btn-sm" onclick="markGoalDone('${g.id}',${!g.done})">${g.done?'Reopen':'✓ Mark Done'}</button>
+        ${!g.done?`<button class="btn btn-secondary btn-sm" onclick="openGoalProg('${jsq(g.id)}')">+ Log Progress</button>`:''}
+        <button class="btn ${g.done?'btn-secondary':'btn-primary'} btn-sm" onclick="markGoalDone('${jsq(g.id)}',${!g.done})">${g.done?'Reopen':'✓ Mark Done'}</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteGoal('${g.id}')" style="margin-left:auto">
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
         </button>
@@ -1362,13 +1776,32 @@ function markGoalDone(id,done){
 
 function deleteGoal(id){
   if(!confirm('Delete this goal?'))return;
-  goals=goals.filter(g=>g.id!==id);db.set('goals',goals);renderGoals();renderHome();toast('Deleted');
+  goals=goals.filter(g=>g.id!==id);db.set('goals',goals);
+  goalLogs=goalLogs.filter(l=>l.goal_id!==id);db.set('goalLogs',goalLogs);
+  renderGoals();renderHome();toast('Deleted');
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────
 function renderSettings(){
   document.getElementById('set-name').value=user.name||'';
   document.getElementById('set-role').value=user.role||'Closer';
+  document.getElementById('set-sheet').value=prefs.sheetId||'';
+  document.getElementById('set-gid').value=prefs.sheetGid||'';
+  document.getElementById('set-sheet-msg').textContent='';
+}
+async function saveSheetSettings(){
+  // Accept a full sheet link too
+  let id=document.getElementById('set-sheet').value.trim();
+  let gid=document.getElementById('set-gid').value.trim();
+  const m=id.match(/\/d\/([a-zA-Z0-9_-]+)/);if(m)id=m[1];
+  const g=document.getElementById('set-sheet').value.match(/gid=(\d+)/);if(g&&!gid)gid=g[1];
+  prefs.sheetId=id;prefs.sheetGid=gid;db.set('prefs',prefs);
+  document.getElementById('set-sheet').value=id;document.getElementById('set-gid').value=gid;
+  const msg=document.getElementById('set-sheet-msg');
+  msg.style.color='var(--tx2)';msg.textContent='Testing…';
+  const r=await loadEOD(true);
+  if(r.error){msg.style.color='#ef4444';msg.textContent=r.error;}
+  else{msg.style.color='#10b981';msg.textContent=`Connected · ${r.rows.length} EOD reports found`;}
 }
 async function saveSettings(){
   user.name=document.getElementById('set-name').value.trim()||user.name;
