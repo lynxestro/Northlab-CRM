@@ -400,6 +400,11 @@ html{background:#141415}
 .plan-sub{font:400 11px 'Geist Mono',ui-monospace,monospace;color:var(--tx2);margin-top:3px;white-space:nowrap}
 .auto-pill{font:500 10px 'Geist Mono',ui-monospace,monospace;padding:4px 8px;border-radius:999px;border:1px solid var(--bdr2);background:transparent;color:var(--tx2);cursor:pointer;margin-right:4px}
 .auto-pill.on{color:var(--pos);border-color:color-mix(in srgb,var(--pos) 45%,transparent)}
+.payout-box{border:1px solid var(--bdr);border-radius:14px;padding:14px;margin:4px 0 8px}
+.payout-lbl{font:500 11px 'Geist Mono',ui-monospace,monospace;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.payout-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.payout-grid span{display:block;font-size:11px;color:var(--tx2);margin-bottom:3px}
+.payout-grid b{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
 .src-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .src-chip{font:500 11px 'Geist Mono',ui-monospace,monospace;padding:5px 10px;border-radius:999px;border:1px solid var(--bdr2);background:transparent;color:var(--tx2);cursor:pointer}
 .src-chip:hover,.src-chip.on{color:var(--tx);border-color:var(--tx2);background:var(--inp)}
@@ -1095,8 +1100,8 @@ async function initApp(){
 // ── HOME ──────────────────────────────────────────────────────
 // "+12% vs last month" in the positive / negative tone, or plain when there is nothing to compare
 function deltaHTML(cur,prev){
-  if(!prev&&!cur)return 'No closes yet this month';
-  if(!prev)return 'Nothing to compare with last month';
+  if(!prev&&!cur)return 'No closes yet';
+  if(!prev)return '';
   const pct=Math.round((cur-prev)/prev*100);
   const cls=pct>0?'up':pct<0?'down':'';
   return `<span class="${cls}">${pct>0?'+':''}${pct}%</span> vs last month`;
@@ -1124,7 +1129,7 @@ function renderHome(){
   const tNow=cashOf(teamMonth),tPrev=cashOf(teamOf(calls).filter(c=>inRange(c,pFrom,pTo)));
   const top=teamRows(teamMonth,mFrom,null,[]).filter(r=>r.cash>0)[0];
   document.getElementById('home-top').textContent=fmt$(tNow);
-  document.getElementById('home-top-sub').innerHTML=deltaHTML(tNow,tPrev)+(top?`<div style="margin-top:4px">Top · ${esc(top.rep.name)}</div>`:'');
+  document.getElementById('home-top-sub').innerHTML=[deltaHTML(tNow,tPrev),top?`Top · ${esc(top.rep.name)}`:''].filter(Boolean).join('<br>');
   const active=goals.filter(g=>!g.done);
   document.getElementById('home-goals-count').textContent=active.length;
   document.getElementById('home-goals-sub').textContent=goals.filter(g=>g.done).length+' completed';
@@ -1964,9 +1969,14 @@ function openRepView(id){
       ${stat('Cash collected',fmt$(row.cash))}${stat('Deals',row.deals)}${stat('Commission',fmt$(row.earned))}
       ${stat('DMs',row.dms)}${stat('Reply Rate',row.rate==null?'—':Math.round(row.rate*100)+'%')}${stat('Group chats',row.chats)}
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <span style="font-size:13px;font-weight:600">All-time: ${fmt$(all.cash)} collected · ${fmt$(all.paid)} paid out · <span style="color:var(--warn)">${fmt$(all.owed)} owed</span></span>
-      <button class="btn btn-primary btn-sm" onclick="openPayoutModal('${jsq(id)}')">Record payout</button>
+    <div class="payout-box">
+      <div class="payout-lbl">All time</div>
+      <div class="payout-grid">
+        <div><span>Collected</span><b>${fmt$(all.cash)}</b></div>
+        <div><span>Paid out</span><b>${fmt$(all.paid)}</b></div>
+        <div><span>Owed</span><b style="color:${all.owed>0?'var(--warn)':'var(--tx)'}">${fmt$(all.owed)}</b></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;white-space:nowrap" onclick="openPayoutModal('${jsq(id)}')">Record payout</button>
     </div>
     <div style="font-size:12px;font-weight:600;margin:14px 0 6px">Deals &amp; payments (${mine.length})</div>
     <div class="tbl-wrap" style="max-height:220px;overflow-y:auto"><table>
