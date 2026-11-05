@@ -396,6 +396,10 @@ body[data-theme="light"] .paycard{box-shadow:0 14px 28px rgba(0,0,0,.18),inset 0
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 html{background:#141415}
+.auto-hint{font:400 11px 'Geist Mono',ui-monospace,monospace;color:var(--tx2);margin:-6px 0 12px;line-height:1.5}
+.plan-sub{font:400 11px 'Geist Mono',ui-monospace,monospace;color:var(--tx2);margin-top:3px;white-space:nowrap}
+.auto-pill{font:500 10px 'Geist Mono',ui-monospace,monospace;padding:4px 8px;border-radius:999px;border:1px solid var(--bdr2);background:transparent;color:var(--tx2);cursor:pointer;margin-right:4px}
+.auto-pill.on{color:var(--pos);border-color:color-mix(in srgb,var(--pos) 45%,transparent)}
 .src-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .src-chip{font:500 11px 'Geist Mono',ui-monospace,monospace;padding:5px 10px;border-radius:999px;border:1px solid var(--bdr2);background:transparent;color:var(--tx2);cursor:pointer}
 .src-chip:hover,.src-chip.on{color:var(--tx);border-color:var(--tx2);background:var(--inp)}
@@ -408,7 +412,7 @@ html{background:#141415}
 body::before{content:'';position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:90;pointer-events:none;transition:background-color .18s}
 #sidebar{padding-top:env(safe-area-inset-top,0px)}
 .modal-overlay{padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
-@media(max-width:767px){#main{margin-left:0;padding:calc(64px + env(safe-area-inset-top,0px)) 16px calc(32px + env(safe-area-inset-bottom,0px))}#hamburger{top:calc(12px + env(safe-area-inset-top,0px))}.rev-big{font-size:36px}.page-title{font-size:20px}}
+@media(max-width:767px){#main{margin-left:0;padding:calc(78px + env(safe-area-inset-top,0px)) 16px calc(32px + env(safe-area-inset-bottom,0px))}#hamburger{top:calc(12px + env(safe-area-inset-top,0px))}body::before{height:calc(60px + env(safe-area-inset-top,0px));border-bottom:1px solid var(--bdr);z-index:42}#mob-overlay{z-index:46}#sidebar{z-index:47}.rev-big{font-size:36px}.page-title{font-size:20px}}
 </style>
 </head>
 <body>
@@ -671,8 +675,8 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;height:env(safe-area
       <div class="fgroup"><label>Plan</label><input id="cl-plan" type="text"/></div>
     </div>
     <div class="frow f2">
-      <div class="fgroup"><label>Date</label><input id="cl-date" type="date"/></div>
-      <div class="fgroup"><label id="cl-amount-lbl">Amount ($)</label><input id="cl-amount" type="number" min="0"/></div>
+      <div class="fgroup"><label>Date</label><input id="cl-date" type="date" onchange="autoHint()"/></div>
+      <div class="fgroup"><label id="cl-amount-lbl">Amount ($)</label><input id="cl-amount" type="number" min="0" oninput="autoHint()"/></div>
     </div>
     <div class="frow">
       <div class="fgroup"><label>Lead source</label>
@@ -690,7 +694,12 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;height:env(safe-area
     </div>
     <label class="parts-toggle" id="cl-parts-wrap"><input type="checkbox" id="cl-parts" onchange="onCloseType()"/> Paying in parts</label>
     <div id="inst-extra" style="display:none">
-      <div class="frow"><div class="fgroup"><label>Full deal value ($)</label><input id="cl-total" type="number" min="0" placeholder="Total they'll pay"/></div></div>
+      <div class="frow f2">
+        <div class="fgroup"><label>Full deal value ($)</label><input id="cl-total" type="number" min="0" placeholder="Total they'll pay" oninput="autoHint()"/></div>
+        <div class="fgroup"><label>Monthly payment ($)</label><input id="cl-monthly" type="number" min="0" placeholder="e.g. 1000" oninput="autoHint()"/></div>
+      </div>
+      <label class="parts-toggle"><input type="checkbox" id="cl-auto" checked onchange="autoHint()"/> Auto-log monthly payments</label>
+      <div class="auto-hint" id="cl-auto-hint"></div>
     </div>
     <div class="frow"><div class="fgroup"><label>Notes</label><input id="cl-notes" type="text" placeholder="Optional"/></div></div>
     <button class="btn btn-primary" style="width:100%;padding:10px;margin-top:4px" onclick="addClose()" id="cl-save">Save close</button>
@@ -950,6 +959,7 @@ function buildSidebar(){
 }
 
 function nav(page){
+  runAutoPayments();
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -1092,6 +1102,7 @@ function deltaHTML(cur,prev){
   return `<span class="${cls}">${pct>0?'+':''}${pct}%</span> vs last month`;
 }
 function renderHome(){
+  runAutoPayments();
   const h=new Date().getHours();
   const now=new Date();
   document.getElementById('home-greet').innerHTML=`${now.toLocaleDateString('en-US',{month:'long'})} <span class="yr">${now.getFullYear()}</span>`;
@@ -1183,7 +1194,7 @@ function renderToggles(){
     <label class="tgl-wrap">
       <button class="tgl ${co[f]?'on':''}" onclick="toggleCo('${f}')"></button>${l}
     </label>`).join('');
-  document.getElementById('install-section').style.display=co.installment_tracking?'block':'none';
+  document.getElementById('install-section').style.display=(co.installment_tracking||getFI().length)?'block':'none';
 }
 
 function toggleCo(field){
@@ -1228,6 +1239,59 @@ function renderSecKPIs(fc,fi){
   ].map(([l,v])=>`<div class="kpi-sec"><div class="kpi-label">${l}</div><div class="kpi-val">${v}</div></div>`).join('');
 }
 
+// ── Payment plans: monthly auto-logging ──────────────────────
+const addMonths=(iso,n)=>{const d=new Date(iso),day=d.getDate();const r=new Date(d);r.setDate(1);r.setMonth(r.getMonth()+n);r.setDate(Math.min(day,new Date(r.getFullYear(),r.getMonth()+1,0).getDate()));return r;};
+const linkedPays=i=>calls.filter(c=>(c.is_payment||c.status==='Installment')&&instOf(c)?.id===i.id);
+function nextDue(i){return addMonths(i.created_date,(i.auto_n||0)+1);}
+function planSub(i){
+  const m=parseFloat(i.monthly||0),left=Math.max(0,parseFloat(i.total_value||0)-parseFloat(i.collected||0));
+  if(!left)return '<div class="plan-sub">Paid off</div>';
+  if(!m)return '';
+  const nd=nextDue(i);
+  return `<div class="plan-sub">${fmt$(m)}/mo · ${i.auto?'next '+nd.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'manual'}</div>`;
+}
+// Auto monthly payments only move the plan forward (less Pending, fuller progress bar).
+// They are NOT added to Cash collected and earn no commission: only the upfront payment counts.
+function runAutoPayments(){
+  const now=new Date();let changed=false;
+  // clean up auto payments the previous version logged as cash (the plan already counts them)
+  if(calls.some(c=>c.auto)){calls=calls.filter(c=>!c.auto);db.set('calls',calls);}
+  installments.forEach(i=>{
+    const m=parseFloat(i.monthly||0);
+    if(!i.auto||!(m>0))return;
+    let guard=0;
+    while(guard++<120){
+      const tot=parseFloat(i.total_value||0),col=parseFloat(i.collected||0);
+      const left=tot-col;if(left<=0.009)break;
+      if(nextDue(i)>now)break;
+      i.collected=col+Math.min(m,left);i.auto_n=(i.auto_n||0)+1;changed=true;
+    }
+  });
+  if(changed)db.set('installments',installments);
+  return changed;
+}
+function toggleAuto(id){
+  const i=installments.find(x=>x.id===id);if(!i)return;
+  i.auto=!i.auto;
+  if(i.auto&&i.auto_n==null)i.auto_n=linkedPays(i).length;
+  db.set('installments',installments);refreshAll();
+  toast(i.auto?'Auto-log on':'Auto-log off');
+}
+function autoHint(){
+  const el=document.getElementById('cl-auto-hint');if(!el)return;
+  const amt=parseFloat(document.getElementById('cl-amount').value)||0;
+  const tot=parseFloat(document.getElementById('cl-total').value)||0;
+  const m=parseFloat(document.getElementById('cl-monthly').value)||0;
+  const on=document.getElementById('cl-auto').checked;
+  const d=document.getElementById('cl-date').value;
+  if(!(m>0)||!(tot>amt)){el.textContent='Only cash actually paid counts as collected. The rest sits in Pending.';return;}
+  const n=Math.ceil((tot-amt)/m);
+  const start=d?new Date(d+'T12:00:00'):new Date();
+  const last=addMonths(start.toISOString(),n);
+  el.textContent=on?`Pending drops by ${fmt$(m)} on the ${start.getDate()}${['th','st','nd','rd'][(start.getDate()%10<4&&Math.floor(start.getDate()/10)!==1)?start.getDate()%10:0]} of each month, ${n} payment${n===1?'':'s'}, done by ${last.toLocaleDateString('en-US',{month:'short',year:'numeric'})}. Only the upfront counts as cash.`
+    :`Auto-log is off. Use +Pay when they pay.`;
+}
+
 function renderInstallTable(fi,tbodyId='install-tbody',showReps=false){
   const tbody=document.getElementById(tbodyId);
   const cols=showReps?7:6;
@@ -1237,12 +1301,13 @@ function renderInstallTable(fi,tbodyId='install-tbody',showReps=false){
     const pct=tot>0?Math.min(100,Math.round(col/tot*100)):0;
     return `<tr>
       <td style="font-weight:500">${esc(i.prospect)||'—'}</td>
-      <td style="color:var(--tx2)">${esc(i.plan)||'—'}</td>
+      <td style="color:var(--tx2)">${esc(i.plan)||'—'}${planSub(i)}</td>
       ${showReps?`<td>${repCell(i)}</td>`:''}
       <td style="color:var(--pos)">${fmt$(col)}</td>
       <td style="color:var(--warn)">${fmt$(Math.max(0,tot-col))}</td>
       <td style="min-width:80px"><div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div><span style="font-size:10px;color:var(--tx2)">${pct}%</span></td>
       <td style="white-space:nowrap">
+        ${parseFloat(i.monthly||0)>0&&col<tot?`<button class="auto-pill${i.auto?' on':''}" onclick="toggleAuto('${i.id}')" title="Auto-log monthly payments">Auto ${i.auto?'on':'off'}</button>`:''}
         <button class="btn btn-secondary btn-sm" onclick="openPayModal('${i.id}')" style="margin-right:4px">+Pay</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteInstall('${i.id}')" style="font-size:15px">×</button>
       </td>
@@ -1319,13 +1384,14 @@ function pickSource(x){document.getElementById('cl-source').value=x;renderSource
 function onCloseType(){
   const parts=document.getElementById('cl-parts').checked;
   document.getElementById('inst-extra').style.display=parts?'block':'none';
-  document.getElementById('cl-amount-lbl').textContent=parts?'Paid today ($)':'Amount ($)';
+  document.getElementById('cl-amount-lbl').textContent=parts?'Paid upfront ($)':'Amount ($)';
+  autoHint();
 }
 
 let editId=null;
 function resetCloseForm(){
-  ['cl-prospect','cl-plan','cl-amount','cl-total','cl-comm','cl-notes','cl-date','cl-setter','cl-closer','cl-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('cl-parts').checked=false;
+  ['cl-prospect','cl-plan','cl-amount','cl-total','cl-monthly','cl-comm','cl-notes','cl-date','cl-setter','cl-closer','cl-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('cl-parts').checked=false;document.getElementById('cl-auto').checked=true;
   onCloseType();
 }
 
@@ -1342,6 +1408,9 @@ function addClose(){
   const createdDate=dateVal?new Date(dateVal+'T12:00:00').toISOString():db.now();
   if(!(amount>0)){toast('Enter the cash collected','err');return;}
   const tv=Math.max(parseFloat(document.getElementById('cl-total').value)||amount,amount);
+  const monthly=parseFloat(document.getElementById('cl-monthly').value)||0;
+  const auto=document.getElementById('cl-auto').checked&&monthly>0;
+  if(parts&&!(tv>amount)){toast('Full deal value must be more than the upfront payment','err');return;}
   const team=closeMode==='team';
   const setter_id=team?(document.getElementById('cl-setter').value||null):null;
   const closer_id=team?(document.getElementById('cl-closer').value||null):null;
@@ -1361,10 +1430,11 @@ function addClose(){
     }else if(parts){
       if(inst){
         inst.collected=Math.max(0,parseFloat(inst.collected||0)+amount-oldAmt);
-        Object.assign(inst,{prospect,plan,source,total_value:tv,first_payment:amount,created_date:createdDate,setter_id:c.setter_id||null,closer_id:c.closer_id||null});
+        if(auto&&inst.auto_n==null)inst.auto_n=linkedPays(inst).length;
+        Object.assign(inst,{prospect,plan,source,total_value:tv,first_payment:amount,monthly,auto,created_date:createdDate,setter_id:c.setter_id||null,closer_id:c.closer_id||null});
         c.inst_id=inst.id;
       }else{
-        const ni={id:db.uid(),company_id:c.company_id??null,team:!!c.team,prospect,plan,source,commission:c.commission||0,setter_id:c.setter_id||null,closer_id:c.closer_id||null,total_value:tv,first_payment:amount,collected:amount,created_date:createdDate};
+        const ni={id:db.uid(),company_id:c.company_id??null,team:!!c.team,prospect,plan,source,commission:c.commission||0,setter_id:c.setter_id||null,closer_id:c.closer_id||null,total_value:tv,first_payment:amount,collected:amount,monthly,auto,auto_n:0,created_date:createdDate};
         installments.push(ni);c.inst_id=ni.id;
       }
       c.type='Installment';
@@ -1383,7 +1453,7 @@ function addClose(){
   const base={company_id:team?null:activeComp,prospect,plan,source,commission:team?0:comm,setter_id,closer_id,team};
   const call={id:db.uid(),...base,status:'Closed',type:parts?'Installment':'PIF',amount,notes:noteTxt,created_date:createdDate};
   if(parts){
-    const inst={id:db.uid(),...base,total_value:tv,first_payment:amount,collected:amount,created_date:createdDate};
+    const inst={id:db.uid(),...base,total_value:tv,first_payment:amount,collected:amount,monthly,auto,auto_n:0,created_date:createdDate};
     installments.push(inst);call.inst_id=inst.id;
     db.set('installments',installments);
   }
@@ -1423,10 +1493,12 @@ function openCloseModal(mode='me',id=null){
     v('cl-setter',c.setter_id||'');v('cl-closer',c.closer_id||'');
     document.getElementById('cl-parts').checked=!pay&&(c.type==='Installment'||!!inst);
     v('cl-total',inst&&!pay?inst.total_value:'');
+    v('cl-monthly',inst&&!pay?(inst.monthly||''):'');
+    document.getElementById('cl-auto').checked=inst?(inst.monthly?!!inst.auto:true):true;
     onCloseType();
   }
   if(!document.getElementById('cl-date').value)document.getElementById('cl-date').value=localISODate(new Date());
-  renderSourcePicker();
+  renderSourcePicker();autoHint();
   openModal('modal-close');
 }
 function openEditDeal(id){openCloseModal('me',id);}
@@ -1434,6 +1506,8 @@ const localISODate=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0
 
 function deleteCall(id){
   if(!confirm('Delete this call?'))return;
+  const dc=calls.find(c=>c.id===id);
+  if(dc&&(dc.is_payment||dc.status==='Installment')){const i=instOf(dc);if(i){i.collected=Math.max(0,parseFloat(i.collected||0)-parseFloat(dc.amount||0));db.set('installments',installments);}}
   calls=calls.filter(c=>c.id!==id);db.set('calls',calls);
   notes=notes.filter(n=>n.call_id!==id);db.set('notes',notes);
   refreshAll();toast('Deleted');
